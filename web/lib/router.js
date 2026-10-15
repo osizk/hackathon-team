@@ -5,6 +5,7 @@
 // Money rule: no spoken text can ever approve a payment. Only the Allow button can.
 import { SCENE_DEFAULTS, SCENES } from '../public/js/data.js';
 import { LINES } from '../public/js/lines.js';
+import { cannedTodo, reviseByKeywords, validateSpec, TODO_WORDS, BLOCK_TYPES, ACCENTS } from './genui.js';
 
 const has = (text, words) => words.some((w) => text.includes(w));
 
@@ -25,9 +26,33 @@ export function sceneReply(scene, data) {
   return { scene, line: INTRO[scene], say: LINES[INTRO[scene]], data: { ...SCENE_DEFAULTS[scene], ...(data || {}) } };
 }
 
-export function keywordRoute(rawText, context = null) {
+const speakLine = (line, extra = {}) => ({ scene: null, line, say: LINES[line], ...extra });
+
+// A saved scene the user kept earlier opens at once, with no new generation.
+function savedMatch(text, saved) {
+  const hit = (Array.isArray(saved) ? saved : []).find((s) => Array.isArray(s?.match) && s.match.some((w) => w && text.includes(String(w).toLowerCase())));
+  return hit ? { scene: 'generated', line: 'gen_saved', say: LINES.gen_saved, data: { savedKind: String(hit.kind) }, via: 'saved' } : null;
+}
+
+// Talk about the generated page that is open: revise it, keep it, or close it.
+function generatedAction(text, { spec, stage } = {}) {
+  if (stage === 'keep') {
+    if (has(text, ['no', "don't", 'not', 'ไม่'])) return speakLine('gen_not_kept', { action: 'close' });
+    if (has(text, [...YES, 'keep', 'save', 'เก็บ'])) return speakLine('gen_kept', { action: 'keep' });
+    return speakLine('gen_keep_ask', { action: 'ask' });
+  }
+  const current = validateSpec(spec);
+  if (!current) return speakLine('gen_what', { action: 'ask' });
+  const r = reviseByKeywords({ ...current, applied: spec.applied || [] }, text);
+  if (r.action === 'revise') return speakLine('gen_revised', { action: 'revise', spec: r.spec });
+  if (r.action === 'accept') return speakLine('gen_keep_ask', { action: 'accept' });
+  return speakLine('gen_what', { action: 'ask' });
+}
+
+export function keywordRoute(rawText, context = null, extra = {}) {
   const text = String(rawText || '').toLowerCase().trim();
   if (!text) return { scene: null, line: 'unsure', say: LINES.unsure };
+  if (context === 'generated') return generatedAction(text, extra);
 
   // Inside an open scene, short answers act on that scene.
   if (context === 'payment' && has(text, PAY_WORDS.concat(YES))) {
@@ -42,6 +67,10 @@ export function keywordRoute(rawText, context = null) {
   for (const { scene, words } of KEYWORDS) {
     if (has(text, words)) return sceneReply(scene);
   }
+  const saved = savedMatch(text, extra.saved);
+  if (saved) return saved;
+  // No prebuilt scene fits: without a model, a todo request gets one canned generated page.
+  if (has(text, TODO_WORDS)) return { scene: 'generated', line: 'gen_todo', say: LINES.gen_todo, data: { spec: cannedTodo() } };
   return { scene: null, line: 'unsure', say: LINES.unsure };
 }
 
@@ -54,16 +83,46 @@ const TOOL = {
   input_schema: {
     type: 'object',
     properties: {
-      scene: { type: 'string', enum: [...SCENES, 'none'] },
-      action: { type: 'string', enum: ['none', 'confirm', 'decline'], description: 'Act on the open scene. Never use confirm to approve a payment.' },
-      say: { type: 'string', description: 'One short sentence in Thai, spoken aloud. Only used when scene is none.' },
-      data: { type: 'object', description: 'Optional scene data in the shape of the defaults.' },
+      scene: { type: 'string', enum: [...SCENES, 'generated', 'none'] },
+      action: {
+        type: 'string',
+        enum: ['none', 'confirm', 'decline', 'revise', 'accept', 'keep', 'close', 'ask'],
+        description:
+          'Act on the open scene. Never use confirm to approve a payment. On a generated page: revise = send the changed spec; ' +
+          'accept = the user likes it (then ask whether to keep it); keep = user said yes to keeping it; close = user does not want to keep it; ask = ask what to change.',
+      },
+      say: { type: 'string', description: 'One or two short sentences in Thai, spoken aloud. For a new or revised generated page, ask if the user likes it and name one or two concrete changes you propose.' },
+      data: { type: 'object', description: 'Optional data for a prebuilt scene, in the shape of the defaults.' },
+      spec: {
+        type: 'object',
+        description: 'For scene generated or action revise: a UI spec built only from the fixed components.',
+        properties: {
+          kind: { type: 'string', description: 'short lowercase slug, e.g. todo, budget, packing' },
+          name: { type: 'string' },
+          match: { type: 'array', items: { type: 'string' }, description: 'words a later request would use for this page' },
+          title: { type: 'string' },
+          subtitle: { type: 'string' },
+          accent: { type: 'string', enum: ACCENTS },
+          blocks: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: { type: { type: 'string', enum: BLOCK_TYPES } },
+              required: ['type'],
+              description:
+                'text{text} stat{label,value} progress{label,value 0-100 or "auto"} checklist{items:[{text,done,due,tag}]} ' +
+                'list{items:[string]} card{title,text} chart{bars:[{label,value}]} field{label,placeholder} button{label} divider{}',
+            },
+          },
+          proposals: { type: 'array', items: { type: 'object', properties: { id: { type: 'string' }, label: { type: 'string' } } }, description: 'one or two concrete changes you propose' },
+        },
+      },
     },
     required: ['scene'],
   },
 };
 
-export async function claudeRoute(text, context, { apiKey, model = 'claude-sonnet-5-5', timeoutMs = 6000, fetchImpl = fetch } = {}) {
+export async function claudeRoute(text, context, extra, { apiKey, model = 'claude-sonnet-5-5', timeoutMs = 6000, fetchImpl = fetch } = {}) {
   const res = await fetchImpl('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     signal: AbortSignal.timeout(timeoutMs),
@@ -73,7 +132,9 @@ export async function claudeRoute(text, context, { apiKey, model = 'claude-sonne
       max_tokens: 600,
       system:
         'You are the agent of an Agent OS. You answer by opening UI scenes, not with long text. ' +
-        `The scene open now is: ${context || 'none (agent home)'}. Scene data defaults: ${JSON.stringify(SCENE_DEFAULTS)}`,
+        `The scene open now is: ${context || 'none (agent home)'}. Scene data defaults: ${JSON.stringify(SCENE_DEFAULTS)}. ` +
+        'Use a prebuilt scene when one fits. When none fits a task, open scene generated with a spec. ' +
+        (context === 'generated' ? `The generated page open now (stage ${extra.stage || 'review'}): ${JSON.stringify(extra.spec)}` : ''),
       tools: [TOOL],
       tool_choice: { type: 'tool', name: 'show_scene' },
       messages: [{ role: 'user', content: String(text) }],
@@ -83,25 +144,45 @@ export async function claudeRoute(text, context, { apiKey, model = 'claude-sonne
   const body = await res.json();
   const call = (body.content || []).find((c) => c.type === 'tool_use');
   if (!call) throw new Error('claude gave no tool call');
-  const { scene, action, say, data } = call.input || {};
+  const { scene, action, say, data, spec } = call.input || {};
 
   // Money rule holds even if the model says otherwise.
   if (context === 'payment' && (action === 'confirm' || scene === 'payment')) return keywordRoute('allow', 'payment');
-  if (action === 'confirm' || action === 'decline') {
+  if (context !== 'generated' && (action === 'confirm' || action === 'decline')) {
     const routed = keywordRoute(action === 'confirm' ? 'yes' : 'no', context);
     if (routed.action) return routed;
   }
+  if (context === 'generated') {
+    if (action === 'revise') {
+      const next = validateSpec(spec);
+      if (next) return { scene: null, action: 'revise', spec: next, line: null, say: say || LINES.gen_revised };
+    }
+    if (['accept', 'keep', 'close', 'ask'].includes(action)) {
+      const line = { accept: 'gen_keep_ask', keep: 'gen_kept', close: 'gen_not_kept', ask: 'gen_what' }[action];
+      return { scene: null, action, line: say ? null : line, say: say || LINES[line] };
+    }
+  }
   if (SCENES.includes(scene)) return sceneReply(scene, data);
+  if (scene === 'generated') {
+    const next = validateSpec(spec);
+    if (next) return { scene: 'generated', line: null, say: say || LINES.gen_revised, data: { spec: next } };
+    throw new Error('claude gave an invalid UI spec');
+  }
   return { scene: null, line: null, say: say || LINES.unsure };
 }
 
-export async function route(text, context, env = process.env, fetchImpl = fetch) {
+export async function route(text, context, env = process.env, fetchImpl = fetch, extra = {}) {
+  // A kept page opens at once, with no model call.
+  if (!context) {
+    const saved = savedMatch(String(text || '').toLowerCase(), extra.saved);
+    if (saved) return saved;
+  }
   if (env.ANTHROPIC_API_KEY) {
     try {
-      return { ...(await claudeRoute(text, context, { apiKey: env.ANTHROPIC_API_KEY, fetchImpl })), via: 'claude' };
+      return { ...(await claudeRoute(text, context, extra, { apiKey: env.ANTHROPIC_API_KEY, fetchImpl })), via: 'claude' };
     } catch (err) {
       console.warn(`[route] Claude failed, using keywords: ${err.message}`);
     }
   }
-  return { ...keywordRoute(text, context), via: 'keywords' };
+  return { via: 'keywords', ...keywordRoute(text, context, extra) };
 }

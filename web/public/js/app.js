@@ -3,6 +3,7 @@
 import { LINES } from './lines.js';
 import { SCENE_DEFAULTS } from './data.js';
 import { SCENES } from './scenes/index.js';
+import { savedIndex } from './scenes/generated.js';
 import { initVoice, speak, showSubtitle } from './voice.js';
 import { createListener } from './stt.js';
 import { T, TEST, wait } from './timing.js';
@@ -22,6 +23,8 @@ function makeAgent(token) {
     // Speak a fixed line by id, or free text.
     say: (lineOrText) => (alive() ? speak(LINES[lineOrText] ? { line: lineOrText, text: LINES[lineOrText] } : { text: lineOrText }) : Promise.resolve()),
     open: (name, data) => alive() && openScene(name, data),
+    // Same as the user saying it (chips and buttons on generated pages).
+    request: (text) => alive() && handleUserText(text),
     close: () => alive() && closeScene(),
   };
 }
@@ -76,7 +79,7 @@ async function routeText(text) {
   const res = await fetch('/api/route', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ text, context: open?.name || null }),
+    body: JSON.stringify({ text, context: open?.name || null, saved: savedIndex(), ...(open?.ctl.state?.() || {}) }),
   });
   if (!res.ok) throw new Error(`route ${res.status}`);
   return res.json();
@@ -100,8 +103,9 @@ export async function handleUserText(text) {
   document.body.dataset.via = res.via || '';
 
   if (res.action) {
-    open?.ctl.onAction?.(res.action, res);
-    if (res.say) await speak({ line: res.line, text: res.say });
+    const talking = res.say ? speak({ line: res.line, text: res.say }) : Promise.resolve();
+    open?.ctl.onAction?.(res.action, res, talking);
+    await talking;
     return;
   }
   if (res.scene && SCENES[res.scene]) {

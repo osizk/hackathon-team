@@ -11,5 +11,12 @@
   "train_done": "1d5f11a27aed8002",
   "flight_intro": "7edcd3778089aa61",
   "flight_done": "31086c631663c50c",
-  "flight_keep": "b00270b415d04fea"
+  "flight_keep": "b00270b415d04fea",
+  "gen_todo": "9516a2384f6bc8b8",
+  "gen_revised": "b3476e8a9e85eb67",
+  "gen_what": "cbc63f7756016d4b",
+  "gen_keep_ask": "675f32df8f47fc6e",
+  "gen_kept": "a81bd62771158c03",
+  "gen_not_kept": "f510bd8d24a4e330",
+  "gen_saved": "c583f3d3450f9f34"
 }

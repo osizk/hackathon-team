@@ -23,7 +23,7 @@ async function readJson(req) {
   let body = '';
   for await (const chunk of req) {
     body += chunk;
-    if (body.length > 10_000) throw new Error('body too large');
+    if (body.length > 60_000) throw new Error('body too large');
   }
   return body ? JSON.parse(body) : {};
 }
@@ -40,8 +40,8 @@ const server = createServer(async (req, res) => {
       return send(res, 200, { brain: process.env.ANTHROPIC_API_KEY ? 'claude' : 'keywords', tts: ttsReady() });
     }
     if (url.pathname === '/api/route' && req.method === 'POST') {
-      const { text, context } = await readJson(req);
-      return send(res, 200, await route(text, context || null));
+      const { text, context, spec, stage, saved } = await readJson(req);
+      return send(res, 200, await route(text, context || null, process.env, fetch, { spec, stage, saved }));
     }
     if (url.pathname === '/api/tts' && req.method === 'POST') {
       if (!ttsReady()) return send(res, 503, { error: 'no ElevenLabs key' });

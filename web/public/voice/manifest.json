@@ -11,5 +11,12 @@
   "train_done",
   "flight_intro",
   "flight_done",
-  "flight_keep"
+  "flight_keep",
+  "gen_todo",
+  "gen_revised",
+  "gen_what",
+  "gen_keep_ask",
+  "gen_kept",
+  "gen_not_kept",
+  "gen_saved"
 ]

@@ -259,3 +259,51 @@ body.listening .mic { animation: pulse 1.2s ease-out infinite; }
 .confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .confetti i { position: absolute; top: -12px; width: 8px; height: 14px; border-radius: 2px; animation: fall 2.4s ease-in forwards; }
 @keyframes fall { to { transform: translate(var(--x), 900px) rotate(var(--r)); opacity: .8; } }
+
+/* ---------- Generated scene (drawn from a JSON spec) ---------- */
+.scene-generated { --g: var(--accent); --g-bg: #fff6ef; background: linear-gradient(180deg, var(--g-bg), var(--card) 45%); transition: background .5s, color .5s; }
+.g-accent-green { --g: #23a26d; --g-bg: #eef8f2; }
+.g-accent-blue { --g: #3b82f6; --g-bg: #eef4ff; }
+.g-accent-purple { --g: #7c5cff; --g-bg: #f3efff; }
+.g-accent-pink { --g: #e64f8b; --g-bg: #fff0f6; }
+.g-accent-dark { --g: #ffb36b; --g-bg: #1f1b18; color: #f5ede3; background: #1f1b18; }
+.g-accent-dark .g-checklist li, .g-accent-dark .g-card, .g-accent-dark .g-stat { background: #2c2622; border-color: #3a332d; }
+.g-flash { animation: g-flash .7s ease; }
+@keyframes g-flash { 0% { filter: brightness(1.15); transform: scale(.985); } 100% { filter: none; transform: none; } }
+.g-badge { display: inline-block; margin: 4px 0 6px; padding: 4px 10px; border-radius: 99px; font-size: 12px; font-weight: 700; color: #fff; background: var(--g); }
+.g-title { margin: 0; font-size: 28px; }
+.g-subtitle { margin: 2px 0 12px; font-size: 14px; opacity: .65; }
+.g-text { font-size: 15px; line-height: 1.5; }
+.g-stat { display: inline-flex; flex-direction: column; margin: 6px 8px 6px 0; padding: 10px 14px; border-radius: 14px; background: #fff; border: 1px solid #eee3d6; }
+.g-stat b { font-size: 22px; }
+.g-stat span { font-size: 12px; opacity: .7; }
+.g-progress { margin: 8px 0 12px; animation: rise-in .4s ease both; }
+.g-progress-label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+.g-bar { height: 12px; border-radius: 99px; background: rgba(127, 127, 127, .18); overflow: hidden; }
+.g-bar i { display: block; height: 100%; border-radius: 99px; background: var(--g); transition: width .5s ease; }
+.g-checklist { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 8px; }
+.g-checklist li { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 14px; background: #fff; border: 1px solid #eee3d6; cursor: pointer; animation: rise-in .35s ease both; }
+.g-checklist li:nth-child(2) { animation-delay: .06s; } .g-checklist li:nth-child(3) { animation-delay: .12s; } .g-checklist li:nth-child(4) { animation-delay: .18s; } .g-checklist li:nth-child(5) { animation-delay: .24s; }
+.g-box { flex: none; width: 24px; height: 24px; border-radius: 8px; border: 2px solid var(--g); display: grid; place-items: center; color: #fff; font-size: 13px; }
+.g-checklist li.done .g-box { background: var(--g); }
+.g-checklist li.done .g-item { text-decoration: line-through; opacity: .55; }
+.g-item { flex: 1; font-size: 15px; }
+.g-tag { font-style: normal; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: #eee; color: #555; }
+.g-tag-high { background: #ffe1dc; color: #c2412d; }
+.g-tag-medium { background: #fff1d6; color: #a86a00; }
+.g-tag-low { background: #e3f4ea; color: #1d7a50; }
+.g-due { font-size: 12px; opacity: .65; min-width: 58px; text-align: right; }
+.g-list { padding-left: 20px; line-height: 1.8; }
+.g-card { margin: 8px 0; padding: 14px; border-radius: 16px; background: #fff; border: 1px solid #eee3d6; }
+.g-card h3 { margin: 0 0 4px; }
+.g-card p { margin: 0; font-size: 14px; opacity: .8; }
+.g-chart { display: flex; align-items: flex-end; gap: 10px; height: 150px; margin: 12px 0; }
+.g-col { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; font-size: 12px; }
+.g-col i { width: 100%; border-radius: 8px 8px 0 0; background: var(--g); }
+.g-field { display: grid; gap: 4px; margin: 8px 0; font-size: 13px; }
+.g-field input { padding: 10px 12px; border-radius: 12px; border: 1px solid #ddd; font: 15px var(--font); }
+.g-button { width: 100%; flex: none; margin-top: 10px; background: var(--g); }
+.g-divider { border: 0; border-top: 1px dashed rgba(127, 127, 127, .35); margin: 14px 0; }
+.g-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.g-chip { padding: 9px 14px; border-radius: 99px; border: 1.5px solid var(--g); background: transparent; color: inherit; font: 600 14px var(--font); cursor: pointer; }
+.g-chip:last-child { background: var(--g); color: #fff; }
