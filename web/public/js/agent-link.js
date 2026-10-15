@@ -4,7 +4,7 @@
 // - Live agent: feed changes go into the conversation; the agent decides whether to speak.
 // - Presenter control, only with ?presenter=1: tap the clock 3 times (or Shift+T / Shift+F / Shift+R) to fire a feed event.
 // URL options: ?script=off stops the demo script; ?tick=<ms> changes how often it looks (default 3000);
-// ?quiet=<ms> is how long after the user's last interaction nothing is pushed (default 8000).
+// ?quiet=<ms> is how long after the user's last interaction nothing is pushed (default 6000).
 import { createFeeds, DEMO_SCRIPT } from './feeds.js';
 import { createAgentLoop } from './agent-loop.js';
 import { logEvent } from './log.js';
@@ -39,9 +39,10 @@ function watchPresence() {
   let last = null;
   const report = () => {
     const p = presence();
-    // Any change in what the page does (a scene opens or folds back, the mic, the agent's voice,
-    // the text box) counts as interaction too: the loop waits its quiet time after it.
-    const key = JSON.stringify({ ...p, lastInteractionAt: 0 });
+    // A change on the user's side (a scene opens or folds back, the mic, the text box) counts as
+    // interaction too: the loop waits its quiet time after it. The agent's own voice does not
+    // (it blocks only while it talks), or its silence reprompts would hold every update back.
+    const key = JSON.stringify([p.scene, p.listening, p.typing, p.thinking]);
     if (last !== null && key !== last) lastInteractionAt = p.lastInteractionAt = Date.now();
     last = key;
     loop.setPresence(p);
@@ -97,7 +98,7 @@ export function connectAgent({ onProactive, onFeed }) {
     feeds: createFeeds(),
     script: scriptOff ? [] : DEMO_SCRIPT,
     tickMs: Number(params.get('tick')) || (TEST ? 300 : 3000),
-    quietMs: params.has('quiet') ? Number(params.get('quiet')) : TEST ? 600 : 8000,
+    quietMs: params.has('quiet') ? Number(params.get('quiet')) : TEST ? 600 : 6000,
     log: (msg) => console.info(msg),
     onEvent: (type, data) => logEvent(type, data),
     emit: (event, data) => {

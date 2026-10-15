@@ -14,7 +14,7 @@ import { LINES } from './lines.js';
 // The page answers a 'proactive' with ack({ id, ok }).
 // quietMs: after the user's last interaction (tap, key, typing, speech), nothing is pushed for this
 // long, so the agent never cuts in while the user is in the middle of something.
-export function createAgentLoop({ feeds, script = [], tickMs = 3000, quietMs = 8000, clock = Date.now, decide = defaultDecide, log = console.log, onEvent = () => {}, emit = () => {} }) {
+export function createAgentLoop({ feeds, script = [], tickMs = 3000, quietMs = 6000, clock = Date.now, decide = defaultDecide, log = console.log, onEvent = () => {}, emit = () => {} }) {
   let presence = { scene: 'home', talking: false, listening: false, typing: false, thinking: false, live: false, lastInteractionAt: 0 };
   let seen = feeds.versions();
   let handled = {};
