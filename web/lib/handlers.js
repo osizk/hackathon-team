@@ -83,7 +83,7 @@ export function createHandlers({ env = process.env, logDir = null, imagesDir, in
     // Web search for the live agent's web_search tool. Errors come back as { error } (the agent
     // then answers without it); only the daily limit is a 429 that switches the page offline.
     async search(headers = {}, { query } = {}) {
-      if (!searchReady(env)) throw new HttpError(503, 'no TAVILY_API_KEY');
+      if (!searchReady(env)) throw new HttpError(503, 'search is not configured');
       await take('calls', headers);
       try {
         return await tavilySearch(query, env);

@@ -8,6 +8,20 @@ import { validateSpec } from '../public/js/genui.js';
 
 const ok = (body) => async (url, opts) => ({ ok: true, status: 200, json: async () => body, url, opts });
 
+test('keyless search is explicit, omits credentials and keyed mode takes precedence', async () => {
+  assert.equal(searchReady({ TAVILY_KEYLESS: 'false' }), false);
+  assert.equal(searchReady({ TAVILY_KEYLESS: 'true' }), true);
+  let headers;
+  const fetchImpl = async (_url, opts) => { headers = opts.headers; return { ok: true, json: async () => ({ results: [] }) }; };
+  await tavilySearch('headphones', { TAVILY_KEYLESS: 'true' }, fetchImpl);
+  assert.equal(headers['X-Tavily-Access-Mode'], 'keyless');
+  assert.equal(headers.authorization, undefined);
+  await tavilySearch('headphones', { TAVILY_KEYLESS: 'true', TAVILY_API_KEY: 'test-key' }, fetchImpl);
+  assert.equal(headers.authorization, 'Bearer test-key');
+  assert.equal(headers['X-Tavily-Access-Mode'], undefined);
+  await assert.rejects(tavilySearch('headphones', {}, () => assert.fail('must not call')), /not configured/);
+});
+
 test('tavilySearch: fast depth, bearer key, 5 results, http(s) links only, trimmed text', async () => {
   let sent;
   const fetchImpl = async (url, opts) => {

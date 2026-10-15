@@ -228,6 +228,7 @@ function setupFallback() {
 }
 
 function setupSuggestions() {
+  $('shoppingSearchBtn').addEventListener('click', () => openScene('shopping', { search: true }));
   const nav = $('suggest');
   for (const s of SUGGESTIONS) {
     const btn = document.createElement('button');
@@ -325,7 +326,7 @@ function setupGreeting() {
     document.body.classList.add('started');
     window.removeEventListener('pointerdown', first, true);
     window.removeEventListener('keydown', first, true);
-    if (e.target.closest?.('#mic, input, form, .presenter, .suggest, .home-btn, .secretary-shortcuts, dialog') || (e.type === 'keydown' && e.key !== 'Enter')) return; // the user is about to talk or type
+    if (e.target.closest?.('#mic, input, form, .presenter, .suggest, .home-btn, .secretary-shortcuts, .shopping-shortcut, dialog') || (e.type === 'keydown' && e.key !== 'Enter')) return; // the user is about to talk or type
     logEvent('greet', { via: 'local' });
     speak({ line: 'greet', text: LINES.greet });
   };

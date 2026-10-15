@@ -22,7 +22,8 @@ export const TOOL_DEFS = [
     name: 'open_scene',
     description:
       'Open a prebuilt full-screen scene. shopping = read the weekly shopping email and build the list; payment = payment approval card; ' +
-      'flight = delayed flight with a faster option; training = sleep score, run plan and 10K race sign-up that fills itself.',
+      'flight = delayed flight with a faster option; training = sleep score, run plan and 10K race sign-up that fills itself. ' +
+      'For REAL product search, use shopping with data_json {"search":true,"query":"product and budget"}. The page searches Tavily itself and displays sources; do not also call web_search. No checkout or payment happens in this mode.',
     params: {
       scene: { type: 'string', enum: PROACTIVE_SCENES, description: 'Which scene to open', required: true },
       data_json: { type: 'string', description: 'Optional JSON object with scene data in the shape of the defaults', required: false },
