@@ -150,6 +150,15 @@ npm run agent:sync -- --dry-run   # show what would be sent
 npm run agent:sync
 ```
 
+The agent in `.env` is the one judges use. To try an agent change first, sync a
+test agent of your own. It gets new tools too, and its ids go to that file, never to `.env`:
+
+```text
+npm run agent:sync -- --env ../.env.test-agent       # creates it the first time
+ELEVENLABS_AGENT_ID=<id from .env.test-agent> PORT=5192 npm start
+npm run smoke:live -- --base http://localhost:5192
+```
+
 Manual smoke test (Playwright covers only the no-key path and a stubbed
 agent):
 1. Run `npm start` and open http://localhost:5173 in Chrome.
@@ -218,6 +227,10 @@ It reports reply speed and flags:
 To test the live agent end to end in Chrome, run
 `npm run smoke:live -- --wav my-thai-request.wav`. The WAV is played as the
 microphone.
+
+To check speed in Chrome (first paint, time to ready, first tap to the agent's voice and scene,
+warm reply), run `npm run measure -- --base <url> --runs 3`. Each live run uses one session of
+the daily limit; `--offline` measures only the page load, and `--slow` simulates a phone on 4G.
 
 ### Presenter controls (team only)
 

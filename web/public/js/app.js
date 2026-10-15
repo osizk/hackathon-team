@@ -9,7 +9,7 @@ import { logEvent } from './log.js';
 import { apiFetch } from './api.js';
 import { createListener } from './stt.js';
 import { connectAgent, fireFeed } from './agent-link.js';
-import { live, checkLive, startLive, setMic, sendText, sendContext, sendFeed, silenceAgent, afterAgentSentence } from './live-agent.js';
+import { live, checkLive, prepareLive, startLive, setMic, sendText, sendContext, sendFeed, silenceAgent, afterAgentSentence } from './live-agent.js';
 import { T, TEST, PRESENTER, wait } from './timing.js';
 
 const $ = (id) => document.getElementById(id);
@@ -113,7 +113,7 @@ async function routeText(text) {
 // What the live agent's client tools may do to the screen.
 const toolUi = {
   current: () => open,
-  // The agent says what it will do first; the scene grows when that sentence ends.
+  // The agent says what it will do first; the scene grows while that sentence plays.
   openScene: async (name, data) => {
     await afterAgentSentence();
     if (open) { closeScene(); await wait(750); }
@@ -311,9 +311,13 @@ async function boot() {
   setupMic(fallback);
   setupGreeting();
   logEvent('page_open', { test: TEST });
-  await initVoice();
+  // One /api/health call for the voice and the brain, fetched while the voice manifest loads.
+  const health = apiFetch('/api/health').then((r) => r.json());
+  health.catch(() => {});
+  await Promise.all([initVoice(health), checkLive(health)]);
   document.body.dataset.scene = 'home';
-  await checkLive();
+  // The user's first touch, tap or key fetches the live agent's signed URL ahead of the first turn.
+  for (const type of ['pointerdown', 'keydown', 'focusin']) window.addEventListener(type, prepareLive, { capture: true, passive: true });
   connectAgent({ onProactive: (scene) => proactive(scene), onFeed: (text) => live.connected && sendFeed(text) });
   document.body.dataset.ready = '1';
   // For tests and the presenter console.

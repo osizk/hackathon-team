@@ -109,3 +109,26 @@ test('live: one voice - app lines go through the agent; pressing the mic silence
   await expect.poll(() => page.evaluate(() => window.__conv.calls.at(-1))).toBe('volume:1');
   await page.locator('#mic').dispatchEvent('pointerup');
 });
+
+test('live speed: the SDK loads at boot, the signed URL is fetched on the first touch and reused by the first turn', async ({ page }) => {
+  let sessions = 0;
+  let sdkLoaded = false;
+  await page.addInitScript(() => {
+    const track = { stop() {}, getSettings: () => ({}) };
+    navigator.mediaDevices.getUserMedia = async () => ({ getTracks: () => [track], getAudioTracks: () => [track] });
+  });
+  await page.route('**/api/health', (r) => r.fulfill({ json: { brain: 'elevenlabs-agent', tts: false } }));
+  await page.route('**/api/agent/session', (r) => { sessions += 1; r.fulfill({ json: { live: true, signedUrl: 'wss://example.invalid/fake' } }); });
+  await page.route('https://cdn.jsdelivr.net/npm/@elevenlabs/client@*/+esm', (r) => { sdkLoaded = true; r.fulfill({ contentType: 'text/javascript', body: FAKE_SDK }); });
+  await page.goto('/?test=1');
+  await expect(page.locator('body')).toHaveAttribute('data-brain', 'agent-ready');
+  await expect.poll(() => sdkLoaded).toBe(true);
+  expect(sessions).toBe(0); // page load alone spends no session
+  await page.locator('#fallbackInput').focus();
+  await expect.poll(() => sessions).toBe(1);
+  await page.fill('#fallbackInput', 'this week is hectic');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('body')).toHaveAttribute('data-brain', 'agent');
+  await expect.poll(() => page.evaluate(() => window.__conv.sent)).toEqual(['this week is hectic']);
+  expect(sessions).toBe(1);
+});

@@ -48,3 +48,10 @@ test('the prompt takes {{today}}, with a placeholder; today() is the Bangkok dat
   // 20:00 UTC on 15 Oct is already Friday 16 Oct in Bangkok (UTC+7).
   assert.equal(today(new Date('2026-10-15T20:00:00Z')), 'Friday 16 October 2026 (2026-10-16)');
 });
+
+test('turn latency: speculative turn on, no filler line (it fired after tool calls)', () => {
+  const turn = agentConfig().conversation_config.turn;
+  assert.equal(turn.speculative_turn, true);
+  assert.equal(turn.soft_timeout_config.timeout_seconds, -1);
+  assert.equal(agentConfig({ name: 'x [test]' }).name, 'x [test]');
+});
