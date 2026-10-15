@@ -15,7 +15,10 @@ Open it in Chrome on a laptop or a phone, then:
 
 1. Tap the screen once to turn on sound. The mascot greets you in Thai.
 2. Tap a suggestion, type in the box next to the mic, or hold the mic and
-   speak (Thai or English):
+   speak (Thai or English). When Chrome asks for the microphone, allow it:
+   the live agent needs it, even for typed requests. Without it, the page
+   says "Offline mode" in one line at the top and keeps working offline
+   (see below). While the agent thinks or searches, the mascot sways:
    - **"สัปดาห์นี้ยุ่งมาก"** ("this week is hectic"): the agent reads a
      shopping email and builds the list, then shows a payment card. Saying
      "pay" does not pay. Only a tap on **Allow** pays.
@@ -30,13 +33,16 @@ Open it in Chrome on a laptop or a phone, then:
      results with their source links.
 3. Tap **⌂ Home** (or press `Esc`) to fold the screen back.
 4. After you tap **Allow** and the payment folds back, stay on the home
-   screen. The always-on agent speaks first about new sleep data and a race
-   (about 20 seconds later), and then about a flight delay.
+   screen. A few seconds later the always-on agent speaks first about new
+   sleep data and a race, and fills in the race sign-up by itself. A few
+   seconds after that it speaks about a flight delay: tap **Yes, change it**
+   or **Keep**.
 
 **Offline mode.** The live agent has a daily usage limit. When the limit is
 reached, or the voice credit runs out, the page says so in one line at the
-top. It then keeps working offline: keywords pick the screen, and the voice
-comes from saved clips. All the suggestions above still work, except that
+top. The same line shows when the microphone is not allowed. The page then
+keeps working offline: keywords pick the screen, and the voice comes from
+saved clips. All the suggestions above still work, except that
 the web search becomes the ready-made training screen.
 
 ### Run it yourself, with no keys

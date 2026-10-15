@@ -30,6 +30,11 @@ test('spoken change revises the spec', () => {
   const yes = reviseByKeywords(spec, 'yes both');
   assert.ok(yes.spec.blocks.some((b) => b.type === 'progress'));
   assert.equal(reviseByKeywords(spec, 'เพิ่ม Call mom').spec.blocks[0].items.at(-1).text, 'Call mom');
+  // A like with an added item is a change, not a keep.
+  const liked = reviseByKeywords(spec, 'ชอบ แต่ขอเพิ่มรายการออกกำลังกาย');
+  assert.equal(liked.action, 'revise');
+  assert.equal(liked.spec.blocks[0].items.at(-1).text, 'ออกกำลังกาย');
+  assert.equal(reviseByKeywords(spec, 'I like it, but add stretching').spec.blocks[0].items.at(-1).text, 'stretching');
 });
 
 test('like asks to keep; yes keeps; no closes', () => {

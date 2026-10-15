@@ -50,7 +50,10 @@ export default function mountFlight(el, data, agent) {
     el.querySelector('.tl-new').hidden = false;
     el.querySelector('.old').classList.add('gone');
     el.querySelector('.flight-buttons').hidden = true;
-    el.querySelector('.flight-done').hidden = false;
+    const done = el.querySelector('.flight-done');
+    done.hidden = false;
+    // The confirmation is the last thing on the page: bring it above the subtitle and composer.
+    done.scrollIntoView({ behavior: 'smooth', block: 'center' });
     el.classList.add('rebooked');
     await agent.say('flight_done');
     await agent.wait(800);
