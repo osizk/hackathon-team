@@ -72,15 +72,18 @@ function setMode(next) {
 const waitMode = (want, ms) =>
   new Promise((resolve) => {
     if (mode === want) return resolve(true);
-    const timer = setTimeout(() => resolve(false), ms);
-    modeWaiters.push((m) => (m === want ? (clearTimeout(timer), resolve(true), true) : false));
+    const waiter = (m) => (m === want ? (clearTimeout(timer), resolve(true), true) : false);
+    const timer = setTimeout(() => {
+      modeWaiters = modeWaiters.filter((w) => w !== waiter);
+      resolve(false);
+    }, ms);
+    modeWaiters.push(waiter);
   });
 
-// Let the agent finish the sentence it is saying before a scene grows (it speaks first, then acts).
-export async function afterAgentSentence(maxMs = 4000) {
+// Speak first, then grow the scene without waiting for the whole sentence.
+export async function afterAgentStarts() {
   if (!live.connected) return;
   if (mode !== 'speaking') await waitMode('speaking', 600);
-  if (mode === 'speaking') await waitMode('listening', maxMs);
 }
 
 // An app line said by the agent's own voice (one voice, never two).
@@ -127,11 +130,18 @@ export function startLive(ui) {
   if (!live.available) return Promise.reject(new Error('live agent not configured'));
   if (starting) return starting;
   starting = (async () => {
+    // Session denial must still switch offline if SDK loading or mic access fails.
+    const preparation = Promise.allSettled([
+      import(SDK_URL),
+      checkMic(),
+    ]);
     const session = await (await apiFetch('/api/agent/session')).json();
     if (session.offline) goOffline(session.offline);
     if (!session.live) throw new Error(session.reason || 'no live session');
-    const { Conversation } = await import(SDK_URL);
-    await checkMic();
+    const [sdk, mic] = await preparation;
+    if (sdk.status === 'rejected') throw sdk.reason;
+    if (mic.status === 'rejected') throw mic.reason;
+    const { Conversation } = sdk.value;
     conversation = await Conversation.startSession({
       signedUrl: session.signedUrl,
       connectionType: 'websocket',

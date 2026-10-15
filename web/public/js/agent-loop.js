@@ -10,7 +10,7 @@ import { LINES } from './lines.js';
 
 // emit(event, data): 'proactive' { id, scene, line, say } offline, or 'feed' { changed, text } when live.
 // The page answers a 'proactive' with ack({ id, ok }).
-export function createAgentLoop({ feeds, script = [], tickMs = 3000, decide = defaultDecide, log = console.log, onEvent = () => {}, emit = () => {} }) {
+export function createAgentLoop({ feeds, script = [], tickMs = 3000, decide = defaultDecide, log = console.log, onEvent = () => {}, emit = () => {}, onIdle = () => false }) {
   let presence = { scene: 'home', talking: false, listening: false, live: false };
   let seen = feeds.versions();
   let handled = {};
@@ -27,6 +27,7 @@ export function createAgentLoop({ feeds, script = [], tickMs = 3000, decide = de
 
   async function tick() {
     if (deciding || pending || busy()) return;
+    if (onIdle()) return;
     const now = feeds.versions();
     const changed = Object.keys(now).filter((k) => now[k] !== seen[k]);
     if (!changed.length && !retry) return;

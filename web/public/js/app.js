@@ -9,12 +9,19 @@ import { logEvent } from './log.js';
 import { apiFetch } from './api.js';
 import { createListener } from './stt.js';
 import { connectAgent, fireFeed } from './agent-link.js';
-import { live, checkLive, startLive, setMic, sendText, sendContext, sendFeed, silenceAgent, afterAgentSentence } from './live-agent.js';
+import { live, checkLive, startLive, setMic, sendText, sendContext, sendFeed, silenceAgent, afterAgentStarts } from './live-agent.js';
 import { T, TEST, PRESENTER, wait } from './timing.js';
+import { createSecretary } from './secretary.js';
+import { setupSecretaryDemo } from './secretary-demo.js';
 
 const $ = (id) => document.getElementById(id);
 const stage = $('stage');
 let open = null; // { name, el, ctl }
+const secretary = createSecretary({ notify: async (notices, current) => {
+  const text = `แจ้งเตือนทดสอบ ${notices.length} เรื่องค่ะ ${notices.map((n) => n.message).join(' ')}`;
+  return sayThenOpen({ text }, 'secretary', { view: 'notifications', noticeIds: notices.map((n) => n.id) },
+    () => current() && !open && !document.body.classList.contains('listening') && !document.body.classList.contains('thinking'));
+} });
 
 if (TEST) document.body.classList.add('test');
 
@@ -24,6 +31,7 @@ function makeAgent(token) {
     alive,
     wait,
     lines: LINES,
+    secretary,
     // Speak a fixed line by id, or free text.
     say: (lineOrText) => (alive() ? speak(LINES[lineOrText] ? { line: lineOrText, text: LINES[lineOrText] } : { text: lineOrText }) : Promise.resolve()),
     open: (name, data) => alive() && openScene(name, data),
@@ -42,6 +50,7 @@ export function openScene(name, data = {}) {
 
   logEvent('scene_open', { name, swap: Boolean(open) });
   if (open) {
+    open.ctl.destroy?.();
     // Scene to scene: the old one slides up, the new one rises under it.
     const old = open.el;
     old.classList.add('leaving');
@@ -62,6 +71,7 @@ export function openScene(name, data = {}) {
 export function closeScene() {
   if (!open) return;
   const { el, name } = open;
+  open.ctl.destroy?.();
   // Tell the live agent, so it does not act on a page that is gone.
   if (live.connected) sendContext(`[screen] The ${name} page was closed. The agent home is showing.`);
   logEvent('scene_close', { name });
@@ -74,12 +84,15 @@ export function closeScene() {
 
 // Speak first, then act: the agent starts its sentence about what it will do, and the scene
 // grows while that sentence plays (never before it starts).
-async function sayThenOpen({ line, text }, name, data) {
+async function sayThenOpen({ line, text }, name, data, current = () => true) {
+  if (!current()) return false;
   let talking;
   await new Promise((started) => { talking = speak({ line, text, onStart: started }); });
-  await wait(name === 'shopping' ? 1400 : 900);
-  openScene(name, data);
+  await wait(120);
+  const show = current();
+  if (show) openScene(name, data);
   await talking;
+  return show;
 }
 
 // Sentences a judge can tap; each is sent as if spoken. One per kind of answer:
@@ -113,15 +126,21 @@ async function routeText(text) {
 // What the live agent's client tools may do to the screen.
 const toolUi = {
   current: () => open,
-  // The agent says what it will do first; the scene grows when that sentence ends.
+  // Grow the scene once speech starts, while the agent explains it.
   openScene: async (name, data) => {
-    await afterAgentSentence();
-    if (open) { closeScene(); await wait(750); }
+    await afterAgentStarts();
     openScene(name, data);
   },
   closeScene: () => closeScene(),
   action: (name, extra = {}) => open?.ctl.onAction?.(name, extra, Promise.resolve()),
   nudgeAllow: () => open?.ctl.onAction?.('button-only'),
+  secretary: async (action, minutes) => {
+    if (['acknowledge', 'snooze'].includes(action) && (open?.name !== 'secretary' || !open.ctl.state().noticeIds.length)) return 'error: no displayed notification';
+    await afterAgentStarts();
+    if (open?.name !== 'secretary') openScene('secretary');
+    open.ctl.onAction(action, { minutes });
+    return JSON.stringify(secretary.get());
+  },
   // Web search on the server (Tavily); only when the server has a search key.
   search: async (query) => {
     if (!live.search) return { error: 'web search is not set up' };
@@ -218,7 +237,7 @@ function setupSuggestions() {
 // The always-on agent opens flight and training by itself; f and t are a last-resort fallback.
 function setupHotkeys(fallback) {
   window.addEventListener('keydown', (e) => {
-    if (e.target.closest('input, textarea') || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+    if (e.target.closest('input, textarea, select, dialog') || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
     const actions = {
       Escape: () => closeScene(),
       ...(PRESENTER ? {
@@ -274,8 +293,8 @@ function setupMic(fallback) {
   mic.addEventListener('pointerup', stop);
   mic.addEventListener('pointerleave', stop);
   mic.addEventListener('pointercancel', stop);
-  window.addEventListener('keydown', (e) => { if (e.key === ' ' && !e.repeat && !e.target.closest('input')) start(e); });
-  window.addEventListener('keyup', (e) => { if (e.key === ' ' && !e.target.closest('input')) stop(); });
+  window.addEventListener('keydown', (e) => { if (e.key === ' ' && !e.repeat && !e.target.closest('input, textarea, select, button, dialog')) start(e); });
+  window.addEventListener('keyup', (e) => { if (e.key === ' ' && !e.target.closest('input, textarea, select, button, dialog')) stop(); });
 }
 
 function tickClock() {
@@ -294,7 +313,7 @@ function setupGreeting() {
     document.body.classList.add('started');
     window.removeEventListener('pointerdown', first, true);
     window.removeEventListener('keydown', first, true);
-    if (e.target.closest?.('#mic, input, form, .presenter, .suggest, .home-btn') || (e.type === 'keydown' && e.key !== 'Enter')) return; // the user is about to talk or type
+    if (e.target.closest?.('#mic, input, form, .presenter, .suggest, .home-btn, .secretary-shortcuts, dialog') || (e.type === 'keydown' && e.key !== 'Enter')) return; // the user is about to talk or type
     logEvent('greet', { via: 'local' });
     speak({ line: 'greet', text: LINES.greet });
   };
@@ -311,13 +330,19 @@ async function boot() {
   setupMic(fallback);
   setupGreeting();
   logEvent('page_open', { test: TEST });
-  await initVoice();
   document.body.dataset.scene = 'home';
-  await checkLive();
-  connectAgent({ onProactive: (scene) => proactive(scene), onFeed: (text) => live.connected && sendFeed(text) });
+  await Promise.all([initVoice(), checkLive()]);
+  connectAgent({ onProactive: (scene) => proactive(scene), onFeed: (text) => live.connected && sendFeed(text), onIdle: () => {
+    if (document.querySelector('dialog[open]') || document.body.classList.contains('thinking') || document.activeElement?.matches('input, textarea, select')) return false;
+    return secretary.flush();
+  } });
+  setupSecretaryDemo(secretary, {
+    open: (view) => openScene('secretary', { view }),
+    reset: () => { secretary.reset(); interruptAll(); silenceAgent(); closeScene(); fireFeed('reset'); },
+  });
   document.body.dataset.ready = '1';
   // For tests and the presenter console.
-  window.agentOS = { openScene, closeScene, handleUserText, proactive, fireFeed };
+  window.agentOS = { openScene, closeScene, handleUserText, proactive, fireFeed, secretary };
 }
 
 boot();

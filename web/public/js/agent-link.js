@@ -76,10 +76,11 @@ function presenterPanel() {
   });
 }
 
-export function connectAgent({ onProactive, onFeed }) {
+export function connectAgent({ onProactive, onFeed, onIdle }) {
   const scriptOff = TEST || params.get('script') === 'off';
   loop = createAgentLoop({
     feeds: createFeeds(),
+    onIdle,
     script: scriptOff ? [] : DEMO_SCRIPT,
     tickMs: Number(params.get('tick')) || (TEST ? 300 : 3000),
     log: (msg) => console.info(msg),
