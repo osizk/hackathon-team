@@ -188,3 +188,33 @@ body.listening .mic { animation: pulse 1.2s ease-out infinite; }
 .shop-total { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 4px; font-size: 18px; }
 .shop-total b { font-size: 28px; }
 .shop-go { width: 100%; flex: none; }
+
+/* ---------- Flight ---------- */
+.scene-flight { background: linear-gradient(180deg, var(--sky), var(--card) 40%); }
+.flight-hero { display: block; width: 100%; height: 130px; object-fit: cover; border-radius: 20px; }
+.ticket { margin: 10px 0; padding: 14px 16px; border-radius: 18px; background: #fff; box-shadow: 0 6px 20px rgba(40, 60, 90, .08); transition: opacity .5s, transform .5s; }
+.ticket-row { display: flex; justify-content: space-between; align-items: center; }
+.pill { padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: 700; color: #fff; }
+.pill.bad { background: var(--bad); }
+.pill.ok { background: var(--ok); }
+.route { display: flex; justify-content: space-between; align-items: center; margin: 8px 0 4px; font-size: 14px; }
+.route big { display: block; font-size: 26px; font-weight: 800; }
+.route s { color: var(--ink-2); }
+.route em { color: var(--bad); font-style: normal; font-weight: 700; }
+.plane { font-size: 22px; color: var(--ink-2); }
+.ticket small { color: var(--ink-2); }
+.ticket.gone { opacity: .35; transform: scale(.96); }
+.ticket.offer { border: 2px solid var(--ok); }
+.rebooked .ticket.offer { box-shadow: 0 0 0 6px rgba(35, 162, 109, .18); }
+.timeline { list-style: none; margin: 8px 0; padding: 0 0 0 18px; border-left: 3px dashed #c9d6e6; }
+.timeline li { position: relative; padding: 5px 0 5px 10px; font-size: 14px; animation: rise-in .4s ease both; transition: opacity .4s; }
+.timeline li::before { content: ""; position: absolute; left: -26px; top: 9px; width: 13px; height: 13px; border-radius: 50%; background: #9db4cf; }
+.timeline time { display: inline-block; width: 52px; font-weight: 700; }
+.timeline .tl-old::before { background: var(--bad); }
+.timeline .tl-new::before, .timeline .tl-meet::before { background: var(--ok); }
+.timeline .gone { opacity: .35; text-decoration: line-through; }
+.flight-buttons { display: flex; gap: 12px; margin-top: 12px; }
+.flight-done { text-align: center; margin-top: 10px; }
+.flight-done .big-check { margin: 0 auto; width: 84px; height: 84px; font-size: 44px; }
+.flight-done h2 { margin: 10px 0 2px; }
+.flight-done p { margin: 0; color: var(--ink-2); }

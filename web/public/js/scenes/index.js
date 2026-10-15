@@ -2,5 +2,6 @@
 // and returns { onAction(action) } for steps the user speaks while it is open.
 import payment from './payment.js';
 import shopping from './shopping.js';
+import flight from './flight.js';
 
-export const SCENES = { payment, shopping };
+export const SCENES = { payment, shopping, flight };
