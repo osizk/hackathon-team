@@ -6,7 +6,7 @@
 import { createToolHandlers } from './agent-tools.js';
 import { showSubtitle, setLiveVoice } from './voice.js';
 import { logEvent } from './log.js';
-import { apiFetch, goOffline, onOffline } from './api.js';
+import { apiFetch, goOffline, onOffline, micBlocked } from './api.js';
 
 // @elevenlabs/client, pinned. jsDelivr's +esm build is one self-contained ES module.
 const SDK_URL = 'https://cdn.jsdelivr.net/npm/@elevenlabs/client@1.26.0/+esm';
@@ -85,6 +85,7 @@ function setMode(next) {
   const speaking = mode === 'speaking';
   if (speaking) speakingSince = Date.now();
   document.body.classList.toggle('speaking', speaking);
+  if (speaking) document.body.classList.remove('thinking');
   logEvent(speaking ? 'audio_start' : 'audio_end', { source: 'agent', id: 'agent' });
   // The user is holding the mic: the agent must not be heard (it would talk into the mic).
   if (speaking && document.body.classList.contains('listening')) silenceAgent();
@@ -191,6 +192,7 @@ export function startLive(ui) {
       onMessage: ({ source, message }) => {
         if (!message) return;
         if (source === 'ai') {
+          document.body.classList.remove('thinking');
           // v3 voices take audio tags like [happy]; they are for the voice, not the subtitle.
           showSubtitle(stripTags(message), 3200);
           logEvent('agent_reply', { text: stripTags(message) });
@@ -212,6 +214,7 @@ export function startLive(ui) {
     starting = null;
     live.available = false;
     setBrain('keywords');
+    if (['NotAllowedError', 'NotFoundError', 'SecurityError'].includes(err.name)) micBlocked();
     throw err;
   });
   return starting;

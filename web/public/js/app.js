@@ -15,6 +15,7 @@ import { T, TEST, PRESENTER, wait } from './timing.js';
 const $ = (id) => document.getElementById(id);
 const stage = $('stage');
 let open = null; // { name, el, ctl }
+let thinkingTimer = null;
 
 if (TEST) document.body.classList.add('test');
 
@@ -51,6 +52,7 @@ export function openScene(name, data = {}) {
     stage.classList.add('open');
   }
   stage.appendChild(el);
+  document.body.classList.remove('thinking');
   document.body.classList.add('scene-open');
   document.body.dataset.scene = name;
 
@@ -125,6 +127,8 @@ const toolUi = {
   // Web search on the server (Tavily); only when the server has a search key.
   search: async (query) => {
     if (!live.search) return { error: 'web search is not set up' };
+    showSubtitle('กำลังค้นเว็บ… · Searching the web…', 0);
+    document.body.classList.add('thinking');
     const t0 = Date.now();
     const res = await apiFetch('/api/search', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query }) });
     const out = res.ok ? await res.json() : { error: `search ${res.status}` };
@@ -139,7 +143,11 @@ export async function handleUserText(text) {
   if (!text) return;
   // Live agent: it hears the text and answers through its tools.
   if (live.connected) {
-    showSubtitle(`“${text}”`, 1200);
+    showSubtitle(`“${text}”`, 2400);
+    // The mascot thinks until the agent speaks or a page opens (a web search can take a while).
+    document.body.classList.add('thinking');
+    clearTimeout(thinkingTimer);
+    thinkingTimer = setTimeout(() => document.body.classList.remove('thinking'), 30000);
     sendText(text);
     return;
   }
@@ -203,6 +211,7 @@ function setupSuggestions() {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.dataset.kind = s.kind;
+    btn.setAttribute('aria-label', `${s.say} · ${s.en}`);
     btn.append(s.say);
     const en = document.createElement('small');
     en.textContent = s.en;

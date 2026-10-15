@@ -132,3 +132,32 @@ test('live speed: the SDK loads at boot, the signed URL is fetched on the first 
   await expect.poll(() => page.evaluate(() => window.__conv.sent)).toEqual(['this week is hectic']);
   expect(sessions).toBe(1);
 });
+
+test('live: a blocked mic says offline mode in one line; a typed request still opens a page', async ({ page }) => {
+  await page.addInitScript(() => {
+    navigator.mediaDevices.getUserMedia = async () => { throw new DOMException('denied', 'NotAllowedError'); };
+  });
+  await page.route('**/api/health', (r) => r.fulfill({ json: { brain: 'elevenlabs-agent', tts: false } }));
+  await page.route('**/api/agent/session', (r) => r.fulfill({ json: { live: true, signedUrl: 'wss://example.invalid/fake' } }));
+  await page.route('https://cdn.jsdelivr.net/npm/@elevenlabs/client@*/+esm', (r) => r.fulfill({ contentType: 'text/javascript', body: FAKE_SDK }));
+  await page.goto('/?test=1');
+  await expect(page.locator('body')).toHaveAttribute('data-brain', 'agent-ready');
+  await page.locator('#fallbackInput').fill('นิ้วโดนมีดบาด เลือดไหลไม่หยุด');
+  await page.locator('#fallbackInput').press('Enter');
+  await expect(page.locator('[data-testid=notice]')).toBeVisible();
+  await expect(page.locator('[data-testid=notice]')).toContainText('mic');
+  await expect(page.locator('body')).toHaveAttribute('data-brain', 'keywords');
+  await expect(page.locator('body')).toHaveAttribute('data-scene', 'generated');
+  // Home stays reachable below the notice.
+  const [notice, home] = await Promise.all(['#notice', '#homeBtn'].map((s) => page.locator(s).boundingBox()));
+  expect(home.y).toBeGreaterThanOrEqual(notice.y + notice.height);
+});
+
+test('live: the mascot thinks from a typed request until the agent answers', async ({ page }) => {
+  await liveHome(page);
+  await page.locator('#fallbackInput').fill('หางานวิ่ง 10K');
+  await page.locator('#fallbackInput').press('Enter');
+  await expect(page.locator('body')).toHaveClass(/thinking/);
+  await page.evaluate(() => window.__conv.opts.onMessage({ source: 'ai', message: 'ขอหาให้แป๊บนะ' }));
+  await expect(page.locator('body')).not.toHaveClass(/thinking/);
+});
