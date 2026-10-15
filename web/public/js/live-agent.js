@@ -18,7 +18,7 @@ let starting = null;
 let mode = 'listening';
 let modeWaiters = [];
 let silenced = false;
-export const live = { available: false, connected: false };
+export const live = { available: false, connected: false, search: false };
 
 const setBrain = (brain) => { document.body.dataset.brain = brain; };
 export const stripTags = (text) => String(text).replace(/\[[^\]]{1,30}\]\s*/g, '').trim();
@@ -27,6 +27,7 @@ export async function checkLive() {
   try {
     const health = await (await apiFetch('/api/health')).json();
     live.available = health.brain === 'elevenlabs-agent' && !health.offline;
+    live.search = Boolean(health.search);
     if (health.offline) goOffline(health.offline);
   } catch {
     live.available = false;

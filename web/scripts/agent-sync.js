@@ -45,7 +45,9 @@ async function call(method, path, body) {
 
 async function syncTools(known) {
   const ids = {};
-  for (const tool of toolConfigs()) {
+  const search = Boolean(process.env.TAVILY_API_KEY);
+  console.log(`web_search tool: ${search ? 'offered' : 'not offered (no TAVILY_API_KEY)'}`);
+  for (const tool of toolConfigs({ search })) {
     const id = known[tool.name];
     if (id) {
       try {
@@ -66,7 +68,7 @@ async function syncTools(known) {
 
 async function main() {
   if (process.argv.includes('--dry-run')) {
-    console.log(JSON.stringify({ tools: toolConfigs(), agent: agentConfig({ toolIds: ['<tool ids>'] }) }, null, 2));
+    console.log(JSON.stringify({ tools: toolConfigs({ search: Boolean(process.env.TAVILY_API_KEY) }), agent: agentConfig({ toolIds: ['<tool ids>'] }) }, null, 2));
     return;
   }
   if (!process.env.ELEVENLABS_API_KEY) {

@@ -122,6 +122,15 @@ const toolUi = {
   closeScene: () => closeScene(),
   action: (name, extra = {}) => open?.ctl.onAction?.(name, extra, Promise.resolve()),
   nudgeAllow: () => open?.ctl.onAction?.('button-only'),
+  // Web search on the server (Tavily); only when the server has a search key.
+  search: async (query) => {
+    if (!live.search) return { error: 'web search is not set up' };
+    const t0 = Date.now();
+    const res = await apiFetch('/api/search', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query }) });
+    const out = res.ok ? await res.json() : { error: `search ${res.status}` };
+    logEvent('search', { query, results: out.results?.length ?? 0, error: out.error || null, ms: Date.now() - t0 });
+    return out;
+  },
 };
 
 // What the user said (voice or fallback text) -> agent action.

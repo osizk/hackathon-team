@@ -18,12 +18,13 @@
 //   steps     { items: [string] }                 (numbered steps, e.g. first aid)
 //   call      { label, number }                   (big tel: button; only emergency numbers)
 //   image     { prompt, caption? }                (picture made by the server; at most 2 per page)
+//   sources   { items: [{ title, url }] }         (web search sources, shown as links; http(s) only)
 // urgency: 'none' | 'urgent' | 'serious'. Urgent pages (health, injury, emergency) show steps at once:
 // no like question, no proposed changes, never kept. Serious ones always get a 1669 call button.
 
 export const TODO_WORDS = ['todo', 'to-do', 'to do', 'checklist', 'task list', 'รายการที่ต้องทำ', 'สิ่งที่ต้องทำ', 'ทูดู', 'เช็คลิสต์', 'ลิสต์งาน'];
 export const ACCENTS = ['orange', 'green', 'blue', 'purple', 'pink', 'dark'];
-export const BLOCK_TYPES = ['text', 'stat', 'progress', 'checklist', 'list', 'card', 'chart', 'field', 'button', 'divider', 'steps', 'call', 'image'];
+export const BLOCK_TYPES = ['text', 'stat', 'progress', 'checklist', 'list', 'card', 'chart', 'field', 'button', 'divider', 'steps', 'call', 'image', 'sources'];
 export const MAX_IMAGES = 2;
 export const URGENCY = ['none', 'urgent', 'serious'];
 // Thai emergency lines: 1669 medical, 191 police, 199 fire.
@@ -31,6 +32,14 @@ export const CALL_NUMBERS = ['1669', '191', '199'];
 const CALL_1669 = { type: 'call', label: 'Call 1669 (emergency medical)', number: '1669' };
 
 const str = (v, max = 120) => (typeof v === 'string' || typeof v === 'number' ? String(v).slice(0, max) : '');
+const webUrl = (v) => {
+  try {
+    const u = new URL(String(v));
+    return ['http:', 'https:'].includes(u.protocol) ? u.href.slice(0, 400) : '';
+  } catch {
+    return '';
+  }
+};
 const arr = (v, max) => (Array.isArray(v) ? v.slice(0, max) : []);
 
 function cleanBlock(b) {
@@ -60,6 +69,10 @@ function cleanBlock(b) {
     case 'button': return { type: 'button', label: str(b.label, 30) };
     case 'divider': return { type: 'divider' };
     case 'image': return str(b.prompt, 200) ? { type: 'image', prompt: str(b.prompt, 200), caption: str(b.caption, 80) } : null;
+    case 'sources': {
+      const items = arr(b.items, 6).map((i) => ({ title: str(i?.title, 80) || str(i?.url, 80), url: webUrl(i?.url) })).filter((i) => i.url);
+      return items.length ? { type: 'sources', items } : null;
+    }
     case 'steps': return { type: 'steps', items: arr(b.items, 8).map((i) => str(i, 160)).filter(Boolean) };
     case 'call': {
       const number = str(b.number, 8).replace(/\D/g, '');

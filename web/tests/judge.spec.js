@@ -44,3 +44,23 @@ test('typed text works like speech, and the input stays visible inside a scene',
   await page.keyboard.press('Escape');
   await expectHome(page);
 });
+
+test('a generated page from a web search shows its sources as safe links', async ({ page }) => {
+  await home(page);
+  await page.evaluate(async () => {
+    const { validateSpec } = await import('/js/genui.js');
+    const spec = validateSpec({
+      title: '10K runs in Bangkok',
+      blocks: [
+        { type: 'card', title: 'Bangkok 10K', text: '9 Nov' },
+        { type: 'sources', items: [{ title: 'Bangkok 10K', url: 'https://run.example/bkk' }, { title: 'bad', url: 'javascript:alert(1)' }] },
+      ],
+    });
+    window.agentOS.openScene('generated', { spec });
+  });
+  const links = page.locator('[data-testid=g-sources] a');
+  await expect(links).toHaveCount(1);
+  await expect(links.first()).toHaveAttribute('href', 'https://run.example/bkk');
+  await expect(links.first()).toHaveAttribute('target', '_blank');
+  await expect(links.first()).toHaveAttribute('rel', 'noopener noreferrer');
+});
