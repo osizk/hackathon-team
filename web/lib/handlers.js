@@ -10,6 +10,8 @@ import { createImageService } from './images.js';
 import { createRunLog, createConsoleLog } from './runlog.js';
 import { createUsage, LimitError } from './usage.js';
 import { searchReady, tavilySearch } from './search.js';
+import { pageReady, streamPage, PAGE_TIMEOUT_MS } from './page-model.js';
+import { validateSpec } from '../public/js/genui.js';
 
 export class HttpError extends Error {
   // extra: more fields for the JSON error body, e.g. { offline: 'limit' }
@@ -22,8 +24,12 @@ export class HttpError extends Error {
 
 export const errorBody = (err) => ({ error: err.message, ...(err.extra || {}) });
 
-// opts: { env, logDir (local JSONL) | console log, imagesDir, inlineImages (Vercel: no disk cache), usage, accounts }
-export function createHandlers({ env = process.env, logDir = null, imagesDir, inlineImages = false, usage = createUsage({ env }), accounts = createAccounts({ env }) } = {}) {
+// opts: { env, logDir (local JSONL) | console log, imagesDir, inlineImages (Vercel: no disk cache), usage, accounts,
+//         fetchImpl, WebSocketImpl and timeoutMs for the page model (tests) }
+export function createHandlers({
+  env = process.env, logDir = null, imagesDir, inlineImages = false, usage = createUsage({ env }), accounts = createAccounts({ env }),
+  fetchImpl = fetch, WebSocketImpl = globalThis.WebSocket, timeoutMs = PAGE_TIMEOUT_MS,
+} = {}) {
   const runLog = logDir ? createRunLog(logDir) : createConsoleLog();
   const liveReady = () => accounts.ready();
   const ttsReady = () => accounts.ready();
@@ -52,6 +58,7 @@ export function createHandlers({ env = process.env, logDir = null, imagesDir, in
         brain: liveReady() ? 'elevenlabs-agent' : 'keywords',
         tts: ttsReady(),
         search: searchReady(env),
+        page: pageReady(accounts),
         offline: !liveReady() ? null : (await usage.siteFull()) ? 'limit' : (await accounts.allEmpty()) ? 'credit' : null,
       };
     },
@@ -105,6 +112,38 @@ export function createHandlers({ env = process.env, logDir = null, imagesDir, in
       const out = await images.get(prompt, String(scene || 'default'));
       if (out.error && !out.quiet) runLog.server('error', { where: 'image', message: out.error });
       return out;
+    },
+    // A free HTML page for a generated scene, written by the page model from { spec, design }.
+    // -> async iterator of raw HTML text (the browser sanitizes it) or an HttpError before it starts.
+    // The time limit ends the text early; the browser then keeps the block page.
+    async page(headers = {}, { spec, design } = {}, { signal } = {}) {
+      if (!pageReady(accounts)) throw new HttpError(503, 'no ElevenLabs key');
+      const clean = validateSpec(spec);
+      if (!clean) throw new HttpError(400, 'spec has no usable blocks');
+      if (clean.urgency !== 'none') throw new HttpError(400, 'urgent pages are never sent to the page model');
+      await take('calls', headers);
+      const stop = new AbortController();
+      const timer = setTimeout(() => stop.abort(new Error('page timeout')), timeoutMs);
+      signal?.addEventListener('abort', () => stop.abort(signal.reason));
+      try {
+        // The page writer in the first account with credit; out of credit before the first text -> the next account.
+        const request = { spec: clean, design: String(design || '').slice(0, 600) };
+        const text = await accounts.run('page', (a) => streamPage(request, envFor(env, a), { fetchImpl, WebSocketImpl, signal: stop.signal }), 'page');
+        return (async function* () {
+          try {
+            yield* text;
+          } catch (err) {
+            runLog.server('error', { where: 'page', message: stop.signal.aborted ? 'page timeout' : err.message });
+          } finally {
+            clearTimeout(timer);
+          }
+        })();
+      } catch (err) {
+        clearTimeout(timer);
+        const message = stop.signal.aborted ? 'page timeout' : err.message;
+        runLog.server('error', { where: 'page', message });
+        throw new HttpError(stop.signal.aborted ? 504 : 502, message);
+      }
     },
     async log(headers, { events } = {}) {
       return { written: runLog.browser(events) };

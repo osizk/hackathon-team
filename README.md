@@ -69,8 +69,9 @@ Copy [.env.example](.env.example) to `.env` at the repo root and fill in:
 | `TAVILY_API_KEY` | The agent gets a `web_search` tool (Tavily, free tier, basic search). Results go on a generated page with source links | There is no search tool. Nothing else changes |
 | `UPSTASH_REDIS_REST_URL` + `_TOKEN` | The daily limit is shared by every Vercel function instance (free Upstash Redis) | The limit is counted in memory: exact locally, best effort on Vercel |
 
-Then run `cd web && npm run agent:sync` once. It creates the agent from
-code, or updates it, in every account. The server finds it by its name.
+Then run `cd web && npm run agent:sync` once. It creates the agents from
+code (the live agent and the page writer), or updates them, in every
+account. The server finds them by their names.
 Run `npm start` again.
 
 ## How it works
@@ -100,8 +101,14 @@ flowchart LR
   keep a page, or search the web.
 - **Generated pages**: the agent describes a page as JSON built only from
   fixed components (text, checklist, chart, steps, call button, source
-  links, …). The browser draws it with `textContent` only. Code written by
-  the model never runs.
+  links, …). The browser draws it with `textContent` only. With the agent's
+  design brief, a second, text-only ElevenLabs agent, the page writer
+  (`POST /api/page`, from the server), then writes the page as free HTML,
+  which replaces the block page as it is written. Each page spends
+  ElevenLabs credit, from the same accounts as the live agent.
+  Model HTML is sanitized before it is shown (no scripts, `on*` attributes,
+  `javascript:` URLs, forms, iframes or outside loads except pictures), then
+  shown in a shadow root. Scripts written by the model never run.
 - **Server** (`web/server.js` locally, `web/api/` on Vercel): signed URL,
   text to speech, web search, the offline keyword router and the run log.
   Every route that spends credit checks the daily usage limit first.
@@ -215,11 +222,12 @@ npx vercel env add ELEVENLABS_API_KEYS production   # paste every key, comma sep
 npx vercel --prod
 ```
 
-The production build runs `agent-sync --auto`: it finds the agent named
-`Agent OS (U-Hackathon 2026)` in each account, creates it with its tools
-if it is missing, and updates it otherwise. Preview and local builds never
-sync. A failing account is a warning with its key masked, never a failed
-deploy. The server finds each key's agent by the same name.
+The production build runs `agent-sync --auto`: it finds the agents named
+`Agent OS (U-Hackathon 2026)` and `Agent OS page writer` in each account,
+creates each one (the live agent with its tools) if it is missing, and
+updates it otherwise. Preview and local builds never sync. A failing
+account is a warning with its key masked, never a failed deploy. The
+server finds each key's agents by the same names.
 
 On Vercel, the run log goes to the function log: Vercel dashboard > the
 project > Logs. Search for `[runlog]`.
