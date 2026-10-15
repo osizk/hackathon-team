@@ -15,13 +15,30 @@ Copy this block for a new decision:
 - **Who decided:** names, or "whole team".
 ```
 
+## 2026-10-16: Judges try the demo alone
+
+- **Decision:** There is no live pitch. Judges get the pitch deck, the source
+  and a Vercel link, and they try the demo with nobody from the team there.
+  So the passcode is gone, because a passcode in a public README protects
+  nothing. A daily usage limit, for the whole site and per visitor, guards
+  the ElevenLabs and Tavily credit. When the limit is reached or the credit
+  runs out, the page switches to offline mode by itself. The home shows a
+  short hint, suggestion buttons and the text box. Presenter controls need
+  `?presenter=1`. Real Gmail is dropped and the fake data stays, but the
+  live agent can search the web through Tavily (free tier) and show the
+  sources.
+- **Why:** "เราจะไม่ได้เป็นคนใช้ ... จะส่งแค่ source ไปให้": the demo must
+  work for a stranger on the first click.
+- **Who decided:** head (team lead)
+
 ## 2026-10-15: Deploy on Vercel
 
 - **Decision:** The demo also runs on Vercel (issue #19). The always-on loop
   and fake feeds run in the page; the server routes are Vercel functions
-  sharing code with the local server; logs go to Vercel's function log; a
-  passcode in a Vercel env var protects every route that can call
-  ElevenLabs. Local `npm start` keeps working, with no passcode.
+  sharing code with the local server; logs go to Vercel's function log. The
+  first plan was a passcode on every route that can call ElevenLabs. On
+  2026-10-16 a daily usage limit replaced it (see above). Local `npm start`
+  keeps working with no keys.
 - **Why:** "Vercel" - a link the team and judges can open without our
   laptop.
 - **Who decided:** head (team lead)
@@ -68,8 +85,8 @@ Copy this block for a new decision:
   flight) every few seconds and decides when to speak and which scene to
   open. The agent decides when live, simple rules offline. It never speaks
   over an open scene or while anyone talks. A script keeps the demo order
-  fixed; the presenter can fire a feed event from a hidden panel. Hotkeys
-  stay as the last resort.
+  fixed; the presenter can fire a feed event from a panel. The panel and the
+  hotkeys stay as the last resort, behind `?presenter=1` since 2026-10-16.
 - **Why:** "Always-on จริง" - the agent should really watch and act, not
   wait for a presenter key.
 - **Who decided:** head (team lead)

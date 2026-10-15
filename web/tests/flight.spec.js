@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { home, say, expectHome } from './helpers.js';
 
 test('flight hotkey: agent speaks first, spoken yes re-routes, folds home', async ({ page }) => {
-  await home(page);
+  await home(page, { presenter: true });
   await page.keyboard.press('f');
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'flight');
   await expect(page.locator('[data-testid=old-flight] .pill')).toHaveText('Delayed 2 h');
@@ -14,7 +14,7 @@ test('flight hotkey: agent speaks first, spoken yes re-routes, folds home', asyn
 });
 
 test('flight: Yes button works too', async ({ page }) => {
-  await home(page);
+  await home(page, { presenter: true });
   await say(page, 'is my flight ok');
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'flight');
   await page.click('[data-testid=yes]');
@@ -23,7 +23,7 @@ test('flight: Yes button works too', async ({ page }) => {
 });
 
 test('flight: spoken no keeps the old flight', async ({ page }) => {
-  await home(page);
+  await home(page, { presenter: true });
   await page.keyboard.press('f');
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'flight');
   await say(page, 'ไม่เอา');

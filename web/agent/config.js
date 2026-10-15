@@ -6,7 +6,7 @@
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { TOOL_DEFS } from '../public/js/agent-tools.js';
+import { toolDefs } from '../public/js/agent-tools.js';
 import { DEFAULT_VOICE } from '../lib/tts.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -19,8 +19,9 @@ export const AGENT_LANGUAGE = 'th';
 export const FIRST_MESSAGE = '';
 
 // One client tool config per tool, in the ElevenLabs ClientToolConfig shape.
-export function toolConfigs() {
-  return TOOL_DEFS.map((t) => {
+// search: offer web_search (only when TAVILY_API_KEY is set where the agent is synced).
+export function toolConfigs({ search = false } = {}) {
+  return toolDefs({ search }).map((t) => {
     const properties = {};
     const required = [];
     for (const [name, p] of Object.entries(t.params)) {
@@ -35,7 +36,8 @@ export function toolConfigs() {
       response_timeout_secs: 10,
       // Say what you are about to do before a scene grows or changes.
       // A page revise takes the model a few seconds: a short sentence first keeps it feeling quick.
-      ...(['open_scene', 'render_ui', 'revise_ui'].includes(t.name) ? { pre_tool_speech: 'force' } : {}),
+      ...(['open_scene', 'render_ui', 'revise_ui', 'web_search'].includes(t.name) ? { pre_tool_speech: 'force' } : {}),
+      ...(t.name === 'web_search' ? { response_timeout_secs: 20 } : {}),
       parameters: { type: 'object', properties, required },
     };
   });

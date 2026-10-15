@@ -59,7 +59,7 @@ body.test *, body.test *::before, body.test *::after { animation-duration: 40ms 
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 60px 24px 40px;
 }
-.mascot-wrap { width: 280px; height: 280px; display: grid; place-items: center; transition: transform var(--grow) ease; }
+.mascot-wrap { width: 230px; height: 230px; margin-top: -170px; display: grid; place-items: center; transition: transform var(--grow) ease; }
 .mascot { width: 100%; height: 100%; object-fit: contain; animation: breathe 3.6s ease-in-out infinite; filter: drop-shadow(0 18px 18px rgba(120, 90, 60, .18)); }
 @keyframes breathe { 0%, 100% { transform: translateY(0) scale(1, 1); } 50% { transform: translateY(-4px) scale(1.025, .985); } }
 body.speaking .mascot { animation: talk .5s ease-in-out infinite, breathe 3.6s ease-in-out infinite; }
@@ -80,14 +80,14 @@ body.speaking .wave i, body.listening .wave i { animation: bar .9s ease-in-out i
 
 /* One subtitle line. Above the stage, so it also shows while a scene is open. */
 .subtitle {
-  position: absolute; left: 24px; right: 24px; bottom: 210px; z-index: 30;
+  position: absolute; left: 24px; right: 24px; bottom: 268px; z-index: 30;
   margin: 0; min-height: 3em; text-align: center; font-size: 19px; line-height: 1.45; font-weight: 500;
   opacity: 0; transform: translateY(6px); transition: opacity .5s, transform .5s;
   pointer-events: none;
 }
 .subtitle.show { opacity: 1; transform: none; }
 body.scene-open .subtitle {
-  bottom: 18px; left: 16px; right: 16px; min-height: 0;
+  bottom: 100px; left: 16px; right: 16px; min-height: 0;
   padding: 12px 16px 12px 58px; text-align: left; font-size: 15px;
   color: #fff; background: rgba(32, 26, 22, .88); border-radius: 18px;
   backdrop-filter: blur(8px);
@@ -97,18 +97,54 @@ body.scene-open .subtitle::before {
   width: 38px; height: 38px; border-radius: 50%; background: var(--cream) url(/img/mascot.svg) center / 120% no-repeat;
 }
 
+/* ---------- Composer: the text input is always shown, next to the hold-to-talk mic ---------- */
+.composer {
+  position: absolute; left: 14px; right: 14px; bottom: 34px; z-index: 50;
+  display: flex; align-items: center; gap: 8px;
+}
+.composer input {
+  flex: 1; min-width: 0; height: 52px; padding: 0 16px; border-radius: 26px; border: 2px solid #eadcca;
+  font: 16px var(--font); background: #fff; outline: none; user-select: text;
+}
+.composer input:focus { border-color: var(--accent); }
+.composer .send { width: 44px; height: 44px; border-radius: 50%; border: 0; font-size: 18px; color: var(--ink); background: #efe3d0; cursor: pointer; }
 .mic {
-  position: absolute; bottom: 72px; left: 50%; translate: -50% 0;
-  width: 84px; height: 84px; border-radius: 50%; border: 0;
+  flex: none; width: 64px; height: 64px; border-radius: 50%; border: 0;
   color: #fff; background: linear-gradient(145deg, var(--accent-2), var(--accent));
-  box-shadow: 0 12px 28px rgba(255, 122, 89, .45), inset 0 -4px 0 rgba(0, 0, 0, .08);
+  box-shadow: 0 10px 22px rgba(255, 122, 89, .45), inset 0 -4px 0 rgba(0, 0, 0, .08);
   display: grid; place-items: center; cursor: pointer; touch-action: none;
   transition: transform .15s;
 }
 .mic:active, body.listening .mic { transform: scale(1.12); }
 body.listening .mic { animation: pulse 1.2s ease-out infinite; }
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 122, 89, .55); } 100% { box-shadow: 0 0 0 26px rgba(255, 122, 89, 0); } }
-.mic-hint { position: absolute; bottom: 38px; margin: 0; font-size: 13px; color: var(--ink-2); }
+.mic-hint { position: absolute; left: 0; right: 0; bottom: 10px; z-index: 50; margin: 0; text-align: center; font-size: 12px; color: var(--ink-2); }
+body.scene-open .mic-hint { display: none; }
+
+/* ---------- First run for a judge: what this is, and sentences to try ---------- */
+.intro { position: absolute; top: 46px; left: 18px; right: 18px; text-align: center; }
+.intro h1 { margin: 0 0 4px; font-size: 22px; letter-spacing: -.01em; }
+.intro p { margin: 0 0 4px; font-size: 14px; line-height: 1.4; }
+.intro small { display: block; font-size: 12px; line-height: 1.35; color: var(--ink-2); }
+body:has(.notice:not([hidden])) .intro { top: 96px; }
+.suggest {
+  position: absolute; left: 14px; right: 14px; bottom: 112px;
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+}
+.suggest p { width: 100%; margin: 0; text-align: center; font-size: 12px; color: var(--ink-2); }
+.suggest button {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 1px; max-width: 48%;
+  padding: 8px 12px; border-radius: 14px; border: 1px solid #eadcca; background: rgba(255, 255, 255, .85);
+  font: 600 14px var(--font); color: var(--ink); text-align: left; cursor: pointer;
+}
+.suggest button small { font-weight: 400; font-size: 11.5px; color: var(--ink-2); }
+.suggest button:active { transform: scale(.97); }
+.home-btn {
+  position: absolute; top: 42px; right: 14px; z-index: 55; display: none;
+  padding: 8px 14px; border-radius: 99px; border: 0; font: 600 14px var(--font);
+  color: #fff; background: rgba(32, 26, 22, .85); cursor: pointer;
+}
+body.scene-open .home-btn { display: block; }
 
 /* ---------- Stage: scenes grow out of the mascot and fold back ---------- */
 .stage {
@@ -119,7 +155,7 @@ body.listening .mic { animation: pulse 1.2s ease-out infinite; }
   pointer-events: none;
 }
 .stage.open { clip-path: circle(140% at 50% 42%); pointer-events: auto; }
-.scene { position: absolute; inset: 0; overflow-y: auto; padding: 58px 22px 110px; transition: transform .6s cubic-bezier(.7, 0, .2, 1), opacity .6s; }
+.scene { position: absolute; inset: 0; overflow-y: auto; padding: 84px 22px 120px; transition: transform .6s cubic-bezier(.7, 0, .2, 1), opacity .6s; }
 .scene.leaving { transform: translateY(-100%); opacity: .4; }
 .scene.entering { animation: rise .6s cubic-bezier(.7, 0, .2, 1); }
 @keyframes rise { from { transform: translateY(100%); } to { transform: none; } }
@@ -157,13 +193,6 @@ body.listening .mic { animation: pulse 1.2s ease-out infinite; }
 }
 @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
 .scene.denied { filter: grayscale(.6); }
-
-/* ---------- Fallback text input (presenter only) ---------- */
-.fallback { position: absolute; left: 12px; right: 12px; top: 46px; z-index: 50; }
-.fallback input {
-  width: 100%; padding: 12px 14px; border-radius: 14px; border: 2px solid var(--accent);
-  font: 16px var(--font); background: #fff; outline: none;
-}
 
 /* ---------- Shopping ---------- */
 .scene-shopping { background: linear-gradient(180deg, #f2f8ef, var(--card) 45%); }
@@ -322,6 +351,11 @@ body.listening .mic { animation: pulse 1.2s ease-out infinite; }
   animation: pulse-red 1.6s ease-out infinite;
 }
 @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(217, 83, 79, .5); } 100% { box-shadow: 0 0 0 18px rgba(217, 83, 79, 0); } }
+.g-sources { margin: 14px 0; padding: 12px 14px; border-radius: 16px; background: #f4efe8; }
+.g-sources-label { display: block; margin-bottom: 6px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); font-weight: 600; }
+.g-sources ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.g-sources a { color: var(--ink); font-weight: 600; font-size: 14px; user-select: text; }
+.g-sources small { display: block; font-size: 12px; color: var(--ink-2); }
 .g-image { margin: 10px 0; }
 .g-frame { position: relative; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: linear-gradient(100deg, #e9e4dd 30%, #f4f0ea 50%, #e9e4dd 70%) 0 0 / 200% 100%; animation: shimmer 1.4s linear infinite; }
 @keyframes shimmer { to { background-position: -200% 0; } }
@@ -333,12 +367,8 @@ body.listening .mic { animation: pulse 1.2s ease-out infinite; }
 .g-image figcaption { margin-top: 6px; font-size: 13px; opacity: .7; }
 
 /* Until the first tap: browsers block sound before a gesture. */
-.tap-hint { position: absolute; top: 18%; left: 50%; translate: -50% 0; margin: 0; padding: 8px 16px; border-radius: 99px; font-size: 14px; font-weight: 600; color: var(--ink-2); background: rgba(255, 255, 255, .7); animation: breathe 2.4s ease-in-out infinite; }
+.tap-hint { position: absolute; top: 49%; left: 50%; translate: -50% 0; margin: 0; padding: 8px 16px; border-radius: 99px; font-size: 14px; font-weight: 600; color: var(--ink-2); background: rgba(255, 255, 255, .7); animation: breathe 2.4s ease-in-out infinite; }
 body.started .tap-hint { display: none; }
 
-/* Passcode gate (deployed site only) */
-body.gated .home, body.gated .statusbar { visibility: hidden; }
-.gate { position: absolute; inset: 0; z-index: 70; display: grid; place-content: center; gap: 12px; padding: 32px; background: var(--cream); text-align: center; }
-.gate p { margin: 0 0 6px; font-size: 24px; font-weight: 800; }
-.gate input { width: 240px; padding: 14px; border-radius: 14px; border: 2px solid var(--accent); font: 18px var(--font); text-align: center; }
-.gate small { color: var(--bad); }
+/* Offline mode notice: one short line when the daily limit or the voice credit runs out. */
+.notice { position: absolute; top: 40px; left: 12px; right: 12px; z-index: 65; margin: 0; padding: 8px 12px; border-radius: 12px; font-size: 12.5px; line-height: 1.35; text-align: center; color: #fff; background: rgba(20, 16, 14, .82); }

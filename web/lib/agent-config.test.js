@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { agentConfig, toolConfigs } from '../agent/config.js';
 import { setEnvLines, parseToolIds, formatToolIds } from '../scripts/agent-sync.js';
-import { TOOL_DEFS } from '../public/js/agent-tools.js';
+import { TOOL_DEFS, toolDefs } from '../public/js/agent-tools.js';
 
 test('agent config: Claude Sonnet 5.5, Thai, v3 conversational voice, private', () => {
   const c = agentConfig({ toolIds: ['t1'] });
@@ -15,8 +15,11 @@ test('agent config: Claude Sonnet 5.5, Thai, v3 conversational voice, private', 
 });
 
 test('client tools match the browser handlers and are JSON-schema objects', () => {
-  const tools = toolConfigs();
+  const tools = toolConfigs({ search: true });
   assert.deepEqual(tools.map((t) => t.name), TOOL_DEFS.map((t) => t.name));
+  // Without a search key the web_search tool is not offered.
+  assert.deepEqual(toolConfigs().map((t) => t.name), toolDefs().map((t) => t.name));
+  assert.equal(toolConfigs().some((t) => t.name === 'web_search'), false);
   for (const t of tools) {
     assert.equal(t.type, 'client');
     assert.equal(t.expects_response, true);

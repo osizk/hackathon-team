@@ -1,34 +1,147 @@
-# hackathon-team
+# Agent OS
 
-**Agent OS**: talk to an agent, and it answers with real UI instead of text.
-One home screen, no app switching. When the agent does a task, a full-screen
-UI for it grows out of the home. When the task is done, it folds back.
+**Talk to one agent instead of opening apps.** It answers by voice and with a
+full-screen UI that grows out of one home screen. When the task is done, the
+UI folds back. Money moves only when you tap **Allow**.
 
-U-Hackathon 2026 by U-topia. Stage demo: Friday 16 October 2026, about
-3 minutes. Read [AGENTS.md](AGENTS.md) and [docs/workflow.md](docs/workflow.md)
-before you work here.
+U-Hackathon 2026 by U-topia. This README is for the judges first. The team's
+own notes come after the judges' part.
 
-## Run the demo
+## Try it (judges)
+
+**One click:** `<VERCEL URL — added after deploy>`
+
+Open it in Chrome on a laptop or a phone, then:
+
+1. Tap the screen once to turn on sound. The mascot greets you in Thai.
+2. Tap a suggestion, type in the box next to the mic, or hold the mic and
+   speak (Thai or English):
+   - **"สัปดาห์นี้ยุ่งมาก"** ("this week is hectic"): the agent reads a
+     shopping email and builds the list, then shows a payment card. Saying
+     "pay" does not pay. Only a tap on **Allow** pays.
+   - **"ช่วยทำ to-do list ให้หน่อย"** ("make me a to-do list"): there is no
+     ready-made screen for this, so the agent draws a new page. It asks if
+     you like it and changes the page when you answer.
+   - **"นิ้วโดนมีดบาด เลือดไหลไม่หยุด"** ("I cut my finger, it keeps
+     bleeding"): first-aid steps open at once, with a 1669 call button. The
+     agent asks no questions.
+   - **"หางานวิ่ง 10K ในกรุงเทพเดือนหน้าให้หน่อย"** ("find a 10K run in
+     Bangkok next month"): the live agent searches the web and shows real
+     results with their source links.
+3. Tap **⌂ Home** (or press `Esc`) to fold the screen back.
+4. Wait on the home screen for a while. The always-on agent speaks first
+   about new sleep data and a race, and later about a flight delay.
+
+**Offline mode.** The live agent has a daily usage limit. When the limit is
+reached, or the voice credit runs out, the page says so in one line at the
+top. It then keeps working offline: keywords pick the screen, and the voice
+comes from saved clips. All the suggestions above still work, except that
+the web search becomes the ready-made training screen.
+
+### Run it yourself, with no keys
 
 You need Node 20 or newer and Google Chrome.
 
 ```text
-cd web
+git clone https://github.com/phittayanan/hackathon-team.git
+cd hackathon-team/web
 npm install
-npm start          # http://localhost:5173
+npm start          # open http://localhost:5173
 ```
 
-It runs with **no keys**. Keys only make it smarter. Put them in `.env` at
-the repo root (copy [.env.example](.env.example)). `.env` is never committed.
+This is the offline mode described above. Nothing needs a key.
+
+### With keys (the live agent)
+
+Copy [.env.example](.env.example) to `.env` at the repo root and fill in:
 
 | Key | With it | Without it |
 | --- | --- | --- |
-| `ELEVENLABS_API_KEY` + `ELEVENLABS_AGENT_ID` | The brain is a live ElevenLabs agent (Claude Sonnet 5.5, Thai voice and speech to text). It opens scenes, draws new pages and decides when to speak first, only through client tools | Keywords pick the scene, a todo request gets one ready-made page, simple rules decide when to speak first |
-| `ELEVENLABS_API_KEY` with Image & Video (Pro plan) | Generated pages can show pictures: a grey frame first, then the picture fades in. Cached by prompt, at most 3 new pictures per page | The frame stays with a small picture icon |
-| `ELEVENLABS_API_KEY` alone | `npm run voice` saves every fixed line as a Thai MP3; new sentences are spoken live | The saved MP3s in `web/public/voice/` still play; anything else uses the browser voice |
+| `ELEVENLABS_API_KEY` + `ELEVENLABS_AGENT_ID` | The brain is a live ElevenLabs agent (Claude Sonnet 5.5 inside, Thai voice and speech to text). It changes the screen only through client tools: it opens scenes, draws new pages and decides when to speak first | Keywords pick the screen, a to-do request gets one ready-made page, simple rules decide when to speak first |
+| `TAVILY_API_KEY` | The agent gets a `web_search` tool (Tavily, free tier, basic search). Results go on a generated page with source links | There is no search tool. Nothing else changes |
+| `UPSTASH_REDIS_REST_URL` + `_TOKEN` | The daily limit is shared by every Vercel function instance (free Upstash Redis) | The limit is counted in memory: exact locally, best effort on Vercel |
 
-Create or update the live agent from code (needs the key's Agents permission,
-scope `convai_write`). It writes `ELEVENLABS_AGENT_ID` to `.env`:
+Then run `cd web && npm run agent:sync` once. It creates the agent from
+code and writes its id to `.env`. Run `npm start` again.
+
+## How it works
+
+```mermaid
+flowchart LR
+  U([You: voice, text or a suggestion]) --> P
+  subgraph P[Browser: one home screen]
+    S[Scenes: shopping, payment, flight, training]
+    G[Generated page from a fixed component set]
+    L[Always-on loop: fake feeds]
+  end
+  P <-- voice + client tools --> A[ElevenLabs agent<br/>Claude Sonnet 5.5, Thai]
+  P -- signed URL, TTS, search --> F[Server functions<br/>daily limit first]
+  F --> A
+  F --> T[Tavily web search]
+  P -. no keys, limit or credit gone .-> K[Offline: keyword router<br/>saved voice clips]
+```
+
+- **Browser** (`web/public/`): plain HTML and JS. The home screen has a
+  mascot, a voice waveform, one subtitle line, suggestions and the mic with
+  a text box. Each scene is a module that fills its UI from data.
+- **Brain**: an ElevenLabs agent defined as code (`web/agent/`). The browser
+  joins it through a signed URL from the server. The agent can change the
+  screen only through client tools (`web/public/js/agent-tools.js`): open a
+  scene, act on it, draw or revise a generated page, mark a page urgent,
+  keep a page, or search the web.
+- **Generated pages**: the agent describes a page as JSON built only from
+  fixed components (text, checklist, chart, steps, call button, source
+  links, …). The browser draws it with `textContent` only. Code written by
+  the model never runs.
+- **Server** (`web/server.js` locally, `web/api/` on Vercel): signed URL,
+  text to speech, web search, the offline keyword router and the run log.
+  Every route that spends credit checks the daily usage limit first.
+
+## Safety rules
+
+- **Allow is a button, never a word.** No tool can approve a payment. Saying
+  "pay" or "allow" on the payment card only makes the Allow button pulse.
+  The rules check (budget left, cap per payment, allowed shop) runs in code
+  before the card shows.
+- **Urgent requests come first.** Health or injury requests open first-aid
+  steps at once. Serious cases get a 1669 call button. There is no "do you
+  like it?" question, and the page is never saved.
+- **One voice at a time.** A line waits for the one before it. While the
+  live agent is connected, every line is said in its voice. Holding the mic
+  silences the agent first, so it never hears itself.
+- **No keys in the browser.** The ElevenLabs and Tavily keys stay on the
+  server. The browser gets only a short-lived signed URL. Source links are
+  shown only when they are `http(s)`.
+- **A limit on spending.** Daily limits apply to live sessions and to paid
+  calls, for the whole site and per visitor. Then the page switches to
+  offline mode by itself.
+
+## What is fake
+
+No real money, mail or bookings. Everything below is demo data in
+`web/public/js/data.js` and `web/public/js/feeds.js`:
+- the shopping email from "Mom", the FreshMart Online prices, the payment
+  card and the U-Card
+- the delayed TG 102 flight and the faster FD 3433 option
+- the sleep score, the run plan, the Bangkok City 10K sign-up and the
+  runner "Ploy"
+- the feed events that make the agent speak first
+
+The web search results are real. The agent's answers are live when it runs
+with keys. Saved pages stay in your own browser (`localStorage`).
+
+---
+
+## For the team
+
+Read [AGENTS.md](AGENTS.md) and [docs/workflow.md](docs/workflow.md) before
+you work here. Storyboard: [docs/agent-os-storyboard.md](docs/agent-os-storyboard.md).
+
+### Live agent checks
+
+Create or update the live agent from code. The key needs the Agents
+permission (scope `convai_write`). The `web_search` tool is synced only when
+`TAVILY_API_KEY` is set:
 
 ```text
 cd web
@@ -36,110 +149,92 @@ npm run agent:sync -- --dry-run   # show what would be sent
 npm run agent:sync
 ```
 
-Manual smoke test of the live agent (Playwright covers only the no-key path
-and a stubbed agent): run `npm start`, open http://localhost:5173 in Chrome,
-hold the mic and say "สัปดาห์นี้ยุ่งมาก". The page should show
-`data-brain="agent"` on `<body>`, the agent should answer in Thai, and the
-shopping list should open. Then say "จ่ายเลย" on the payment card: it must not
-pay.
+Manual smoke test (Playwright covers only the no-key path and a stubbed
+agent):
+1. Run `npm start` and open http://localhost:5173 in Chrome.
+2. Tap "สัปดาห์นี้ยุ่งมาก". `<body>` should show `data-brain="agent"`, the
+   agent should answer in Thai, and the shopping list should open.
+3. On the payment card, say "จ่ายเลย". It must not pay.
 
-The browser's speech recognition (Thai) needs Chrome on `localhost` or HTTPS.
+The browser's own speech recognition (Thai) needs Chrome on `localhost` or
+HTTPS.
 
-## Demo flow
-
-Storyboard: [docs/agent-os-storyboard.md](docs/agent-os-storyboard.md).
-
-1. Hold the mic and say "this week is hectic". The agent reads a fake email
-   and builds a shopping list item by item.
-2. The list slides up into a payment card. Only a tap on **Allow** pays.
-   Saying "allow" does not.
-3. The agent speaks first: good sleep, and a 10K race. The race form fills
-   itself and submits. Confetti.
-4. The agent speaks first: the flight is delayed 2 hours. Say "yes" and it
-   books a faster flight.
-5. Ask for something it has no scene for, like "help me make a todo list".
-   It draws a page, asks if you like it, and changes it when you answer.
-   Say you like it, and it offers to keep the page for next time.
-
-Steps 3 and 4 come from the always-on agent, a loop that runs in the page. It
-watches fake feeds and speaks when the page is idle. A script fires the feed
-events after the payment and training scenes close, so the order stays the
-same. Open the page with `?script=off` to turn the script off.
-
-## Deploy on Vercel
+### Deploy on Vercel
 
 The app deploys as static files (`web/public/`) plus small functions
 (`web/api/`). The always-on agent runs in the page, so no server process is
 needed. One-time steps for the captain:
 
 1. Log in: `npx vercel login`.
-2. From `web/`, link the project: `cd web && npx vercel link`. The project's
-   root directory is `web` (`vercel.json` is there).
+2. Link the project: `cd web && npx vercel link`. The project's root
+   directory is `web`, where `vercel.json` is.
 3. Set the env vars for Production. Each command asks for the value:
 
    ```text
    npx vercel env add ELEVENLABS_API_KEY production
    npx vercel env add ELEVENLABS_AGENT_ID production
    npx vercel env add ELEVENLABS_TOOL_IDS production
-   npx vercel env add AGENT_OS_PASSCODE production
+   npx vercel env add TAVILY_API_KEY production
    ```
 
-   Use the same values as in `.env`. `AGENT_OS_PASSCODE` is a short code you
-   give the team. The site asks for it once per browser tab. Every route that
-   can call ElevenLabs refuses without it.
+   Use the same values as in `.env`. For an exact daily limit across
+   function instances, add a free Upstash Redis database from the Vercel
+   Marketplace. It sets `KV_REST_API_URL` and `KV_REST_API_TOKEN`. Change
+   the limits with the `USAGE_*` variables in `.env.example`.
 4. Deploy: `npx vercel --prod`.
 
 On Vercel, the run log goes to the function log: Vercel dashboard > the
-project > Logs. Search for `[runlog]`. Locally, the run log stays in
-`web/logs/` as before.
+project > Logs. Search for `[runlog]`.
 
-## Run log: find what to fix
+### Run log: find what to fix
 
-Every server run writes one file, `web/logs/run-<time>.jsonl`. It is local
-only and never committed, because it holds what testers said. Each line has
-a millisecond time and records one of these:
-- what the user said
+Each local server run writes one file, `web/logs/run-<time>.jsonl`. It stays
+local and is never committed, because it holds what testers said. Each line
+records one event with a millisecond time:
+- what the user said, typed or tapped
 - what the agent replied
-- every tool call
-- every voice start and end, with its source (live agent, saved MP3, TTS or
-  browser)
+- every tool call and web search
+- every voice start and end, with its source
 - scenes opening and closing
-- feed events, and the agent's choice to speak or wait
+- feed events
+- limit and offline switches
 - errors
-
-Check the latest run, or a named one:
 
 ```text
 cd web
-npm run log:check
+npm run log:check                                   # the latest run
 npm run log:check -- logs/run-2026-10-15T17-41-34-352Z.jsonl
 ```
 
-It reports how fast the agent replies, and flags these problems:
+It reports reply speed and flags:
 - two voices at once
-- a reply slower than 3 s
-- a scene that opened before the agent said anything
-- a feed event pushed while something was speaking
-- the mic hearing the agent's own words (self-hearing)
+- replies slower than 3 s
+- a scene that opened before the agent spoke
+- a feed event pushed over speech
+- self-hearing
 - errors
 
 To test the live agent end to end in Chrome, run
 `npm run smoke:live -- --wav my-thai-request.wav`. The WAV is played as the
 microphone.
 
-## Presenter controls
+### Presenter controls (team only)
+
+Judges never need these. They work only when the page is opened with
+`?presenter=1`.
 
 | Control | What it does |
 | --- | --- |
-| First tap | The mascot greets once ("แตะหน้าจอเพื่อเริ่ม" shows until then) |
-| Hold `Space` or the mic | Talk. Pressing it first silences the agent, so the mic never hears it |
-| `/` | Hidden text box, if the mic fails |
-| Tap the clock 3 times | Hidden feed panel: sleep synced, flight delayed, new email, reset |
+| `/` | Focus the text box |
+| Tap the clock 3 times | Feed panel: sleep synced, flight delayed, new email, reset |
 | `Shift+T`, `Shift+F`, `Shift+R` | Feed events: sleep synced, flight delayed, reset |
-| `s`, `p`, `t`, `f` | Last resort: open shopping, payment, training or flight directly |
-| `Esc` | Fold back to home |
+| `s`, `p`, `t`, `f`, `h` | Last resort: open shopping, payment, training or flight, or go home |
 
-## Test
+For everyone: hold `Space` or the mic to talk, and `Esc` folds back home.
+Other URL options: `?script=off` stops the scripted feed events, and `?mute=1`
+silences the voice.
+
+### Test
 
 ```text
 cd web
@@ -147,4 +242,4 @@ npm run lint
 npm test           # unit tests + Playwright in Chrome, with no API keys
 ```
 
-Out of scope for the demo: real payments, outside websites, LINE.
+Out of scope: real payments, real Gmail or calendar, LINE.

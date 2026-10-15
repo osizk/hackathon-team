@@ -1,18 +1,18 @@
 import { test, expect } from '@playwright/test';
 import { home, say, expectHome } from './helpers.js';
 
-test('home has mascot, mic and no chat box', async ({ page }) => {
+test('home has mascot, mic, one text input next to it and no chat history', async ({ page }) => {
   await home(page);
   await expect(page.locator('#mascot')).toBeVisible();
   await expect(page.locator('#mic')).toBeVisible();
-  await expect(page.locator('#fallback')).toBeHidden();
-  await expect(page.locator('textarea, input:visible')).toHaveCount(0);
+  await expect(page.locator('#fallbackInput')).toBeVisible();
+  await expect(page.locator('textarea, input:visible')).toHaveCount(1);
   const health = await (await page.request.get('/api/health')).json();
-  expect(health).toEqual({ brain: 'keywords', tts: false, passcode: false, authorized: true });
+  expect(health).toEqual({ brain: 'keywords', tts: false, search: false, offline: null });
 });
 
 test('payment: Allow pays and folds back home', async ({ page }) => {
-  await home(page);
+  await home(page, { presenter: true });
   await say(page, 'pay for it');
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'payment');
   await expect(page.locator('#stage')).toHaveClass(/open/);
@@ -25,7 +25,7 @@ test('payment: Allow pays and folds back home', async ({ page }) => {
 });
 
 test('payment: Deny folds back home without paying', async ({ page }) => {
-  await home(page);
+  await home(page, { presenter: true });
   await say(page, 'checkout');
   await page.click('[data-testid=deny]');
   await expect(page.locator('[data-testid=pay-success]')).toBeHidden();
@@ -33,7 +33,7 @@ test('payment: Deny folds back home without paying', async ({ page }) => {
 });
 
 test('payment: saying allow does not pay', async ({ page }) => {
-  await home(page);
+  await home(page, { presenter: true });
   await page.keyboard.press('p');
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'payment');
   await say(page, 'allow');

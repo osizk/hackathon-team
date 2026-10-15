@@ -6,11 +6,11 @@ import { SCENES } from './scenes/index.js';
 import { savedIndex } from './scenes/generated.js';
 import { initVoice, speak, showSubtitle, interruptAll } from './voice.js';
 import { logEvent } from './log.js';
-import { apiFetch, passcodeGate } from './api.js';
+import { apiFetch } from './api.js';
 import { createListener } from './stt.js';
 import { connectAgent, fireFeed } from './agent-link.js';
 import { live, checkLive, startLive, setMic, sendText, sendContext, sendFeed, silenceAgent, afterAgentSentence } from './live-agent.js';
-import { T, TEST, wait } from './timing.js';
+import { T, TEST, PRESENTER, wait } from './timing.js';
 
 const $ = (id) => document.getElementById(id);
 const stage = $('stage');
@@ -82,6 +82,16 @@ async function sayThenOpen({ line, text }, name, data) {
   await talking;
 }
 
+// Sentences a judge can tap; each is sent as if spoken. One per kind of answer:
+// a prebuilt scene, a generated page, the urgent first-aid case, and a web search (live) or
+// the training scene (offline).
+export const SUGGESTIONS = [
+  { say: 'สัปดาห์นี้ยุ่งมาก', en: 'This week is hectic', kind: 'scene' },
+  { say: 'ช่วยทำ to-do list ให้หน่อย', en: 'Make me a to-do list', kind: 'generated' },
+  { say: 'นิ้วโดนมีดบาด เลือดไหลไม่หยุด', en: 'I cut my finger, it keeps bleeding', kind: 'urgent' },
+  { say: 'หางานวิ่ง 10K ในกรุงเทพเดือนหน้าให้หน่อย', en: 'Find a 10K run in Bangkok next month', kind: 'search' },
+];
+
 // The agent speaks first (always-on feed event offline, or a presenter hotkey).
 async function proactive(name) {
   if (open) closeScene();
@@ -112,6 +122,15 @@ const toolUi = {
   closeScene: () => closeScene(),
   action: (name, extra = {}) => open?.ctl.onAction?.(name, extra, Promise.resolve()),
   nudgeAllow: () => open?.ctl.onAction?.('button-only'),
+  // Web search on the server (Tavily); only when the server has a search key.
+  search: async (query) => {
+    if (!live.search) return { error: 'web search is not set up' };
+    const t0 = Date.now();
+    const res = await apiFetch('/api/search', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query }) });
+    const out = res.ok ? await res.json() : { error: `search ${res.status}` };
+    logEvent('search', { query, results: out.results?.length ?? 0, error: out.error || null, ms: Date.now() - t0 });
+    return out;
+  },
 };
 
 // What the user said (voice or fallback text) -> agent action.
@@ -154,39 +173,63 @@ export async function handleUserText(text) {
   if (res.say) await speak({ line: res.line, text: res.say });
 }
 
-// Hidden fallback input for the presenter: "/" or "`" shows it, Escape hides it.
+// What the user typed or tapped: same path as speech. Starts the live agent first if it can.
+async function submitText(text, via) {
+  text = String(text || '').trim();
+  if (!text) return;
+  logEvent('user_text', { text, via });
+  if (live.available && !live.connected) await startLive(toolUi).catch(() => {});
+  handleUserText(text);
+}
+
+// The text input, always shown next to the mic (for anyone who cannot or would rather not talk).
 function setupFallback() {
   const form = $('fallback');
   const input = $('fallbackInput');
-  const show = () => { form.hidden = false; input.focus(); };
-  const hide = () => { form.hidden = true; input.blur(); };
-  form.addEventListener('submit', async (e) => {
+  form.addEventListener('submit', (e) => {
     e.preventDefault();
     const text = input.value;
     input.value = '';
-    hide();
-    logEvent('user_text', { text });
-    if (live.available && !live.connected) await startLive(toolUi).catch(() => {});
-    handleUserText(text);
+    input.blur();
+    submitText(text, 'typed');
   });
-  input.addEventListener('keydown', (e) => { if (e.key === 'Escape') hide(); });
-  return { show };
+  input.addEventListener('keydown', (e) => { if (e.key === 'Escape') input.blur(); });
+  return { show: () => input.focus() };
 }
 
-// Presenter hotkeys (not while typing): / text input, f flight, t training, s shopping, p payment, h or Escape home.
-// The always-on agent normally opens flight and training by itself; f and t are a last-resort fallback.
+function setupSuggestions() {
+  const nav = $('suggest');
+  for (const s of SUGGESTIONS) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.dataset.kind = s.kind;
+    btn.append(s.say);
+    const en = document.createElement('small');
+    en.textContent = s.en;
+    btn.append(en);
+    btn.addEventListener('click', () => { logEvent('suggestion', { kind: s.kind }); submitText(s.say, 'suggestion'); });
+    nav.append(btn);
+  }
+  $('homeBtn').addEventListener('click', () => closeScene());
+}
+
+// Escape always folds back home. Presenter hotkeys only with ?presenter=1 (not while typing):
+// / text input, f flight, t training, s shopping, p payment, h home.
+// The always-on agent opens flight and training by itself; f and t are a last-resort fallback.
 function setupHotkeys(fallback) {
   window.addEventListener('keydown', (e) => {
     if (e.target.closest('input, textarea') || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
     const actions = {
-      '/': () => fallback.show(),
-      '`': () => fallback.show(),
-      f: () => proactive('flight'),
-      t: () => proactive('training'),
-      s: () => proactive('shopping'),
-      p: () => proactive('payment'),
-      h: () => closeScene(),
       Escape: () => closeScene(),
+      ...(PRESENTER ? {
+        '/': () => fallback.show(),
+        '`': () => fallback.show(),
+        f: () => proactive('flight'),
+        t: () => proactive('training'),
+        s: () => proactive('shopping'),
+        p: () => proactive('payment'),
+        h: () => closeScene(),
+      } : {}),
     };
     const run = actions[e.key];
     if (run) { e.preventDefault(); run(); }
@@ -251,7 +294,7 @@ function setupGreeting() {
     document.body.classList.add('started');
     window.removeEventListener('pointerdown', first, true);
     window.removeEventListener('keydown', first, true);
-    if (e.target.closest?.('#mic, input, form, .presenter') || (e.type === 'keydown' && e.key !== 'Enter')) return; // the user is about to talk or type
+    if (e.target.closest?.('#mic, input, form, .presenter, .suggest, .home-btn') || (e.type === 'keydown' && e.key !== 'Enter')) return; // the user is about to talk or type
     logEvent('greet', { via: 'local' });
     speak({ line: 'greet', text: LINES.greet });
   };
@@ -260,10 +303,10 @@ function setupGreeting() {
 }
 
 async function boot() {
-  await passcodeGate();
   tickClock();
   setInterval(tickClock, 15000);
   const fallback = setupFallback();
+  setupSuggestions();
   setupHotkeys(fallback);
   setupMic(fallback);
   setupGreeting();

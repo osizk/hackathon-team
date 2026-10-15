@@ -147,6 +147,24 @@ function drawBlock(b, spec, onChange, onButton) {
       b.items.forEach((t) => ol.append(h('li', null, t)));
       return ol;
     }
+    case 'sources': {
+      // Web search sources: real links (http/https only, checked in validateSpec).
+      const box = h('div', 'g-sources');
+      box.dataset.testid = 'g-sources';
+      box.append(h('span', 'g-sources-label', 'Sources'));
+      const ul = h('ul');
+      b.items.forEach((i) => {
+        const a = h('a', null, i.title);
+        a.href = i.url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        const li = h('li');
+        li.append(a, h('small', null, new URL(i.url).hostname.replace(/^www\./, '')));
+        ul.append(li);
+      });
+      box.append(ul);
+      return box;
+    }
     case 'call': {
       // Only emergency numbers reach here (checked on the server); digits only.
       const a = h('a', 'g-call', `📞 ${b.label}`);

@@ -4,7 +4,7 @@ import { home, expectHome } from './helpers.js';
 const fire = (page, event) => page.evaluate((e) => window.agentOS.fireFeed(e), event);
 
 test('a flight feed event makes the agent speak first and open the flight card, no hotkey', async ({ page }) => {
-  await home(page);
+  await home(page, { presenter: true });
   await expect(page.locator('body')).toHaveAttribute('data-agent', 'on');
   await fire(page, 'flight-delayed');
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'flight', { timeout: 5000 });
@@ -17,14 +17,14 @@ test('a flight feed event makes the agent speak first and open the flight card, 
 });
 
 test('sleep data opens training by itself', async ({ page }) => {
-  await home(page);
+  await home(page, { presenter: true });
   await fire(page, 'sleep-synced');
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'training', { timeout: 5000 });
   await expectHome(page);
 });
 
 test('the agent waits while a scene is open, then speaks when home', async ({ page }) => {
-  await home(page);
+  await home(page, { presenter: true });
   await page.keyboard.press('p');
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'payment');
   await fire(page, 'flight-delayed');
@@ -35,14 +35,14 @@ test('the agent waits while a scene is open, then speaks when home', async ({ pa
 });
 
 test('a new shopping email alone does not interrupt', async ({ page }) => {
-  await home(page);
+  await home(page, { presenter: true });
   await fire(page, 'email-shopping');
   await page.waitForTimeout(1200);
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'home');
 });
 
 test('hidden presenter control: tap the clock 3 times, fire flight delayed', async ({ page }) => {
-  await home(page);
+  await home(page, { presenter: true });
   await expect(page.locator('[data-testid=presenter]')).toBeHidden();
   await page.click('#clock', { clickCount: 3 });
   await expect(page.locator('[data-testid=presenter]')).toBeVisible();

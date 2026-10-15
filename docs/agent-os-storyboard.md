@@ -18,7 +18,7 @@ home. No other app ever opens.
 - A mascot in the middle, with a voice waveform while it talks.
 - One subtitle line that fades by itself.
 - A hold-to-talk mic button.
-- No chat history, no stacked bubbles, no text box.
+- No chat history, no stacked bubbles. One text box sits next to the mic for anyone who would rather type.
 - The user talks. The agent answers by voice (ElevenLabs Thai TTS) and by
   building UI. User speech goes through speech to text (Thai is "Good" tier,
   10-20% word error).
@@ -60,16 +60,18 @@ stop it.
 After scene 4, ask "help me make a todo list" to show a generated page and
 the like-and-adjust loop (see [decisions](decisions.md)).
 
-Presenter controls (keys work when not typing):
+Controls. The text box and the suggestion buttons are always shown. The
+presenter rows work only with `?presenter=1`, and keys work only when you are
+not typing:
 
 | Control | What it does |
 | --- | --- |
 | hold `Space` or the mic | Talk (browser speech recognition, th-TH) |
-| `/` | Show the hidden text input, if the mic fails |
-| tap the clock 3 times | Hidden feed panel: sleep synced, flight delayed, new email, reset |
+| `/` | Focus the text box (presenter) |
+| tap the clock 3 times | Feed panel: sleep synced, flight delayed, new email, reset (presenter) |
 | `Shift+T`, `Shift+F`, `Shift+R` | Feed events: sleep synced, flight delayed, reset |
-| `s`, `p`, `t`, `f` | Last resort: open shopping, payment, training or flight directly |
-| `Esc` or `h` | Fold back to home |
+| `s`, `p`, `t`, `f` | Last resort: open shopping, payment, training or flight directly (presenter) |
+| `Esc`, `h` (presenter) or the ⌂ Home button | Fold back to home |
 
 Voice order: cached MP3 in `web/public/voice/`, then live ElevenLabs, then the
 browser voice. With the live ElevenLabs agent configured, it picks the scene; without

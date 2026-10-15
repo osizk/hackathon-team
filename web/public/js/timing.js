@@ -4,3 +4,5 @@ export const TEST = params.has('test');
 export const MUTED = TEST || params.has('mute');
 export const T = (ms) => (TEST ? Math.round(ms / 20) : ms);
 export const wait = (ms) => new Promise((r) => setTimeout(r, T(ms)));
+// ?presenter=1 turns on the team's presenter controls (hotkeys, clock panel). Judges never need them.
+export const PRESENTER = params.has('presenter');

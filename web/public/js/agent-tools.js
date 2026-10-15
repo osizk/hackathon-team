@@ -50,11 +50,28 @@ export const TOOL_DEFS = [
     params: { level: { type: 'string', enum: ['urgent', 'serious'], description: 'How urgent', required: true } },
   },
   {
+    name: 'web_search',
+    // Offered only when the server has a search key (TAVILY_API_KEY); see toolDefs().
+    needs: 'search',
+    description:
+      'Search the web for real, current information (events, places, prices, opening hours, news). Returns a short answer and ' +
+      'sources. Then show it with render_ui; the page lists the sources as links by itself. Search once per request.',
+    params: { query: { type: 'string', description: 'What to search for, in a few words (English or Thai)', required: true } },
+  },
+  {
     name: 'keep_scene',
     description: 'The user liked the open generated page and said yes to keeping it: save it so it opens at once next time.',
     params: {},
   },
 ];
+
+// The tools to offer: web_search only when search is available.
+export const toolDefs = ({ search = false } = {}) => TOOL_DEFS.filter((t) => t.needs !== 'search' || search);
+
+const withSources = (spec, sources) =>
+  !sources?.length || spec.blocks.some((b) => b.type === 'sources')
+    ? spec
+    : validateSpec({ ...spec, blocks: [...spec.blocks, { type: 'sources', items: sources }] }) || spec;
 
 const parseJson = (text) => {
   if (text == null || text === '') return {};
@@ -66,9 +83,12 @@ const parseJson = (text) => {
   }
 };
 
-// ui: { current(): { name, ctl } | null, openScene(name, data), closeScene(), action(name, extra), nudgeAllow() }
+// ui: { current(): { name, ctl } | null, openScene(name, data), closeScene(), action(name, extra), nudgeAllow(),
+//       search(query) -> { answer, results: [{ title, url, content }] } | { error } }
 export function createToolHandlers(ui) {
   const generated = () => (ui.current()?.name === 'generated' ? ui.current() : null);
+  // Sources of the last web search: the next page drawn shows them as links.
+  let sources = [];
 
   return {
     // Returns after the scene has grown (the agent's sentence first), so a next tool sees it.
@@ -97,8 +117,10 @@ export function createToolHandlers(ui) {
     },
 
     async render_ui({ spec_json } = {}) {
-      const spec = validateSpec(parseJson(spec_json));
+      let spec = validateSpec(parseJson(spec_json));
       if (!spec) return 'error: spec has no usable blocks; use only the fixed components';
+      spec = withSources(spec, sources);
+      sources = [];
       await ui.openScene('generated', { spec });
       return spec.urgency === 'none' ? 'page shown; now ask if the user likes it and propose one or two changes' : 'first-aid page shown';
     },
@@ -106,8 +128,10 @@ export function createToolHandlers(ui) {
     revise_ui({ spec_json } = {}) {
       const open = generated();
       if (!open) return 'error: no generated page is open';
-      const spec = validateSpec(parseJson(spec_json));
+      let spec = validateSpec(parseJson(spec_json));
       if (!spec) return 'error: spec has no usable blocks';
+      // A revise keeps the sources of the page it changes.
+      spec = withSources(spec, open.ctl.state?.().spec?.blocks.find((b) => b.type === 'sources')?.items);
       ui.action('revise', { spec });
       return 'page redrawn';
     },
@@ -119,6 +143,16 @@ export function createToolHandlers(ui) {
       const spec = validateSpec({ ...current, urgency: level === 'serious' ? 'serious' : 'urgent' });
       ui.action('urgent', { spec });
       return `marked ${spec.urgency}`;
+    },
+
+    async web_search({ query } = {}) {
+      if (!ui.search) return 'web search is not available; answer from what you know and say so';
+      const out = await ui.search(String(query || ''));
+      if (!out || out.error) return `web search failed (${out?.error || 'no answer'}); answer from what you know and say so`;
+      sources = out.results.map(({ title, url }) => ({ title, url }));
+      if (!out.results.length) return 'no results; answer from what you know and say so';
+      const lines = out.results.map((r, i) => `${i + 1}. ${r.title}: ${r.content}`);
+      return [`answer: ${out.answer || '(none)'}`, ...lines, 'Now call render_ui with this information; the page shows the sources by itself.'].join('\n').slice(0, 3000);
     },
 
     keep_scene() {

@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { home, say, expectHome } from './helpers.js';
 
 test('training hotkey: form fills itself, submits, confetti, folds home', async ({ page }) => {
-  await home(page);
+  await home(page, { presenter: true });
   await page.keyboard.press('t');
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'training');
   await expect(page.locator('[data-testid=sleep-score]')).toHaveText('86');
@@ -14,7 +14,7 @@ test('training hotkey: form fills itself, submits, confetti, folds home', async 
 });
 
 test('fallback text "training" routes to the training scene', async ({ page }) => {
-  await home(page);
+  await home(page, { presenter: true });
   await say(page, 'how is my training');
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'training');
   await page.keyboard.press('Escape');
