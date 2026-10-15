@@ -25,7 +25,7 @@ About 3 minutes on stage. Storyboard:
 [agent-os-storyboard.md](agent-os-storyboard.md).
 
 1. Agent home: a mascot, a voice waveform, one fading subtitle line, a
-   hold-to-talk mic. No chat history, no text box.
+   hold-to-talk mic with a text box next to it. No chat history.
 2. "This week is hectic": the agent reads a fake email and builds a shopping
    list item by item.
 3. The list becomes a payment card. Money moves only on a tap of Allow.

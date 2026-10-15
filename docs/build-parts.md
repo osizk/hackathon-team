@@ -65,14 +65,14 @@ A loop in the page watches fake feeds (email, calendar, sleep and runs,
 flight) every few seconds. It decides by itself when to speak and which scene
 to open. It never speaks over an open
 scene or while anyone talks. A script fires the feed events in a fixed order;
-the presenter can fire one from a hidden panel.
+the presenter can fire one from a panel (only with `?presenter=1`).
 
 ### Part 8: Ready for Vercel
 
 The server routes are Vercel functions in `web/api/`, sharing code with the
 local server (`web/lib/handlers.js`). The always-on loop runs in the page, so
-no long-running server is needed. A passcode protects the deployed site. The
-deploy steps are in the README.
+no long-running server is needed. A daily usage limit protects the ElevenLabs
+and Tavily credit on the deployed site. The deploy steps are in the README.
 
 ### Part 7: Docs
 

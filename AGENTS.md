@@ -31,7 +31,7 @@ Decided 2026-10-15. Why: [docs/decisions.md](docs/decisions.md).
 ## App flow
 
 1. The agent home: a mascot, a voice waveform, one fading subtitle line and a
-   hold-to-talk mic. No chat history and no text box.
+   hold-to-talk mic with a text box next to it. No chat history.
 2. The user speaks, or the agent speaks first (flight delay, training).
 3. The agent picks a prebuilt scene and fills it with data, then the scene
    grows full screen out of the home.
