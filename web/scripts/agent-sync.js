@@ -1,16 +1,29 @@
 // Create or update the ElevenLabs agent from agent/config.js, and write its id to .env.
 // Usage: npm run agent:sync              (needs ELEVENLABS_API_KEY with the Agents write permission)
 //        npm run agent:sync -- --dry-run (prints what it would send; no API call)
+//        npm run agent:sync -- --env ../.env.test-agent
+//            A test agent of your own: ELEVENLABS_AGENT_ID and ELEVENLABS_TOOL_IDS are read from and
+//            written to that file (empty or missing there = create a new agent and new tools), so
+//            the shared agent in .env, which judges use, is never touched. The key still comes from .env.
+//            Run the app on it: ELEVENLABS_AGENT_ID=<test id> npm start
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadEnv } from '../lib/env.js';
-import { agentConfig, toolConfigs } from '../agent/config.js';
+import { agentConfig, toolConfigs, AGENT_NAME } from '../agent/config.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const ENV_PATH = join(here, '..', '..', '.env');
+const envArg = process.argv.indexOf('--env');
+const TEST_ENV = envArg > 0 ? resolve(process.argv[envArg + 1]) : null;
+const ENV_PATH = TEST_ENV || join(here, '..', '..', '.env');
 const API = 'https://api.elevenlabs.io/v1/convai';
-loadEnv(ENV_PATH);
+if (TEST_ENV) {
+  // The test file's ids win; empty ones must not fall back to the shared ids in .env.
+  for (const key of ['ELEVENLABS_AGENT_ID', 'ELEVENLABS_TOOL_IDS']) process.env[key] = '';
+  const text = existsSync(TEST_ENV) ? readFileSync(TEST_ENV, 'utf8') : '';
+  for (const m of text.matchAll(/^(ELEVENLABS_AGENT_ID|ELEVENLABS_TOOL_IDS)=(.*)$/gm)) process.env[m[1]] = m[2].trim();
+}
+loadEnv(join(here, '..', '..', '.env'));
 
 // Tool ids live in .env as name:id,name:id (shell-safe, unlike JSON).
 export const parseToolIds = (text = '') =>
@@ -77,7 +90,8 @@ async function main() {
   }
   const known = parseToolIds(process.env.ELEVENLABS_TOOL_IDS);
   const toolIds = await syncTools(known);
-  const body = agentConfig({ toolIds: Object.values(toolIds), voiceId: process.env.ELEVENLABS_VOICE_ID || undefined });
+  const name = TEST_ENV ? `${AGENT_NAME} [test: ${basename(TEST_ENV)}]` : AGENT_NAME;
+  const body = agentConfig({ toolIds: Object.values(toolIds), voiceId: process.env.ELEVENLABS_VOICE_ID || undefined, name });
 
   let agentId = process.env.ELEVENLABS_AGENT_ID;
   if (agentId) {
@@ -89,7 +103,7 @@ async function main() {
   }
   const current = existsSync(ENV_PATH) ? readFileSync(ENV_PATH, 'utf8') : '';
   writeFileSync(ENV_PATH, setEnvLines(current, { ELEVENLABS_AGENT_ID: agentId, ELEVENLABS_TOOL_IDS: formatToolIds(toolIds) }));
-  console.log('wrote ELEVENLABS_AGENT_ID and ELEVENLABS_TOOL_IDS to .env');
+  console.log(`wrote ELEVENLABS_AGENT_ID and ELEVENLABS_TOOL_IDS to ${TEST_ENV ? basename(TEST_ENV) : '.env'}`);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
