@@ -51,6 +51,8 @@ export function agentConfig({ toolIds = [], voiceId = DEFAULT_VOICE } = {}) {
       agent: {
         first_message: FIRST_MESSAGE,
         language: AGENT_LANGUAGE,
+        // The page sends {{today}} at session start; the placeholder only covers a session without it.
+        dynamic_variables: { dynamic_variable_placeholders: { today: 'unknown (ask the user if a date matters)' } },
         prompt: {
           prompt: readFileSync(join(here, 'prompt.md'), 'utf8'),
           llm: AGENT_LLM,
