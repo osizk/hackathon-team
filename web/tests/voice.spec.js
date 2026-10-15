@@ -6,7 +6,7 @@ const runlog = (page) => page.evaluate(() => window.__runlog);
 const first = (events, pred) => events.find(pred);
 
 test('speak first, then act: the intro starts before the scene grows; one voice at a time', async ({ page }) => {
-  await home(page);
+  await home(page, { presenter: true });
   await say(page, 'this week is hectic');
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'payment', { timeout: 10_000 });
   await page.click('[data-testid=allow]');
@@ -20,7 +20,7 @@ test('speak first, then act: the intro starts before the scene grows; one voice 
 });
 
 test('speak first offline for every scene: proactive, generated and urgent', async ({ page }) => {
-  await home(page);
+  await home(page, { presenter: true });
   await page.keyboard.press('f');
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'flight');
   await page.keyboard.press('Escape');
@@ -42,7 +42,7 @@ test('speak first offline for every scene: proactive, generated and urgent', asy
 });
 
 test('greeting: the first tap greets once, never again; the tap hint goes away', async ({ page }) => {
-  await home(page);
+  await home(page, { presenter: true });
   await expect(page.locator('[data-testid=tap-hint]')).toBeVisible();
   await page.mouse.click(200, 200);
   await expect(page.locator('[data-testid=tap-hint]')).toBeHidden();
@@ -55,7 +55,7 @@ test('greeting: the first tap greets once, never again; the tap hint goes away',
 });
 
 test('pressing the mic stops the agent voice at once', async ({ page }) => {
-  await home(page);
+  await home(page, { presenter: true });
   await page.keyboard.press('f'); // the agent starts its flight line
   await expect(page.locator('body')).toHaveClass(/speaking/);
   await page.locator('#mic').dispatchEvent('pointerdown');

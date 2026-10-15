@@ -78,7 +78,6 @@ test('live: render, revise, mark urgent and keep generated pages', async ({ page
 
 test('live: typed text goes to the agent, and feed changes arrive as contextual updates', async ({ page }) => {
   await liveHome(page);
-  await page.keyboard.press('/');
   await page.fill('#fallbackInput', 'this week is hectic');
   await page.keyboard.press('Enter');
   await expect.poll(() => page.evaluate(() => window.__conv.sent)).toEqual(['this week is hectic']);

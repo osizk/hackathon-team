@@ -2,12 +2,12 @@
 // - Watches what the page is doing (scene open, agent talking, user talking) for the never-speak-over guard.
 // - Offline: when the rules decide to speak first, opens that scene if the page is idle.
 // - Live agent: feed changes go into the conversation; the agent decides whether to speak.
-// - Hidden presenter control: tap the clock 3 times (or Shift+T / Shift+F / Shift+R) to fire a feed event.
+// - Presenter control, only with ?presenter=1: tap the clock 3 times (or Shift+T / Shift+F / Shift+R) to fire a feed event.
 // URL options: ?script=off stops the demo script; ?tick=<ms> changes how often it looks (default 3000).
 import { createFeeds, DEMO_SCRIPT } from './feeds.js';
 import { createAgentLoop } from './agent-loop.js';
 import { logEvent } from './log.js';
-import { TEST } from './timing.js';
+import { TEST, PRESENTER } from './timing.js';
 
 const params = new URLSearchParams(location.search);
 let loop = null;
@@ -95,7 +95,7 @@ export function connectAgent({ onProactive, onFeed }) {
     },
   });
   watchPresence();
-  presenterPanel();
+  if (PRESENTER) presenterPanel();
   document.body.dataset.agent = 'on';
   return loop;
 }

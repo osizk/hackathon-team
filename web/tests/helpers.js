@@ -1,13 +1,13 @@
 import { expect } from '@playwright/test';
 
-export async function home(page) {
-  await page.goto('/?test=1');
+// presenter: true turns on the team's hotkeys and clock panel (?presenter=1); judges never see them.
+export async function home(page, { presenter = false } = {}) {
+  await page.goto(presenter ? '/?test=1&presenter=1' : '/?test=1');
   await expect(page.locator('body')).toHaveAttribute('data-ready', '1');
 }
 
-// Type into the hidden fallback input, as a presenter would if the mic failed.
+// Type into the text input next to the mic, as a judge would.
 export async function say(page, text) {
-  await page.keyboard.press('/');
   await expect(page.locator('#fallbackInput')).toBeVisible();
   await page.fill('#fallbackInput', text);
   await page.keyboard.press('Enter');
