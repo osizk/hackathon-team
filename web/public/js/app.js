@@ -3,7 +3,7 @@
 import { LINES } from './lines.js';
 import { SCENE_DEFAULTS } from './data.js';
 import { SCENES } from './scenes/index.js';
-import { savedIndex } from './scenes/generated.js';
+import { savedIndex, loadSaved } from './scenes/generated.js';
 import { initVoice, speak, showSubtitle, interruptAll } from './voice.js';
 import { logEvent } from './log.js';
 import { apiFetch } from './api.js';
@@ -122,6 +122,9 @@ const toolUi = {
   closeScene: () => closeScene(),
   action: (name, extra = {}) => open?.ctl.onAction?.(name, extra, Promise.resolve()),
   nudgeAllow: () => open?.ctl.onAction?.('button-only'),
+  // Kept pages, so the live agent can reopen one by its reference (render_ui {"saved": kind}).
+  saved: () => loadSaved(),
+  tellAgent: (text) => text && live.connected && sendContext(text),
   // Web search on the server (Tavily); only when the server has a search key.
   search: async (query) => {
     if (!live.search) return { error: 'web search is not set up' };

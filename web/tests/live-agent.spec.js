@@ -86,6 +86,30 @@ test('live: render, revise, mark urgent and keep generated pages', async ({ page
   expect(await tool(page, 'keep_scene', {})).toMatch(/^refused/);
 });
 
+test('live: kept pages are told to the agent at session start and when kept, and reopen by reference', async ({ page }) => {
+  await liveHome(page);
+  expect(await page.evaluate(() => window.__conv.context.filter((t) => t.includes('kept earlier')))).toEqual([]);
+  const spec = { kind: 'packing', name: 'Packing list', match: ['packing', 'pack'], title: 'Packing list', blocks: [{ type: 'checklist', items: [{ text: 'Passport', done: true }] }] };
+  await tool(page, 'render_ui', { spec_json: JSON.stringify(spec) });
+  expect(await tool(page, 'keep_scene', {})).toMatch(/^kept/);
+  await expect.poll(() => page.evaluate(() => window.__conv.context.join(' '))).toContain('"Packing list" (reference: {"saved":"packing"}; words: packing, packing list, pack)');
+  await expectHome(page);
+
+  // A new visit: the session starts with the kept pages in its context.
+  await page.reload();
+  await expect(page.locator('body')).toHaveAttribute('data-brain', 'agent-ready');
+  await page.locator('#mic').dispatchEvent('pointerdown');
+  await expect(page.locator('body')).toHaveAttribute('data-brain', 'agent');
+  await page.locator('#mic').dispatchEvent('pointerup');
+  await expect.poll(() => page.evaluate(() => window.__conv.context[0] || '')).toMatch(/^\[screen\] Pages the user kept earlier: "Packing list"/);
+
+  // "Open my packing list": the agent calls render_ui with the reference; the kept page opens as saved.
+  expect(await tool(page, 'render_ui', { spec_json: '{"saved":"packing"}' })).toMatch(/^reopened the kept page "Packing list"/);
+  await expect(page.locator('[data-testid=g-badge]')).toHaveText('Saved scene');
+  await expect(page.locator('[data-testid=g-title]')).toHaveText('Packing list');
+  expect(await tool(page, 'render_ui', { spec_json: '{"saved":"nope"}' })).toMatch(/^error/);
+});
+
 test('live: typed text goes to the agent, and feed changes arrive as contextual updates', async ({ page }) => {
   await liveHome(page);
   await page.fill('#fallbackInput', 'this week is hectic');
