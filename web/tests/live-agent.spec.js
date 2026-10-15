@@ -151,6 +151,8 @@ test('live: typed text goes to the agent, and feed changes arrive as contextual 
   // The offline router must not open anything by itself in live mode.
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'home');
 
+  // Finish the fake reply before checking feeds: thinking deliberately blocks interruptions.
+  await page.evaluate(() => window.__conv.opts.onMessage({ source: 'ai', message: 'Ready.' }));
   await page.evaluate(() => window.agentOS.fireFeed('flight-delayed'));
   await expect.poll(() => page.evaluate(() => window.__conv.context.join(' ')), { timeout: 5000 }).toContain('delayed 120 minutes');
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'home');
