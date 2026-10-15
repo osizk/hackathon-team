@@ -1,0 +1,15 @@
+{
+  "greet": "42dbc533051e7600",
+  "unsure": "4ec06db252ea9060",
+  "shop_intro": "f8a706754098425d",
+  "shop_found": "1a3551c19d7f6895",
+  "pay_ask": "d17fb96c3a4a9cf7",
+  "pay_button_only": "a8735c5557af4688",
+  "pay_done": "9158c92c6253de3c",
+  "pay_denied": "ba5040ceecce4946",
+  "train_intro": "cde7118a03492963",
+  "train_done": "1d5f11a27aed8002",
+  "flight_intro": "7edcd3778089aa61",
+  "flight_done": "31086c631663c50c",
+  "flight_keep": "b00270b415d04fea"
+}

@@ -1,0 +1,15 @@
+[
+  "greet",
+  "unsure",
+  "shop_intro",
+  "shop_found",
+  "pay_ask",
+  "pay_button_only",
+  "pay_done",
+  "pay_denied",
+  "train_intro",
+  "train_done",
+  "flight_intro",
+  "flight_done",
+  "flight_keep"
+]

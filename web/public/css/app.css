@@ -164,3 +164,27 @@ body.listening .mic { animation: pulse 1.2s ease-out infinite; }
   width: 100%; padding: 12px 14px; border-radius: 14px; border: 2px solid var(--accent);
   font: 16px var(--font); background: #fff; outline: none;
 }
+
+/* ---------- Shopping ---------- */
+.scene-shopping { background: linear-gradient(180deg, #f2f8ef, var(--card) 45%); }
+.mail {
+  display: flex; gap: 12px; padding: 14px; border-radius: 18px; background: #fff;
+  box-shadow: 0 6px 20px rgba(60, 50, 40, .08); animation: rise-in .5s ease both; position: relative; overflow: hidden;
+}
+.mail::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255, 179, 107, .35) 50%, transparent 70%); animation: scan 1.1s linear infinite; }
+.mail.read::after { display: none; }
+@keyframes scan { from { translate: -100% 0; } to { translate: 100% 0; } }
+@keyframes rise-in { from { opacity: 0; transform: translateY(16px); } }
+.mail-avatar { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-2); color: #fff; font-weight: 700; }
+.mail h3 { margin: 2px 0; font-size: 15px; }
+.mail p { margin: 0; font-size: 13px; color: var(--ink-2); }
+.shop-head { display: flex; align-items: center; gap: 12px; margin: 18px 0 6px; }
+.shop-head img { width: 76px; height: 76px; object-fit: contain; }
+.shop-head h1 { margin: 0; font-size: 22px; }
+.shop-items { list-style: none; margin: 0; padding: 0; }
+.shop-items li { display: flex; align-items: center; gap: 10px; padding: 11px 4px; border-bottom: 1px solid #ece4d8; animation: rise-in .35s ease both; font-size: 16px; }
+.shop-items li b { margin-left: auto; }
+.shop-items .check { width: 22px; height: 22px; border-radius: 50%; background: var(--ok); color: #fff; font-size: 12px; display: grid; place-items: center; }
+.shop-total { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 4px; font-size: 18px; }
+.shop-total b { font-size: 28px; }
+.shop-go { width: 100%; flex: none; }
