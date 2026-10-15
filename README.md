@@ -9,7 +9,7 @@ own notes come after the judges' part.
 
 ## Try it (judges)
 
-**One click:** `<VERCEL URL — added after deploy>`
+**One click:** https://agents-os-dusky.vercel.app
 
 Open it in Chrome on a laptop or a phone, then:
 
@@ -29,8 +29,9 @@ Open it in Chrome on a laptop or a phone, then:
      Bangkok next month"): the live agent searches the web and shows real
      results with their source links.
 3. Tap **⌂ Home** (or press `Esc`) to fold the screen back.
-4. Wait on the home screen for a while. The always-on agent speaks first
-   about new sleep data and a race, and later about a flight delay.
+4. After you tap **Allow** and the payment folds back, stay on the home
+   screen. The always-on agent speaks first about new sleep data and a race
+   (about 20 seconds later), and then about a flight delay.
 
 **Offline mode.** The live agent has a daily usage limit. When the limit is
 reached, or the voice credit runs out, the page says so in one line at the
