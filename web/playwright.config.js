@@ -10,6 +10,6 @@ export default defineConfig({
     command: 'node server.js',
     url: 'http://localhost:5174/api/health',
     reuseExistingServer: false,
-    env: { PORT: '5174', ANTHROPIC_API_KEY: '', ELEVENLABS_API_KEY: '', ELEVENLABS_VOICE_ID: '' },
+    env: { PORT: '5174', ANTHROPIC_API_KEY: '', ELEVENLABS_API_KEY: '', ELEVENLABS_VOICE_ID: '', AGENT_SCRIPT: 'off', AGENT_TICK_MS: '300' },
   },
 });

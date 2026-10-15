@@ -1,6 +1,8 @@
 import { expect } from '@playwright/test';
 
 export async function home(page) {
+  // The always-on agent lives on the shared test server: start every test from fresh feeds.
+  await page.request.post('/api/feeds/event', { data: { event: 'reset' } });
   await page.goto('/?test=1');
   await expect(page.locator('body')).toHaveAttribute('data-ready', '1');
 }

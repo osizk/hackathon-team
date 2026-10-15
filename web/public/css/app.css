@@ -307,3 +307,8 @@ body.listening .mic { animation: pulse 1.2s ease-out infinite; }
 .g-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 .g-chip { padding: 9px 14px; border-radius: 99px; border: 1.5px solid var(--g); background: transparent; color: inherit; font: 600 14px var(--font); cursor: pointer; }
 .g-chip:last-child { background: var(--g); color: #fff; }
+
+/* ---------- Hidden presenter control (tap the clock 3 times) ---------- */
+.statusbar #clock { pointer-events: auto; cursor: default; padding: 4px 8px; margin: -4px -8px; }
+.presenter { position: absolute; top: 44px; left: 12px; z-index: 60; display: grid; gap: 6px; padding: 10px; border-radius: 14px; background: rgba(20, 16, 14, .9); }
+.presenter button { padding: 8px 12px; border: 0; border-radius: 10px; font: 600 13px var(--font); text-align: left; cursor: pointer; }

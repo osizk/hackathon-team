@@ -6,6 +6,7 @@ import { SCENES } from './scenes/index.js';
 import { savedIndex } from './scenes/generated.js';
 import { initVoice, speak, showSubtitle } from './voice.js';
 import { createListener } from './stt.js';
+import { connectAgent } from './agent-link.js';
 import { T, TEST, wait } from './timing.js';
 
 const $ = (id) => document.getElementById(id);
@@ -137,9 +138,10 @@ function setupFallback() {
 }
 
 // Presenter hotkeys (not while typing): / text input, f flight, t training, s shopping, p payment, h or Escape home.
+// The always-on agent normally opens flight and training by itself; f and t are a last-resort fallback.
 function setupHotkeys(fallback) {
   window.addEventListener('keydown', (e) => {
-    if (e.target.closest('input, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.target.closest('input, textarea') || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
     const actions = {
       '/': () => fallback.show(),
       '`': () => fallback.show(),
@@ -189,6 +191,7 @@ async function boot() {
   setupMic(fallback);
   await initVoice();
   document.body.dataset.scene = 'home';
+  connectAgent({ onProactive: (scene) => proactive(scene) });
   document.body.dataset.ready = '1';
   // For tests and the presenter console.
   window.agentOS = { openScene, closeScene, handleUserText, proactive };
