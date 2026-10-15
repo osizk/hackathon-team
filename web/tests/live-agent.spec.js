@@ -123,6 +123,18 @@ test('live: typed text goes to the agent, and feed changes arrive as contextual 
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'home');
 });
 
+test('live: a feed update waits while the user is typing, then says why and what the user is doing', async ({ page }) => {
+  await liveHome(page);
+  await page.fill('#fallbackInput', 'half a sent');
+  await page.evaluate(() => window.agentOS.fireFeed('flight-delayed'));
+  await page.waitForTimeout(2000);
+  expect(await page.evaluate(() => window.__conv.context.filter((t) => t.startsWith('[feed update]')))).toEqual([]);
+  await page.fill('#fallbackInput', '');
+  await page.locator('#fallbackInput').blur();
+  await expect.poll(() => page.evaluate(() => window.__conv.context.find((t) => t.startsWith('[feed update]')) || ''), { timeout: 5000 })
+    .toMatch(/clashes.*Urgency: high\. User now: on the agent home, no page open; not typing; not speaking; last interaction \d+ s ago\./);
+});
+
 test('live: one voice - app lines go through the agent; pressing the mic silences the agent before the mic opens', async ({ page }) => {
   await liveHome(page);
   // A scene line while live: sent to the agent to say, never played locally.

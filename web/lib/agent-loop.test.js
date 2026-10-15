@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createFeeds } from '../public/js/feeds.js';
-import { createAgentLoop, describeChanges, flightReason } from '../public/js/agent-loop.js';
-import { decideByRules } from '../public/js/brain.js';
+import { createAgentLoop, describeChanges, flightReason, topUrgency } from '../public/js/agent-loop.js';
+import { decideByRules, feedUrgency } from '../public/js/brain.js';
 
 function setup(opts = {}) {
   const pushed = [];
@@ -107,4 +107,37 @@ test('a short delay with no clash says so and offers no faster flight', () => {
   const text = describeChanges(feeds.get(), ['flight']);
   assert.match(text, /nothing on the calendar clashes/);
   assert.doesNotMatch(text, /faster flight/);
+});
+
+test('live mode: no feed update while the user types, thinks or just interacted; then it carries urgency and context', async () => {
+  const feeds = createFeeds();
+  const msgs = [];
+  let t = 100_000;
+  const loop = createAgentLoop({ feeds, tickMs: 1e9, quietMs: 8000, clock: () => t, log: () => {}, emit: (event, data) => { if (event === 'feed') msgs.push(data); } });
+  loop.fire('flight-delayed');
+  for (const p of [{ typing: true }, { thinking: true }, { lastInteractionAt: t - 3000 }]) {
+    loop.setPresence({ scene: 'home', live: true, ...p });
+    await loop.tick();
+  }
+  assert.equal(msgs.length, 0);
+  t += 39_000; // 42 s after the last interaction
+  await loop.tick();
+  assert.equal(msgs.length, 1);
+  assert.equal(msgs[0].urgency, 'high');
+  assert.deepEqual(msgs[0].context, { scene: 'home', typing: false, speaking: false, agentTalking: false, idleSeconds: 42 });
+  assert.match(msgs[0].text, /Urgency: high\./);
+  assert.match(msgs[0].text, /User now: on the agent home, no page open; not typing; not speaking; last interaction 42 s ago\.$/);
+  loop.stop();
+});
+
+test('offline rules use the same urgency: a delay that clashes with nothing does not interrupt', () => {
+  const feeds = createFeeds();
+  feeds.fire('flight-delayed');
+  feeds.get().flight.delayMinutes = 30;
+  assert.equal(feedUrgency(feeds.get(), 'flight'), 'low');
+  assert.equal(decideByRules(feeds.get(), {}).speak, false);
+  feeds.get().flight.delayMinutes = 120;
+  assert.equal(feedUrgency(feeds.get(), 'flight'), 'high');
+  assert.match(decideByRules(feeds.get(), {}).reason, /clashes/);
+  assert.equal(topUrgency(feeds.get(), ['email', 'flight']), 'high');
 });
