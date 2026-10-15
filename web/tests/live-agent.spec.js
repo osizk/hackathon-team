@@ -58,6 +58,16 @@ test('live: client tools open and act on scenes; payment can never be approved b
   await expectHome(page);
 });
 
+test('live: the agent cannot loosen the payment rules through open_scene data', async ({ page }) => {
+  await liveHome(page);
+  const evil = { merchant: 'Evil Shop', total: 45000, items: [{ name: 'Gadget', qty: 1, price: 45000 }], rules: { monthlyBudgetLeft: 100000, perPaymentCap: 99999, allowedShops: ['Evil Shop'] } };
+  expect(await tool(page, 'open_scene', { scene: 'payment', data_json: JSON.stringify(evil) })).toBe('opened payment');
+  await expect(page.locator('[data-testid=pay-total]')).toHaveText('฿45,000');
+  await expect(page.locator('.pay-rules .bad')).toHaveCount(3);
+  await expect(page.locator('[data-testid=allow]')).toBeDisabled();
+  await expect(page.locator('.pay-note')).toHaveText('Blocked by the rules check.');
+});
+
 test('live: render, revise, mark urgent and keep generated pages', async ({ page }) => {
   await liveHome(page);
   const spec = { kind: 'packing', name: 'Packing list', title: 'Packing list', blocks: [{ type: 'checklist', items: [{ text: 'Passport' }] }, { type: 'evil' }], proposals: [{ id: 'a', label: 'Add weather' }] };
