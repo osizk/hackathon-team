@@ -6,7 +6,7 @@ import { SCENES } from './scenes/index.js';
 import { savedIndex } from './scenes/generated.js';
 import { initVoice, speak, showSubtitle, interruptAll } from './voice.js';
 import { logEvent } from './log.js';
-import { apiFetch, passcodeGate } from './api.js';
+import { apiFetch } from './api.js';
 import { createListener } from './stt.js';
 import { connectAgent, fireFeed } from './agent-link.js';
 import { live, checkLive, startLive, setMic, sendText, sendContext, sendFeed, silenceAgent, afterAgentSentence } from './live-agent.js';
@@ -260,7 +260,6 @@ function setupGreeting() {
 }
 
 async function boot() {
-  await passcodeGate();
   tickClock();
   setInterval(tickClock, 15000);
   const fallback = setupFallback();

@@ -1,5 +1,10 @@
 import { defineConfig } from '@playwright/test';
 
+const NO_KEYS = {
+  ELEVENLABS_API_KEY: '', ELEVENLABS_AGENT_ID: '', ELEVENLABS_VOICE_ID: '', TAVILY_API_KEY: '',
+  UPSTASH_REDIS_REST_URL: '', UPSTASH_REDIS_REST_TOKEN: '', KV_REST_API_URL: '', KV_REST_API_TOKEN: '',
+};
+
 // The app must run with no API keys, so the test server gets empty keys.
 export default defineConfig({
   testDir: 'tests',
@@ -12,14 +17,15 @@ export default defineConfig({
       command: 'node server.js',
       url: 'http://localhost:5176/api/health',
       reuseExistingServer: false,
-      env: { PORT: '5176', ELEVENLABS_API_KEY: '', ELEVENLABS_AGENT_ID: '', ELEVENLABS_VOICE_ID: '', AGENT_OS_PASSCODE: '' },
+      env: { PORT: '5176', ...NO_KEYS },
     },
     {
-      // Same app with a passcode, like the deployed site.
+      // A live-configured site whose daily limit is already used up (limits 0): it must start offline.
+      // The key is fake; with the limit at 0 no call reaches ElevenLabs.
       command: 'node server.js',
       url: 'http://localhost:5177/api/health',
       reuseExistingServer: false,
-      env: { PORT: '5177', ELEVENLABS_API_KEY: '', ELEVENLABS_AGENT_ID: '', ELEVENLABS_VOICE_ID: '', AGENT_OS_PASSCODE: 'u-topia-2026' },
+      env: { PORT: '5177', ...NO_KEYS, ELEVENLABS_API_KEY: 'fake', ELEVENLABS_AGENT_ID: 'fake', USAGE_SESSIONS_PER_DAY: '0', USAGE_CALLS_PER_DAY: '0' },
     },
   ],
 });

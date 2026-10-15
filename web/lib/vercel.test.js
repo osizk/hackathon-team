@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { passcodeOk, createHandlers } from './handlers.js';
+import { createHandlers } from './handlers.js';
+import { createUsage, memoryStore } from './usage.js';
+import { isOutOfCredit } from './tts.js';
 import health from '../api/health.js';
 import routeFn from '../api/route.js';
 import tts from '../api/tts.js';
@@ -19,30 +21,39 @@ function call(fn, { method = 'GET', headers = {}, body } = {}) {
   });
 }
 
-test('passcodeOk: open without a passcode, exact match with one', () => {
-  assert.equal(passcodeOk({}, undefined), true);
-  assert.equal(passcodeOk({ AGENT_OS_PASSCODE: 'abc' }, 'abc'), true);
-  assert.equal(passcodeOk({ AGENT_OS_PASSCODE: 'abc' }, 'abd'), false);
-  assert.equal(passcodeOk({ AGENT_OS_PASSCODE: 'abc' }, ''), false);
-});
-
-test('handlers refuse ElevenLabs routes before any call when the passcode is wrong', async () => {
+test('handlers check the daily limit before any ElevenLabs call, and say offline', async () => {
   let called = false;
-  const app = createHandlers({ env: { AGENT_OS_PASSCODE: 'abc', ELEVENLABS_API_KEY: 'k', ELEVENLABS_AGENT_ID: 'a' }, inlineImages: true });
+  const env = { ELEVENLABS_API_KEY: 'k', ELEVENLABS_AGENT_ID: 'a', USAGE_SESSIONS_PER_DAY: '0', USAGE_CALLS_PER_DAY: '0' };
+  const app = createHandlers({ env, inlineImages: true, usage: createUsage({ env, store: memoryStore() }) });
   const realFetch = globalThis.fetch;
   globalThis.fetch = async () => { called = true; throw new Error('no network in tests'); };
   try {
-    for (const run of [() => app.session({}), () => app.tts({}, { text: 'x' }), () => app.image({}, { prompt: 'x' }), () => app.log({}, { events: [] })]) {
-      await assert.rejects(run, (err) => err.status === 401);
+    assert.deepEqual(await app.session({}), { live: false, reason: 'daily site limit reached', offline: 'limit' });
+    for (const run of [() => app.tts({}, { text: 'x' }), () => app.image({}, { prompt: 'x' })]) {
+      await assert.rejects(run, (err) => err.status === 429 && err.extra.offline === 'limit');
     }
   } finally {
     globalThis.fetch = realFetch;
   }
   assert.equal(called, false);
-  assert.deepEqual(app.health({}), { brain: 'elevenlabs-agent', tts: true, passcode: true, authorized: false });
+  assert.deepEqual(await app.health(), { brain: 'elevenlabs-agent', tts: true, offline: 'limit' });
 });
 
-test('Vercel functions: health, route with a parsed body, method check, passcode 401', async () => {
+test('ElevenLabs out of credit -> offline: credit', async () => {
+  const env = { ELEVENLABS_API_KEY: 'k', ELEVENLABS_AGENT_ID: 'a' };
+  const app = createHandlers({ env, inlineImages: true, usage: createUsage({ env, store: memoryStore() }) });
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({ ok: false, status: 401, text: async () => '{"detail":{"status":"quota_exceeded","message":"This request exceeds your quota"}}' });
+  try {
+    assert.deepEqual(await app.session({}), { live: false, reason: 'ElevenLabs credit ran out', offline: 'credit' });
+    await assert.rejects(app.tts({}, { text: 'x' }), (err) => err.status === 429 && err.extra.offline === 'credit');
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+  assert.equal(isOutOfCredit(401, 'invalid api key'), false);
+});
+
+test('Vercel functions: health, route with a parsed body, method check', async () => {
   const h = await call(health);
   assert.equal(h.status, 200);
   assert.equal(h.json.brain === 'keywords' || h.json.brain === 'elevenlabs-agent', true);
@@ -52,11 +63,9 @@ test('Vercel functions: health, route with a parsed body, method check, passcode
   assert.equal(r.json.scene, 'shopping');
   assert.equal((await call(routeFn, { method: 'GET' })).status, 405);
 
-  process.env.AGENT_OS_PASSCODE = 'abc';
-  try {
-    assert.equal((await call(tts, { method: 'POST', body: { text: 'x' } })).status, 401);
-    assert.equal((await call(session, { headers: {} })).status, 401);
-  } finally {
-    delete process.env.AGENT_OS_PASSCODE;
-  }
+  // The shared handlers read process.env when first made; without a key, TTS is 503 and the session is offline.
+  assert.equal((await call(tts, { method: 'POST', body: { text: 'x' } })).status, process.env.ELEVENLABS_API_KEY ? 200 : 503);
+  const s = await call(session, { headers: {} });
+  assert.equal(s.status, 200);
+  assert.equal(typeof s.json.live, 'boolean');
 });

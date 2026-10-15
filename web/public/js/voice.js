@@ -7,7 +7,7 @@
 // Every audio start and end goes to the run log with its source.
 import { T, MUTED } from './timing.js';
 import { logEvent } from './log.js';
-import { apiFetch } from './api.js';
+import { apiFetch, onOffline } from './api.js';
 
 let manifest = new Set();
 let liveTts = false;
@@ -25,11 +25,15 @@ export async function initVoice() {
     if (res.ok) manifest = new Set(await res.json());
   } catch { /* no cached voice yet */ }
   try {
-    liveTts = (await (await apiFetch('/api/health')).json()).tts;
+    const health = await (await apiFetch('/api/health')).json();
+    liveTts = health.tts && !health.offline;
   } catch { /* server without health route */ }
 }
 
 export const setLiveVoice = (fn) => { liveVoice = fn; };
+
+// Offline mode: no more ElevenLabs TTS calls; cached MP3s, then the browser's voice.
+onOffline(() => { liveTts = false; });
 
 export function showSubtitle(text, holdMs = 2600) {
   const el = $('subtitle');

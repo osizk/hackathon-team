@@ -8,7 +8,7 @@ test('home has mascot, mic and no chat box', async ({ page }) => {
   await expect(page.locator('#fallback')).toBeHidden();
   await expect(page.locator('textarea, input:visible')).toHaveCount(0);
   const health = await (await page.request.get('/api/health')).json();
-  expect(health).toEqual({ brain: 'keywords', tts: false, passcode: false, authorized: true });
+  expect(health).toEqual({ brain: 'keywords', tts: false, offline: null });
 });
 
 test('payment: Allow pays and folds back home', async ({ page }) => {

@@ -2,7 +2,7 @@
 // Logs go to the function log (console), which shows in Vercel's logs.
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createHandlers, HttpError } from './handlers.js';
+import { createHandlers, HttpError, errorBody } from './handlers.js';
 
 let app = null;
 export const handlers = () => (app ??= createHandlers({ imagesDir: join(tmpdir(), 'agentos-images'), inlineImages: true }));
@@ -41,7 +41,7 @@ export function vercelFunction(fn, { method = null } = {}) {
       }
       res.statusCode = status;
       res.setHeader('content-type', 'application/json');
-      res.end(JSON.stringify({ error: status === 500 ? 'server error' : err.message }));
+      res.end(JSON.stringify(status === 500 ? { error: 'server error' } : errorBody(err)));
     }
   };
 }

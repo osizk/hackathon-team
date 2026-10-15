@@ -1,71 +1,90 @@
 // What the server does, shared by the local server (server.js) and the Vercel functions (api/).
-// Every route that can call ElevenLabs checks the passcode first (only when AGENT_OS_PASSCODE is set,
-// i.e. on the deployed site; locally there is none).
-import { timingSafeEqual } from 'node:crypto';
+// Every route that can spend ElevenLabs credit checks the daily usage limit first (lib/usage.js).
+// When the limit is reached, or ElevenLabs says the credit ran out, the answer carries
+// `offline: 'limit' | 'credit'` and the page switches to its offline brain by itself.
 import { route } from './router.js';
 import { elevenTts, ttsReady } from './tts.js';
 import { liveReady, signedUrl } from './live-session.js';
 import { createImageService } from './images.js';
 import { createRunLog, createConsoleLog } from './runlog.js';
-
-export const PASSCODE_HEADER = 'x-agent-os-passcode';
-
-export function passcodeOk(env, given) {
-  const want = env.AGENT_OS_PASSCODE;
-  if (!want) return true;
-  const a = Buffer.from(String(given || ''));
-  const b = Buffer.from(String(want));
-  return a.length === b.length && timingSafeEqual(a, b);
-}
+import { createUsage, LimitError } from './usage.js';
 
 export class HttpError extends Error {
-  constructor(status, message) {
+  // extra: more fields for the JSON error body, e.g. { offline: 'limit' }
+  constructor(status, message, extra = {}) {
     super(message);
     this.status = status;
+    this.extra = extra;
   }
 }
 
-// opts: { env, logDir (local JSONL) | console log, imagesDir, inlineImages (Vercel: no disk cache) }
-export function createHandlers({ env = process.env, logDir = null, imagesDir, inlineImages = false } = {}) {
+export const errorBody = (err) => ({ error: err.message, ...(err.extra || {}) });
+
+// opts: { env, logDir (local JSONL) | console log, imagesDir, inlineImages (Vercel: no disk cache), usage }
+export function createHandlers({ env = process.env, logDir = null, imagesDir, inlineImages = false, usage = createUsage({ env }) } = {}) {
   const runLog = logDir ? createRunLog(logDir) : createConsoleLog();
   const images = createImageService({ env, dir: imagesDir, inline: inlineImages });
-  const guard = (headers) => {
-    if (!passcodeOk(env, headers[PASSCODE_HEADER])) throw new HttpError(401, 'passcode required');
+  // Counts one use; over the limit -> 429 with offline: 'limit'.
+  const take = async (kind, headers) => {
+    try {
+      await usage.take(kind, headers);
+    } catch (err) {
+      if (!(err instanceof LimitError)) throw err;
+      runLog.server('limit', { kind, scope: err.scope });
+      throw new HttpError(429, err.message, { offline: 'limit' });
+    }
+  };
+  const outOfCredit = (err, where) => {
+    runLog.server('error', { where, message: err.message, outOfCredit: true });
+    return new HttpError(429, 'ElevenLabs credit ran out', { offline: 'credit' });
   };
 
   return {
     runLog,
     images,
-    health: (headers = {}) => ({
-      brain: liveReady(env) ? 'elevenlabs-agent' : 'keywords',
-      tts: ttsReady(env),
-      passcode: Boolean(env.AGENT_OS_PASSCODE),
-      authorized: passcodeOk(env, headers[PASSCODE_HEADER]),
-    }),
-    async session(headers) {
-      guard(headers);
+    usage,
+    async health() {
+      return {
+        brain: liveReady(env) ? 'elevenlabs-agent' : 'keywords',
+        tts: ttsReady(env),
+        offline: liveReady(env) && (await usage.siteFull()) ? 'limit' : null,
+      };
+    },
+    async session(headers = {}) {
       if (!liveReady(env)) return { live: false, reason: 'no ELEVENLABS_API_KEY or ELEVENLABS_AGENT_ID' };
+      try {
+        await take('sessions', headers);
+      } catch (err) {
+        return { live: false, reason: err.message, offline: 'limit' };
+      }
       try {
         return { live: true, signedUrl: await signedUrl(env) };
       } catch (err) {
+        if (err.outOfCredit) {
+          outOfCredit(err, 'signed url');
+          return { live: false, reason: 'ElevenLabs credit ran out', offline: 'credit' };
+        }
         runLog.server('error', { where: 'signed url', message: err.message });
         return { live: false, reason: err.message };
       }
     },
     route: async ({ text, context, spec, stage, saved } = {}) => route(text, context || null, { spec, stage, saved }),
-    async tts(headers, { text } = {}) {
-      guard(headers);
+    async tts(headers = {}, { text } = {}) {
       if (!ttsReady(env)) throw new HttpError(503, 'no ElevenLabs key');
-      return elevenTts(String(text).slice(0, 400), env);
+      await take('calls', headers);
+      try {
+        return await elevenTts(String(text).slice(0, 400), env);
+      } catch (err) {
+        throw err.outOfCredit ? outOfCredit(err, 'tts') : err;
+      }
     },
-    async image(headers, { prompt, scene } = {}) {
-      guard(headers);
+    async image(headers = {}, { prompt, scene } = {}) {
+      if (env.ELEVENLABS_API_KEY && !images.unavailable()) await take('calls', headers);
       const out = await images.get(prompt, String(scene || 'default'));
       if (out.error && !out.quiet) runLog.server('error', { where: 'image', message: out.error });
       return out;
     },
     async log(headers, { events } = {}) {
-      guard(headers);
       return { written: runLog.browser(events) };
     },
   };

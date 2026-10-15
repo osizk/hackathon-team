@@ -16,8 +16,18 @@ export async function elevenTts(text, env = process.env, fetchImpl = fetch) {
     headers: { 'content-type': 'application/json', 'xi-api-key': env.ELEVENLABS_API_KEY, accept: 'audio/mpeg' },
     body: JSON.stringify({ text, model_id: model, language_code: 'th' }),
   });
-  if (!res.ok) throw new Error(`elevenlabs ${res.status}`);
+  if (!res.ok) throw creditError(res.status, await res.text().catch(() => ''), 'elevenlabs');
   return Buffer.from(await res.arrayBuffer());
+}
+
+// ElevenLabs answers 401 quota_exceeded (or 402/429 with a credit message) when the credit runs out.
+export const isOutOfCredit = (status, text = '') =>
+  [401, 402, 429].includes(status) && /quota|credit|insufficient|exceeded/i.test(text);
+
+export function creditError(status, text, what) {
+  const err = new Error(`${what} ${status}`);
+  if (isOutOfCredit(status, text)) err.outOfCredit = true;
+  return err;
 }
 
 export const ttsReady = (env = process.env) => Boolean(env.ELEVENLABS_API_KEY);

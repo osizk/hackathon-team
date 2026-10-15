@@ -6,7 +6,7 @@
 import { createToolHandlers } from './agent-tools.js';
 import { showSubtitle, setLiveVoice } from './voice.js';
 import { logEvent } from './log.js';
-import { apiFetch } from './api.js';
+import { apiFetch, goOffline, onOffline } from './api.js';
 
 // @elevenlabs/client, pinned. jsDelivr's +esm build is one self-contained ES module.
 const SDK_URL = 'https://cdn.jsdelivr.net/npm/@elevenlabs/client@1.26.0/+esm';
@@ -25,13 +25,31 @@ export const stripTags = (text) => String(text).replace(/\[[^\]]{1,30}\]\s*/g, '
 
 export async function checkLive() {
   try {
-    live.available = (await (await apiFetch('/api/health')).json()).brain === 'elevenlabs-agent';
+    const health = await (await apiFetch('/api/health')).json();
+    live.available = health.brain === 'elevenlabs-agent' && !health.offline;
+    if (health.offline) goOffline(health.offline);
   } catch {
     live.available = false;
   }
   setBrain(live.available ? 'agent-ready' : 'keywords');
   return live.available;
 }
+
+// ElevenLabs closes the conversation with a quota message when the credit runs out.
+const OUT_OF_CREDIT = /quota|credit|insufficient/i;
+
+// Limit reached or credit gone: end the live conversation; the offline brain takes over.
+onOffline((reason) => {
+  logEvent('offline', { reason });
+  live.available = false;
+  const ending = conversation;
+  conversation = null;
+  starting = null;
+  live.connected = false;
+  setLiveVoice(null);
+  setBrain('keywords');
+  ending?.endSession?.().catch?.(() => {});
+});
 
 function setMode(next) {
   if (next === mode) return;
@@ -109,6 +127,7 @@ export function startLive(ui) {
   if (starting) return starting;
   starting = (async () => {
     const session = await (await apiFetch('/api/agent/session')).json();
+    if (session.offline) goOffline(session.offline);
     if (!session.live) throw new Error(session.reason || 'no live session');
     const { Conversation } = await import(SDK_URL);
     await checkMic();
@@ -117,7 +136,8 @@ export function startLive(ui) {
       connectionType: 'websocket',
       clientTools: wrapTools(createToolHandlers(ui)),
       onConnect: () => { live.connected = true; setBrain('agent'); },
-      onDisconnect: () => {
+      onDisconnect: (details) => {
+        if (OUT_OF_CREDIT.test(`${details?.reason ?? ''} ${details?.message ?? ''}`)) goOffline('credit');
         live.connected = false;
         conversation = null;
         starting = null;
@@ -125,7 +145,11 @@ export function startLive(ui) {
         setMode('listening');
         setBrain(live.available ? 'agent-ready' : 'keywords');
       },
-      onError: (message) => { console.warn('[agent]', message); logEvent('error', { where: 'agent', message: String(message).slice(0, 300) }); },
+      onError: (message) => {
+        console.warn('[agent]', message);
+        logEvent('error', { where: 'agent', message: String(message).slice(0, 300) });
+        if (OUT_OF_CREDIT.test(String(message))) goOffline('credit');
+      },
       onMessage: ({ source, message }) => {
         if (!message) return;
         if (source === 'ai') {
