@@ -66,8 +66,9 @@ with the Waterstones fee is known.
   of them stay cheaper even with free shipping and 0% duty.
 - That includes almost all items bought often: chargers, earbuds, memory
   cards, a mouse, Korean and Japanese skincare, coffee. It also includes
-  expensive items: the Sigma lens (Thailand 13,104 THB cheaper than the US
-  floor), the Seiko watch (2,567 THB), the DJI Osmo Pocket 3 (2,230 THB).
+  expensive items. Even against the 0% duty floor, Thailand is cheaper by at
+  least 4,806 THB for the Sigma lens, 2,121 THB for the Seiko watch and
+  1,519 THB for the DJI Osmo Pocket 3.
 - Duty decides 7 items (2, 15, 24, 25, 28, 31, 42). The duty rates there are
   from third-party sites. For the Sony WH-1000XM5 the source says 60%, which
   looks like a ceiling rate. At 0% duty the world floor would be 3,367 THB
@@ -75,7 +76,34 @@ with the Waterstones fee is known.
 
 ## Saving between Thai shops
 
-THAI_SPREAD_PLACEHOLDER
+This is the saving the agent's own compare finds: the cheapest Thai shop
+versus the dearest Thai shop for the same product. It comes from the Thai
+prices named in each row's notes. We did not search again for it.
+
+- **33 items** had two or more Thai prices for the same product. In 28 of
+  them the prices differed.
+- **Typical saving**: median 225 THB (20%) across those 28 items. Across all
+  33, the median is 140 THB (18%).
+- **Biggest savings**:
+
+  | # | Item | Cheapest Thai | Dearest Thai | Saving |
+  | --- | --- | --- | --- | --- |
+  | 28 | Sony WH-1000XM5 | 10,490 Sony Store TH | 14,990 JIB | 4,500 THB (43%) |
+  | 30 | Sigma 18-50mm F2.8 | 18,900 Zoom Camera | 22,900 JIA | 4,000 THB (21%) |
+  | 29 | Sony FE 50mm F1.8 | 9,800 Digital2Home | 11,990 AVvalue | 2,190 THB (22%) |
+  | 49 | Seiko 5 SRPD55K1 | 6,800 Annywatchtime | 8,790 Tarad Nalika | 1,990 THB (29%) |
+  | 32 | Kindle Paperwhite | 7,490 Lazada WellTech | 8,990 Central Online | 1,500 THB (20%) |
+  | 27 | Logitech MX Master 3S | 2,730 Mercular | 3,890 iStudio | 1,160 THB (43%) |
+
+- The biggest saving in percent is a small item: the Anker 511 charger (1),
+  350 THB at JIB versus 790 THB at Mercular (126%).
+- So the Thai-shop compare saves more, and more often, than buying abroad.
+  It works for items bought often (15 of the 28) and rarely (13 of 28).
+- The dearest price can be a list price that no one pays. Treat these
+  savings as an upper case.
+- Two rows may have an even lower Thai price than the one we used. Item 34
+  has 2,290 THB on an old page. Item 31 has a 2,555 THB sale with no date.
+  We kept the current prices.
 
 ## Delivery time
 
