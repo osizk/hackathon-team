@@ -4,11 +4,20 @@
 import { validateSpec } from './genui.js';
 
 export const PROACTIVE_SCENES = ['shopping', 'payment', 'flight', 'training'];
+const SECRETARY_ACTIONS = ['today', 'email', 'add_tasks', 'draft', 'acknowledge', 'snooze'];
 
 // Tool definitions, shared by the agent config (scripts/agent-sync.js) and the browser.
 // Parameters are kept flat (strings and enums) so any tool schema format can carry them;
 // structured data travels as a JSON string.
 export const TOOL_DEFS = [
+  {
+    name: 'secretary_action',
+    description: 'Personal secretary DEMO with sample data only. today = today tasks and calendar; email = sample client email; add_tasks = import its two tasks once; draft = prepare editable reply proposing 14:30 (13:30 conflicts with team meeting); acknowledge or snooze = act on displayed notifications. Returns current sample data. No real mail or calendar changes. Sending requires the owner tapping the test-send button; no tool can send.',
+    params: {
+      action: { type: 'string', enum: SECRETARY_ACTIONS, description: 'Secretary action', required: true },
+      minutes: { type: 'string', enum: ['1', '5'], description: 'Snooze for one or five minutes', required: false },
+    },
+  },
   {
     name: 'open_scene',
     description:
@@ -106,6 +115,11 @@ export function createToolHandlers(ui) {
   let sources = [];
 
   return {
+    secretary_action({ action, minutes = '1' } = {}) {
+      if (!SECRETARY_ACTIONS.includes(action) || (action === 'snooze' && !['1', '5'].includes(minutes))) return 'error: invalid secretary action';
+      if (!ui.secretary) return 'error: secretary unavailable';
+      return ui.secretary(action, Number(minutes));
+    },
     // Returns after the scene has grown (the agent's sentence first), so a next tool sees it.
     async open_scene({ scene, data_json } = {}) {
       if (!PROACTIVE_SCENES.includes(scene)) return `error: unknown scene "${scene}"`;
