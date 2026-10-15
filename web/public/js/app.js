@@ -16,6 +16,8 @@ import { hasMemory } from './memory.js';
 import { noteFeed, proactiveWatch, forgetOnRequest } from './learn.js';
 import { createSecretary } from './secretary.js';
 import { setupSecretaryDemo } from './secretary-demo.js';
+import { initMascot } from './mascot.js';
+import { initLanguage } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 const stage = $('stage');
@@ -108,15 +110,6 @@ async function sayThenOpen({ line, text }, name, data, current = () => true) {
   return show;
 }
 
-// Sentences a judge can tap; each is sent as if spoken. One per kind of answer:
-// a prebuilt scene, a generated page, the urgent first-aid case, and a web search (live) or
-// the training scene (offline).
-export const SUGGESTIONS = [
-  { say: 'สัปดาห์นี้ยุ่งมาก', en: 'This week is hectic', kind: 'scene' },
-  { say: 'ช่วยทำ to-do list ให้หน่อย', en: 'Make me a to-do list', kind: 'generated' },
-  { say: 'นิ้วโดนมีดบาด เลือดไหลไม่หยุด', en: 'I cut my finger, it keeps bleeding', kind: 'urgent' },
-  { say: 'หางานวิ่ง 10K ในกรุงเทพเดือนหน้าให้หน่อย', en: 'Find a 10K run in Bangkok next month', kind: 'search' },
-];
 
 // The agent speaks first (always-on feed event offline, or a presenter hotkey).
 async function proactive(name) {
@@ -238,20 +231,7 @@ function setupFallback() {
   return { show: () => input.focus() };
 }
 
-function setupSuggestions() {
-  const nav = $('suggest');
-  for (const s of SUGGESTIONS) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.dataset.kind = s.kind;
-    btn.setAttribute('aria-label', `${s.say} · ${s.en}`);
-    btn.append(s.say);
-    const en = document.createElement('small');
-    en.textContent = s.en;
-    btn.append(en);
-    btn.addEventListener('click', () => { logEvent('suggestion', { kind: s.kind }); submitText(s.say, 'suggestion'); });
-    nav.append(btn);
-  }
+function setupHomeButton() {
   // The memory page: no talking needed to see or change what the agent remembers.
   $('memoryEntry').addEventListener('click', () => openScene('memory'));
   $('homeBtn').addEventListener('click', () => closeScene());
@@ -342,19 +322,21 @@ function setupGreeting() {
   let greeted = false;
   const first = (e) => {
     if (greeted) return;
+    if (e.target.closest?.('#mic, input, form, .presenter, .language-switch, .memory-entry, .home-btn, .secretary-shortcuts, dialog') || (e.type === 'keydown' && e.key !== 'Enter')) return;
     greeted = true;
-    document.body.classList.add('started');
     window.removeEventListener('pointerdown', first, true);
     window.removeEventListener('keydown', first, true);
-    if (e.target.closest?.('#mic, input, form, .presenter, .suggest, .memory-entry, .home-btn, .secretary-shortcuts, dialog') || (e.type === 'keydown' && e.key !== 'Enter')) return; // the user is about to talk or type
-    // A returning visitor with the live agent: the agent greets with what it remembers.
+    // Returning visitors hear the live agent's remembered greeting.
     if (live.available && hasMemory()) {
       logEvent('greet', { via: 'agent' });
-      startLive(toolUi).then(() => sendText(SESSION_START)).catch(() => speak({ line: 'greet', text: LINES.greet }));
+      startLive(toolUi).then(() => {
+        document.body.classList.add('started');
+        return sendText(SESSION_START);
+      }).catch(() => speak({ text: LINES.greet, onStart: () => document.body.classList.add('started') }));
       return;
     }
     logEvent('greet', { via: 'local' });
-    speak({ line: 'greet', text: LINES.greet });
+    speak({ text: LINES.greet, onStart: () => document.body.classList.add('started') });
   };
   window.addEventListener('pointerdown', first, true);
   window.addEventListener('keydown', first, true);
@@ -362,10 +344,12 @@ function setupGreeting() {
 
 async function boot() {
   forgetOnRequest(); // ?forget=1: start with no memory and nothing learned
+  initLanguage();
+  initMascot();
   tickClock();
   setInterval(tickClock, 15000);
   const fallback = setupFallback();
-  setupSuggestions();
+  setupHomeButton();
   setupHotkeys(fallback);
   setupMic(fallback);
   setupGreeting();

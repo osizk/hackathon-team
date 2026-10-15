@@ -15,8 +15,8 @@ let loop = null;
 // The user's last tap, key, typing or speech (ms); the loop stays quiet for a while after it.
 let lastInteractionAt = 0;
 
-// Typing: the text box has focus and text in it (an empty focused box is not typing).
-const typing = () => document.activeElement?.id === 'fallbackInput' && document.activeElement.value.trim() !== '';
+// A draft in the text box means the user is composing, even if the field briefly loses focus.
+const typing = () => document.getElementById('fallbackInput')?.value.trim() !== '';
 
 function presence() {
   const b = document.body;

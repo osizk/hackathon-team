@@ -34,8 +34,8 @@ for (const viewport of [{ width: 320, height: 568 }, { width: 375, height: 812 }
       expect(boxes.transcriptScrollable).toBe(true);
     };
     await checkRegions();
-    await page.getByTestId('suggest').locator('button').last().scrollIntoViewIfNeeded();
-    const suggestion = await page.getByTestId('suggest').locator('button').last().boundingBox();
+    await page.getByTestId('secretary-demo').scrollIntoViewIfNeeded();
+    const suggestion = await page.getByTestId('secretary-demo').boundingBox();
     const subtitle = await page.locator('#subtitle').boundingBox();
     expect(suggestion.y + suggestion.height).toBeLessThanOrEqual(subtitle.y);
 

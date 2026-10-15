@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { expectHome } from './helpers.js';
+import { expectHome, revealHome } from './helpers.js';
 
 // The live ElevenLabs agent path, with the SDK and the agent routes stubbed (no network, no key).
 // A real smoke test with a real agent is a manual step in README.md.
@@ -29,6 +29,7 @@ async function liveHome(page) {
   await page.route('https://cdn.jsdelivr.net/npm/@elevenlabs/client@*/+esm', (r) => r.fulfill({ contentType: 'text/javascript', body: FAKE_SDK }));
   await page.goto('/?test=1');
   await expect(page.locator('body')).toHaveAttribute('data-brain', 'agent-ready');
+  await revealHome(page);
   // Hold the mic: the session starts and the mic is unmuted only while held.
   await page.locator('#mic').dispatchEvent('pointerdown');
   await expect(page.locator('body')).toHaveAttribute('data-brain', 'agent');
@@ -99,7 +100,7 @@ test('live: the agent cannot loosen the payment rules through open_scene data', 
   await expect(page.locator('[data-testid=pay-total]')).toHaveText('฿45,000');
   await expect(page.locator('.pay-rules .bad')).toHaveCount(3);
   await expect(page.locator('[data-testid=allow]')).toBeDisabled();
-  await expect(page.locator('.pay-note')).toHaveText('Blocked by the rules check.');
+  await expect(page.locator('.pay-note')).toHaveText('ไม่ผ่านเงื่อนไขการชำระเงิน');
 });
 
 test('live: render, revise, mark urgent and keep generated pages', async ({ page }) => {
@@ -139,7 +140,7 @@ test('live: kept pages are told to the agent at session start and when kept, and
 
   // "Open my packing list": the agent calls render_ui with the reference; the kept page opens as saved.
   expect(await tool(page, 'render_ui', { spec_json: '{"saved":"packing"}' })).toMatch(/^reopened the kept page "Packing list"/);
-  await expect(page.locator('[data-testid=g-badge]')).toHaveText('Saved scene');
+  await expect(page.locator('[data-testid=g-badge]')).toHaveText('หน้าที่บันทึกไว้');
   await expect(page.locator('[data-testid=g-title]')).toHaveText('Packing list');
   expect(await tool(page, 'render_ui', { spec_json: '{"saved":"nope"}' })).toMatch(/^error/);
 });
@@ -163,7 +164,9 @@ test('live: typed text goes to the agent, and feed changes arrive as contextual 
 
 test('live: a feed update waits while the user is typing, then says why and what the user is doing', async ({ page }) => {
   await liveHome(page);
+  await page.locator('#fallbackInput').click();
   await page.fill('#fallbackInput', 'half a sent');
+  await expect.poll(() => page.evaluate(() => document.getElementById('fallbackInput')?.value.trim() !== '')).toBe(true);
   await page.evaluate(() => window.agentOS.fireFeed('flight-delayed'));
   await page.waitForTimeout(2000);
   expect(await page.evaluate(() => window.__conv.context.filter((t) => t.startsWith('[feed update]')))).toEqual([]);
@@ -208,6 +211,7 @@ test('live speed: the SDK loads at boot, the signed URL is fetched on the first 
   await expect(page.locator('body')).toHaveAttribute('data-brain', 'agent-ready');
   await expect.poll(() => sdkLoaded).toBe(true);
   expect(sessions).toBe(0); // page load alone spends no session
+  await revealHome(page);
   await page.locator('#fallbackInput').focus();
   await expect.poll(() => sessions).toBe(1);
   await page.fill('#fallbackInput', 'this week is hectic');
@@ -226,10 +230,11 @@ test('live: a blocked mic says offline mode in one line; a typed request still o
   await page.route('https://cdn.jsdelivr.net/npm/@elevenlabs/client@*/+esm', (r) => r.fulfill({ contentType: 'text/javascript', body: FAKE_SDK }));
   await page.goto('/?test=1');
   await expect(page.locator('body')).toHaveAttribute('data-brain', 'agent-ready');
+  await revealHome(page);
   await page.locator('#fallbackInput').fill('นิ้วโดนมีดบาด เลือดไหลไม่หยุด');
   await page.locator('#fallbackInput').press('Enter');
   await expect(page.locator('[data-testid=notice]')).toBeVisible();
-  await expect(page.locator('[data-testid=notice]')).toContainText('mic');
+  await expect(page.locator('[data-testid=notice]')).toContainText('ไมค์');
   await expect(page.locator('body')).toHaveAttribute('data-brain', 'keywords');
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'generated');
   // Home stays reachable below the notice.
@@ -258,7 +263,7 @@ test('live: 20 s without the user ends the session; the page sleeps; feeds do no
   await expect(page.locator('body')).toHaveAttribute('data-brain', 'asleep');
   expect(await page.evaluate(() => window.__ends)).toBe(1);
   expect(await page.evaluate(() => window.__runlog.find((e) => e.type === 'live_end'))).toMatchObject({ why: 'idle' });
-  await expect(page.locator('#micHint')).toContainText('Asleep');
+  await expect(page.locator('#micHint')).toContainText('หลับอยู่');
 
   // Asleep: another feed update never starts a session by itself.
   await page.evaluate(() => window.agentOS.fireFeed('sleep-synced'));
@@ -270,7 +275,7 @@ test('live: 20 s without the user ends the session; the page sleeps; feeds do no
   await page.locator('#mic').dispatchEvent('pointerdown');
   await expect(page.locator('body')).toHaveAttribute('data-brain', 'agent');
   expect(await page.evaluate(() => window.__starts)).toBe(2);
-  await expect(page.locator('#micHint')).not.toContainText('Asleep');
+  await expect(page.locator('#micHint')).not.toContainText('หลับอยู่');
   await page.locator('#mic').dispatchEvent('pointerup');
 });
 

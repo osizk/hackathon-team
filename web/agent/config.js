@@ -14,7 +14,7 @@ import { SYSTEM_PROMPT as PAGE_PROMPT } from '../lib/page-model.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
-export const AGENT_NAME = 'Agent OS (U-Hackathon 2026)';
+export const AGENT_NAME = 'Q-Bot (U-Hackathon 2026)';
 export const AGENT_LLM = 'claude-sonnet-5-5';
 export const AGENT_TTS_MODEL = 'eleven_v3_conversational';
 export const AGENT_LANGUAGE = 'th';

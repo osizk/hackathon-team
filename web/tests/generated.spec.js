@@ -7,7 +7,7 @@ test('todo request opens a generated page; a spoken change redraws it; folds hom
   await home(page);
   await say(page, 'help me make a todo list');
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'generated');
-  await expect(page.locator('[data-testid=g-badge]')).toHaveText('Generated for you');
+  await expect(page.locator('[data-testid=g-badge]')).toHaveText('สร้างให้คุณ');
   await expect(page.locator('.g-checklist li')).toHaveCount(5);
   await expect(page.locator('[data-testid=g-chips] .g-chip')).toHaveCount(3);
   await expect(page.locator('.g-due')).toHaveCount(0);
@@ -44,7 +44,7 @@ test('like it, keep it, then a second todo request opens the saved scene with no
   const res = await (await routed).json();
   expect(res.via).toBe('saved');
   expect(res.data).toEqual({ savedKind: 'todo' });
-  await expect(page.locator('[data-testid=g-badge]')).toHaveText('Saved scene');
+  await expect(page.locator('[data-testid=g-badge]')).toHaveText('หน้าที่บันทึกไว้');
   await expect(page.locator('.g-due')).toHaveCount(5);
   await page.keyboard.press('Escape');
   await expectHome(page);
@@ -65,7 +65,7 @@ test('urgent: bleeding finger shows first-aid steps at once, a 1669 button, no l
   await home(page);
   await say(page, 'เลือดผมออกที่นิ้วทำไงดี');
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'generated');
-  await expect(page.locator('[data-testid=g-badge]')).toHaveText('First aid');
+  await expect(page.locator('[data-testid=g-badge]')).toHaveText('ปฐมพยาบาล');
   await expect(page.locator('.g-steps li')).toHaveCount(4);
   await expect(page.locator('[data-testid=g-call]')).toHaveAttribute('href', 'tel:1669');
   await expect(page.locator('[data-testid=g-chips]')).toHaveCount(0);
@@ -279,7 +279,7 @@ test('live: render_ui with a design brief; a data-action tap reaches the agent a
   expect(await tool(page, 'keep_scene', {})).toMatch(/^kept/);
   await expectHome(page);
   expect(await tool(page, 'render_ui', { spec_json: '{"saved":"trip"}' })).toMatch(/^reopened/);
-  await expect(page.locator('[data-testid=g-badge]')).toHaveText('Saved scene');
+  await expect(page.locator('[data-testid=g-badge]')).toHaveText('หน้าที่บันทึกไว้');
   await expect(scene(page)).toHaveAttribute('data-view', 'html');
   await expect(page.locator('[data-testid=g-html] h1')).toContainText('หัวหิน');
   expect(calls).toHaveLength(2);

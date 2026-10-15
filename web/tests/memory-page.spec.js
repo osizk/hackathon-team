@@ -82,7 +82,7 @@ test('memory page: edit a fact, forget a learned line, remove a kept page, then 
   expect((await stored(page)).saved).toEqual(['todo']);
   await scene.getByTestId('forget-all').click();
   await scene.getByTestId('forget-all-yes').click();
-  for (const id of ['mem-facts', 'mem-learned', 'mem-kept']) await expect(scene.getByTestId(id).locator('.mem-empty')).toHaveText('ยังไม่มี · Nothing yet');
+  for (const id of ['mem-facts', 'mem-learned', 'mem-kept']) await expect(scene.getByTestId(id).locator('.mem-empty')).toHaveText('ยังไม่มี');
   await expect(scene.getByTestId('forget-all')).toHaveCount(0);
   expect(await stored(page)).toEqual({ memory: {}, learned: [], saved: [] });
 
