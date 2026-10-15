@@ -15,11 +15,25 @@ Copy this block for a new decision:
 - **Who decided:** names, or "whole team".
 ```
 
+## 2026-10-15: The brain is an ElevenLabs agent
+
+- **Decision:** The agent's brain is an ElevenLabs agent (ElevenAgents) with
+  Claude Sonnet 5.5 inside, Thai voice and Thai speech to text. It is defined
+  as code (`web/agent/`) and created or updated by `npm run agent:sync`. The
+  browser joins with the official JS SDK through a signed URL from our
+  server. The agent changes the screen only through client tools. Feed
+  changes go into the conversation as contextual updates. The Claude API key
+  path is removed. Offline, the keyword router, cached MP3s and ready-made
+  pages still run the demo.
+- **Why:** "ElevenLabs agent" - one service for voice, listening and the
+  brain.
+- **Who decided:** head (team lead)
+
 ## 2026-10-15: Allow is a button only
 
 - **Decision:** On the payment card, only a tap on Allow moves money. Saying
   "allow", "yes" or "pay" only makes the button pulse. This holds even if
-  Claude says otherwise; the code checks it. Tonight Allow ends in a success
+  the agent says otherwise; the code checks it. Tonight Allow ends in a success
   screen only, with no real payment.
 - **Why:** Speech to text makes mistakes, and money must never move by
   mistake. Same rule as before: nothing pays without the owner's approve.
@@ -30,7 +44,7 @@ Copy this block for a new decision:
 - **Decision:** The agent speaks first by itself. A loop on the server
   watches fake feeds (email, calendar, sleep and runs, flight) every few
   seconds, decides when to speak and which scene to open, and pushes it to
-  the page. Claude decides with a key, simple rules without. It never speaks
+  the page. The agent decides when live, simple rules offline. It never speaks
   over an open scene or while anyone talks. A script keeps the demo order
   fixed; the presenter can fire a feed event from a hidden panel. Hotkeys
   stay as the last resort.

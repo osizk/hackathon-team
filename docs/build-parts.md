@@ -28,8 +28,8 @@ How to run and test: [README.md](../README.md).
 ### Part 1: Agent home, scene system, payment card
 
 A mascot, voice waveform, one fading subtitle line and a hold-to-talk mic.
-Scenes grow out of the home and fold back. The router picks a scene: Claude
-with a key, keywords without. The payment card checks the rules in code and
+Scenes grow out of the home and fold back. The brain picks a scene: the live
+ElevenLabs agent through client tools, or keywords offline. The payment card checks the rules in code and
 pays only on a tap of Allow.
 
 ### Part 2: Shopping list and voice
@@ -50,7 +50,7 @@ itself and submits, inside our own UI. Then the mascot runs on a treadmill.
 
 ### Part 5: Generated pages
 
-When no prebuilt scene fits, Claude returns a page as JSON from a fixed set of
+When no prebuilt scene fits, the agent returns a page as JSON from a fixed set of
 parts: text, stat, progress, checklist, list, card, chart, field, button,
 divider. The browser draws it; it never runs model-written HTML or JS. The
 agent asks if you like it and proposes changes. Your answer changes the page
@@ -74,7 +74,7 @@ README, idea, build parts, decisions and the storyboard describe Agent OS.
 
 | Part | Why | Size |
 | --- | --- | --- |
-| Test the Claude paths with a real key | Scene choice, generated pages and speak-or-wait are only tested with fake answers | 1 h |
+| Smoke-test the live ElevenLabs agent | Needs a key with the Agents permission; then `npm run agent:sync` and the README smoke step | 1 h |
 | Pick a better Thai voice | The account has no Thai-only voice; try voices, then `npm run voice -- --force` | 0.5 h |
 | HTTPS for the phone | The mic needs HTTPS on a phone (for example a tunnel) | 0.5 h |
 | Stage rehearsal and backup video | Time the 3 minutes; record a backup in case the room Wi-Fi fails | 1.5 h |

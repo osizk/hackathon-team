@@ -31,23 +31,7 @@ test('unknown text only talks', () => {
 });
 
 test('no key uses keywords', async () => {
-  const r = await route('hectic', null, {});
-  assert.equal(r.via, 'keywords');
-  assert.equal(r.scene, 'shopping');
-});
-
-test('Claude saying confirm on payment is still button-only', async () => {
-  const fakeFetch = async () => ({
-    ok: true,
-    json: async () => ({ content: [{ type: 'tool_use', input: { scene: 'none', action: 'confirm' } }] }),
-  });
-  const r = await route('just pay it', 'payment', { ANTHROPIC_API_KEY: 'x' }, fakeFetch);
-  assert.equal(r.via, 'claude');
-  assert.equal(r.action, 'button-only');
-});
-
-test('Claude failure falls back to keywords', async () => {
-  const r = await route('hectic week', null, { ANTHROPIC_API_KEY: 'x' }, async () => { throw new Error('offline'); });
+  const r = await route('hectic', null);
   assert.equal(r.via, 'keywords');
   assert.equal(r.scene, 'shopping');
 });

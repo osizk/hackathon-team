@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createFeeds } from './feeds.js';
 import { createAgentLoop } from './agent-loop.js';
-import { decide, decideByRules } from './brain.js';
+import { decideByRules } from './brain.js';
 
 function setup(opts = {}) {
   const pushed = [];
@@ -60,14 +60,27 @@ test('script: closing payment schedules the sleep event', async () => {
   loop.stop();
 });
 
-test('rules wait on a plain email; Claude cannot pick an unknown or handled scene', async () => {
+test('rules wait on a plain email', () => {
   const feeds = createFeeds();
   feeds.fire('email-shopping');
   assert.equal(decideByRules(feeds.get(), {}).speak, false);
-  const fake = (input) => async () => ({ ok: true, json: async () => ({ content: [{ type: 'tool_use', input }] }) });
-  const env = { ANTHROPIC_API_KEY: 'x' };
-  assert.equal((await decide(feeds.get(), ['email'], {}, env, fake({ speak: true, scene: 'payment', reason: 'x' }))).speak, false);
-  assert.equal((await decide(feeds.get(), ['flight'], { flight: true }, env, fake({ speak: true, scene: 'flight', reason: 'x' }))).speak, false);
-  const ok = await decide(feeds.get(), ['flight'], {}, env, fake({ speak: true, scene: 'flight', reason: 'delay' }));
-  assert.deepEqual([ok.speak, ok.scene, ok.via], [true, 'flight', 'claude']);
+  feeds.fire('flight-delayed');
+  assert.equal(decideByRules(feeds.get(), {}).scene, 'flight');
+  assert.equal(decideByRules(feeds.get(), { flight: true }).speak, false);
+});
+
+test('live mode: feed changes become a contextual update, only when idle', async () => {
+  const feeds = createFeeds();
+  const msgs = [];
+  const loop = createAgentLoop({ feeds, tickMs: 1e9, log: () => {} });
+  loop.addClient({ write: (m) => { if (m.startsWith('event: feed')) msgs.push(JSON.parse(m.split('data: ')[1])); } });
+  loop.setPresence({ scene: 'payment', live: true });
+  loop.fire('flight-delayed');
+  await loop.tick();
+  assert.equal(msgs.length, 0);
+  loop.setPresence({ scene: 'home', live: true });
+  await loop.tick();
+  assert.equal(msgs.length, 1);
+  assert.match(msgs[0].text, /delayed 120 minutes/);
+  loop.stop();
 });

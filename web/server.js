@@ -1,5 +1,6 @@
 // Agent OS demo server: serves public/ and a few small routes.
-//   POST /api/route           { text, context } -> agent action (Claude if ANTHROPIC_API_KEY, else keywords)
+//   GET  /api/agent/session                     -> { live, signedUrl } to join the ElevenLabs agent (if configured)
+//   POST /api/route           { text, context } -> offline brain: keyword router (used when the live agent is not)
 //   POST /api/tts             { text }          -> audio/mpeg from ElevenLabs (if ELEVENLABS_API_KEY)
 //   GET  /api/agent/stream                      -> SSE: the always-on agent speaks first ('proactive')
 //   POST /api/agent/presence  { scene, talking, listening } -> what the page is doing now
@@ -13,6 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { loadEnv } from './lib/env.js';
 import { route } from './lib/router.js';
 import { elevenTts, ttsReady } from './lib/tts.js';
+import { liveReady, signedUrl } from './lib/live-session.js';
 import { createFeeds, DEMO_SCRIPT } from './lib/feeds.js';
 import { createAgentLoop } from './lib/agent-loop.js';
 
@@ -49,11 +51,20 @@ const server = createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   try {
     if (url.pathname === '/api/health') {
-      return send(res, 200, { brain: process.env.ANTHROPIC_API_KEY ? 'claude' : 'keywords', tts: ttsReady() });
+      return send(res, 200, { brain: liveReady() ? 'elevenlabs-agent' : 'keywords', tts: ttsReady() });
+    }
+    if (url.pathname === '/api/agent/session') {
+      if (!liveReady()) return send(res, 200, { live: false, reason: 'no ELEVENLABS_API_KEY or ELEVENLABS_AGENT_ID' });
+      try {
+        return send(res, 200, { live: true, signedUrl: await signedUrl() });
+      } catch (err) {
+        console.warn(`[agent] no live session, using offline brain: ${err.message}`);
+        return send(res, 200, { live: false, reason: err.message });
+      }
     }
     if (url.pathname === '/api/route' && req.method === 'POST') {
       const { text, context, spec, stage, saved } = await readJson(req);
-      return send(res, 200, await route(text, context || null, process.env, fetch, { spec, stage, saved }));
+      return send(res, 200, await route(text, context || null, { spec, stage, saved }));
     }
     if (url.pathname === '/api/agent/stream') {
       res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store', connection: 'keep-alive' });
@@ -94,5 +105,5 @@ const server = createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Agent OS on http://localhost:${PORT}  brain=${process.env.ANTHROPIC_API_KEY ? 'claude' : 'keywords'} tts=${ttsReady() ? 'elevenlabs' : 'browser'} script=${process.env.AGENT_SCRIPT === 'off' ? 'off' : 'on'}`);
+  console.log(`Agent OS on http://localhost:${PORT}  brain=${liveReady() ? 'elevenlabs-agent' : 'keywords'} tts=${ttsReady() ? 'elevenlabs' : 'browser'} script=${process.env.AGENT_SCRIPT === 'off' ? 'off' : 'on'}`);
 });

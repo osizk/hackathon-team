@@ -7,6 +7,7 @@ import { savedIndex } from './scenes/generated.js';
 import { initVoice, speak, showSubtitle } from './voice.js';
 import { createListener } from './stt.js';
 import { connectAgent } from './agent-link.js';
+import { live, checkLive, startLive, setMic, sendText, sendContext } from './live-agent.js';
 import { T, TEST, wait } from './timing.js';
 
 const $ = (id) => document.getElementById(id);
@@ -86,10 +87,25 @@ async function routeText(text) {
   return res.json();
 }
 
+// What the live agent's client tools may do to the screen.
+const toolUi = {
+  current: () => open,
+  openScene: (name, data) => { if (open) closeScene(); setTimeout(() => openScene(name, data), open ? T(750) : 0); },
+  closeScene: () => closeScene(),
+  action: (name, extra = {}) => open?.ctl.onAction?.(name, extra, Promise.resolve()),
+  nudgeAllow: () => open?.ctl.onAction?.('button-only'),
+};
+
 // What the user said (voice or fallback text) -> agent action.
 export async function handleUserText(text) {
   text = text.trim();
   if (!text) return;
+  // Live agent: it hears the text and answers through its tools.
+  if (live.connected) {
+    showSubtitle(`“${text}”`, 1200);
+    sendText(text);
+    return;
+  }
   showSubtitle(`“${text}”`, 1200);
   document.body.classList.add('thinking');
   let res;
@@ -126,11 +142,12 @@ function setupFallback() {
   const input = $('fallbackInput');
   const show = () => { form.hidden = false; input.focus(); };
   const hide = () => { form.hidden = true; input.blur(); };
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const text = input.value;
     input.value = '';
     hide();
+    if (live.available && !live.connected) await startLive(toolUi).catch(() => {});
     handleUserText(text);
   });
   input.addEventListener('keydown', (e) => { if (e.key === 'Escape') hide(); });
@@ -164,12 +181,27 @@ function setupMic(fallback) {
     onFinal: (t) => handleUserText(t),
     onError: (err) => { console.warn('[stt]', err); if (err === 'not-allowed') fallback.show(); },
   });
-  if (!listener) {
-    mic.addEventListener('click', () => fallback.show());
-    return;
-  }
-  const start = (e) => { e.preventDefault(); document.body.classList.add('listening'); listener.start(); };
-  const stop = () => { if (!document.body.classList.contains('listening')) return; document.body.classList.remove('listening'); listener.stop(); };
+  // Live agent: holding the mic unmutes it; the agent does its own speech to text.
+  // Offline: the browser's speech recognition (th-TH) listens while the mic is held.
+  const start = async (e) => {
+    e.preventDefault();
+    document.body.classList.add('listening');
+    if (live.available) {
+      try {
+        await startLive(toolUi);
+        if (document.body.classList.contains('listening')) setMic(true);
+        return;
+      } catch { /* fall back to browser listening */ }
+    }
+    if (listener) listener.start();
+    else { document.body.classList.remove('listening'); fallback.show(); }
+  };
+  const stop = () => {
+    if (!document.body.classList.contains('listening')) return;
+    document.body.classList.remove('listening');
+    if (live.connected) setMic(false);
+    else listener?.stop();
+  };
   mic.addEventListener('pointerdown', start);
   mic.addEventListener('pointerup', stop);
   mic.addEventListener('pointerleave', stop);
@@ -191,7 +223,8 @@ async function boot() {
   setupMic(fallback);
   await initVoice();
   document.body.dataset.scene = 'home';
-  connectAgent({ onProactive: (scene) => proactive(scene) });
+  await checkLive();
+  connectAgent({ onProactive: (scene) => proactive(scene), onFeed: (text) => live.connected && sendContext(text), isLive: () => live.connected });
   document.body.dataset.ready = '1';
   // For tests and the presenter console.
   window.agentOS = { openScene, closeScene, handleUserText, proactive };

@@ -1,0 +1,85 @@
+import { test, expect } from '@playwright/test';
+import { expectHome } from './helpers.js';
+
+// The live ElevenLabs agent path, with the SDK and the agent routes stubbed (no network, no key).
+// A real smoke test with a real agent is a manual step in README.md.
+const FAKE_SDK = `
+export const Conversation = {
+  async startSession(opts) {
+    const conv = { opts, sent: [], context: [], muted: null,
+      setMicMuted(m) { conv.muted = m; }, sendUserMessage(t) { conv.sent.push(t); },
+      sendContextualUpdate(t) { conv.context.push(t); }, async endSession() {} };
+    window.__conv = conv;
+    setTimeout(() => opts.onConnect && opts.onConnect({ conversationId: 'fake' }), 0);
+    return conv;
+  },
+};`;
+
+async function liveHome(page) {
+  await page.request.post('/api/feeds/event', { data: { event: 'reset' } });
+  await page.addInitScript(() => {
+    navigator.mediaDevices.getUserMedia = async () => ({ getTracks: () => [] });
+  });
+  await page.route('**/api/health', (r) => r.fulfill({ json: { brain: 'elevenlabs-agent', tts: false } }));
+  await page.route('**/api/agent/session', (r) => r.fulfill({ json: { live: true, signedUrl: 'wss://example.invalid/fake' } }));
+  await page.route('https://cdn.jsdelivr.net/npm/@elevenlabs/client@*/+esm', (r) => r.fulfill({ contentType: 'text/javascript', body: FAKE_SDK }));
+  await page.goto('/?test=1');
+  await expect(page.locator('body')).toHaveAttribute('data-brain', 'agent-ready');
+  // Hold the mic: the session starts and the mic is unmuted only while held.
+  await page.locator('#mic').dispatchEvent('pointerdown');
+  await expect(page.locator('body')).toHaveAttribute('data-brain', 'agent');
+  await expect.poll(() => page.evaluate(() => window.__conv?.muted)).toBe(false);
+  await page.locator('#mic').dispatchEvent('pointerup');
+  await expect.poll(() => page.evaluate(() => window.__conv.muted)).toBe(true);
+}
+
+const tool = (page, name, params) => page.evaluate(([n, p]) => window.__conv.opts.clientTools[n](p), [name, params]);
+
+test('live: client tools open and act on scenes; payment can never be approved by the agent', async ({ page }) => {
+  await liveHome(page);
+  expect(await tool(page, 'open_scene', { scene: 'payment' })).toBe('opened payment');
+  await expect(page.locator('body')).toHaveAttribute('data-scene', 'payment');
+  expect(await tool(page, 'scene_action', { action: 'confirm' })).toMatch(/^refused/);
+  await expect(page.locator('[data-testid=allow]')).toHaveClass(/nudge/);
+  await expect(page.locator('[data-testid=pay-success]')).toBeHidden();
+  expect(await tool(page, 'scene_action', { action: 'close' })).toBe('closed');
+  await expectHome(page);
+
+  expect(await tool(page, 'open_scene', { scene: 'flight' })).toBe('opened flight');
+  await expect(page.locator('body')).toHaveAttribute('data-scene', 'flight');
+  await tool(page, 'scene_action', { action: 'confirm' });
+  await expect(page.locator('[data-testid=flight-done]')).toBeVisible();
+  await expectHome(page);
+});
+
+test('live: render, revise, mark urgent and keep generated pages', async ({ page }) => {
+  await liveHome(page);
+  const spec = { kind: 'packing', name: 'Packing list', title: 'Packing list', blocks: [{ type: 'checklist', items: [{ text: 'Passport' }] }, { type: 'evil' }], proposals: [{ id: 'a', label: 'Add weather' }] };
+  expect(await tool(page, 'render_ui', { spec_json: JSON.stringify(spec) })).toMatch(/ask if the user likes it/);
+  await expect(page.locator('[data-testid=g-title]')).toHaveText('Packing list');
+  await tool(page, 'revise_ui', { spec_json: JSON.stringify({ ...spec, blocks: [{ type: 'checklist', items: [{ text: 'Passport' }, { text: 'Charger' }] }] }) });
+  await expect(page.locator('.g-checklist li')).toHaveCount(2);
+  expect(await tool(page, 'keep_scene', {})).toMatch(/^kept/);
+  await expectHome(page);
+  expect(Object.keys(await page.evaluate(() => JSON.parse(localStorage.getItem('agentos.savedScenes'))))).toEqual(['packing']);
+
+  await tool(page, 'render_ui', { spec_json: JSON.stringify({ title: 'Cut finger', blocks: [{ type: 'steps', items: ['Press the cut'] }] }) });
+  expect(await tool(page, 'mark_urgent', { level: 'serious' })).toBe('marked serious');
+  await expect(page.locator('[data-testid=g-call]')).toHaveAttribute('href', 'tel:1669');
+  await expect(page.locator('[data-testid=g-chips]')).toHaveCount(0);
+  expect(await tool(page, 'keep_scene', {})).toMatch(/^refused/);
+});
+
+test('live: typed text goes to the agent, and feed changes arrive as contextual updates', async ({ page }) => {
+  await liveHome(page);
+  await page.keyboard.press('/');
+  await page.fill('#fallbackInput', 'this week is hectic');
+  await page.keyboard.press('Enter');
+  await expect.poll(() => page.evaluate(() => window.__conv.sent)).toEqual(['this week is hectic']);
+  // The offline router must not open anything by itself in live mode.
+  await expect(page.locator('body')).toHaveAttribute('data-scene', 'home');
+
+  await page.request.post('/api/feeds/event', { data: { event: 'flight-delayed' } });
+  await expect.poll(() => page.evaluate(() => window.__conv.context.join(' ')), { timeout: 5000 }).toContain('delayed 120 minutes');
+  await expect(page.locator('body')).toHaveAttribute('data-scene', 'home');
+});

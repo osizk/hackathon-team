@@ -71,7 +71,7 @@ Presenter controls (keys work when not typing):
 | `Esc` or `h` | Fold back to home |
 
 Voice order: cached MP3 in `web/public/voice/`, then live ElevenLabs, then the
-browser voice. With `ANTHROPIC_API_KEY` set, Claude picks the scene; without
+browser voice. With the live ElevenLabs agent configured, it picks the scene; without
 it, a keyword router does. The app runs with no keys at all.
 
 Out of scope: real payments, outside websites, LINE, CryptoMate code.

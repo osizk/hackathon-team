@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validateSpec, cannedTodo, cannedFirstAid, reviseByKeywords } from './genui.js';
+import { validateSpec, cannedTodo, cannedFirstAid, reviseByKeywords } from '../public/js/genui.js';
 import { keywordRoute, route } from './router.js';
 
 test('validateSpec drops unknown components and keeps strings plain', () => {
@@ -41,25 +41,10 @@ test('like asks to keep; yes keeps; no closes', () => {
   assert.equal(keywordRoute('no thanks', 'generated', { spec, stage: 'keep' }).action, 'close');
 });
 
-test('a kept page opens at once, without a model call', async () => {
-  let called = false;
-  const r = await route('todo list for tomorrow', null, { ANTHROPIC_API_KEY: 'x' }, async () => { called = true; }, {
-    saved: [{ kind: 'todo', match: ['todo'] }],
-  });
-  assert.equal(called, false);
+test('a kept page opens at once, with no generation', async () => {
+  const r = await route('todo list for tomorrow', null, { saved: [{ kind: 'todo', match: ['todo'] }] });
   assert.equal(r.via, 'saved');
   assert.equal(r.data.savedKind, 'todo');
-});
-
-test('Claude generated spec is validated', async () => {
-  const fakeFetch = async () => ({
-    ok: true,
-    json: async () => ({ content: [{ type: 'tool_use', input: { scene: 'generated', say: 'ok', spec: { kind: 'budget', title: 'Budget', blocks: [{ type: 'chart', bars: [{ label: 'Food', value: 40 }] }, { type: 'evil' }] } } }] }),
-  });
-  const r = await route('plan my budget', null, { ANTHROPIC_API_KEY: 'x' }, fakeFetch);
-  assert.equal(r.scene, 'generated');
-  assert.equal(r.data.spec.blocks.length, 1);
-  assert.ok(r.data.spec.match.includes('budget'));
 });
 
 test('bleeding finger opens first aid at once, with a 1669 button and no proposals', () => {

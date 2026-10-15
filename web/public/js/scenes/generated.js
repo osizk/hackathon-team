@@ -150,7 +150,7 @@ export default function mountGenerated(el, data, agent) {
     agent.close();
     return {};
   }
-  const urgent = Boolean(spec.urgency && spec.urgency !== 'none');
+  let urgent = Boolean(spec.urgency && spec.urgency !== 'none');
   let stage = urgent ? 'urgent' : fromSaved ? 'saved' : 'review';
   let version = 0;
 
@@ -185,6 +185,14 @@ export default function mountGenerated(el, data, agent) {
   return {
     state: () => ({ spec, stage: stage === 'saved' ? 'review' : stage }),
     async onAction(action, res, talking) {
+      if (action === 'urgent' && res?.spec) {
+        spec = res.spec;
+        urgent = true;
+        stage = 'urgent';
+        version += 1;
+        draw(true);
+        return;
+      }
       if (urgent && action !== 'close') return;
       if (action === 'revise' && res.spec) {
         spec = res.spec;

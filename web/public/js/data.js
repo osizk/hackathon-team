@@ -1,4 +1,4 @@
-// Default data for each scene. The agent (Claude or the keyword router) sends
+// Default data for each scene. The agent (the ElevenLabs agent or the keyword router) sends
 // structured data in this shape; the scene fills its UI from it.
 export const SCENE_DEFAULTS = {
   payment: {

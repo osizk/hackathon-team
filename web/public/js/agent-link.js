@@ -1,6 +1,7 @@
 // Link to the always-on agent on the server.
 // - Tells the server what the page is doing (scene open, agent talking, user talking).
-// - Listens on SSE; when the agent decides to speak first, opens that scene if the page is idle.
+// - Listens on SSE. Offline: when the rules decide to speak first, opens that scene if the page is idle.
+//   Live agent: feed changes arrive as text and go into the conversation as contextual updates.
 // - Hidden presenter control: tap the clock 3 times (or Shift+T / Shift+F / Shift+R) to fire a feed event.
 
 const post = (url, body) =>
@@ -8,7 +9,12 @@ const post = (url, body) =>
 
 function presence() {
   const b = document.body;
-  return { scene: b.dataset.scene || 'home', talking: b.classList.contains('speaking'), listening: b.classList.contains('listening') };
+  return {
+    scene: b.dataset.scene || 'home',
+    talking: b.classList.contains('speaking'),
+    listening: b.classList.contains('listening'),
+    live: b.dataset.brain === 'agent', // the server then sends feed changes as contextual updates
+  };
 }
 const idle = () => {
   const p = presence();
@@ -24,7 +30,7 @@ function watchPresence() {
     last = key;
     post('/api/agent/presence', p);
   };
-  new MutationObserver(report).observe(document.body, { attributes: true, attributeFilter: ['class', 'data-scene'] });
+  new MutationObserver(report).observe(document.body, { attributes: true, attributeFilter: ['class', 'data-scene', 'data-brain'] });
   report();
 }
 
@@ -63,7 +69,7 @@ function presenterPanel() {
   });
 }
 
-export function connectAgent({ onProactive }) {
+export function connectAgent({ onProactive, onFeed }) {
   watchPresence();
   presenterPanel();
   if (!('EventSource' in window)) return;
@@ -77,5 +83,7 @@ export function connectAgent({ onProactive }) {
     console.info(`[agent] speaks first: ${msg.scene} (${msg.via}: ${msg.reason})`);
     onProactive(msg.scene);
   });
+  // Live agent: the feed change goes into the conversation; the agent decides whether to speak.
+  es.addEventListener('feed', (e) => onFeed?.(JSON.parse(e.data).text));
   es.onerror = () => { document.body.dataset.agent = 'reconnecting'; };
 }

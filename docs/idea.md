@@ -50,5 +50,5 @@ Every task grows out of the home and folds back to it. That is the OS.
   "Jessica" voice speaks Thai with `eleven_v4`.
 - Phone on stage: the microphone needs HTTPS when the page is not on
   `localhost`.
-- The Claude paths (scene choice, generated pages, speak-or-wait) are unit
-  tested with fake answers only, not yet with a real key.
+- The live ElevenLabs agent is tested with a stubbed SDK only, until the key
+  has the Agents permission.
