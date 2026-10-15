@@ -15,6 +15,107 @@ Copy this block for a new decision:
 - **Who decided:** names, or "whole team".
 ```
 
+## 2026-10-15: Deploy on Vercel
+
+- **Decision:** The demo also runs on Vercel (issue #19). The always-on loop
+  and fake feeds run in the page; the server routes are Vercel functions
+  sharing code with the local server; logs go to Vercel's function log; a
+  passcode in a Vercel env var protects every route that can call
+  ElevenLabs. Local `npm start` keeps working, with no passcode.
+- **Why:** "Vercel" - a link the team and judges can open without our
+  laptop.
+- **Who decided:** head (team lead)
+
+## 2026-10-15: Pictures in generated pages
+
+- **Decision:** Generated pages can have an image part with a short prompt.
+  The page shows a grey frame at once; the server asks the ElevenLabs Image &
+  Video API (`gemini-2.5-flash-image`) and the picture fades in. Pictures are
+  cached by prompt, capped per page, and any error keeps the frame with an
+  icon. The four storyboard scenes keep their ready-made pictures.
+- **Why:** "เปิด" - pages the agent makes should look as good as the
+  prebuilt ones.
+- **Who decided:** head (team lead)
+
+## 2026-10-15: The brain is an ElevenLabs agent
+
+- **Decision:** The agent's brain is an ElevenLabs agent (ElevenAgents) with
+  Claude Sonnet 5.5 inside, Thai voice and Thai speech to text. It is defined
+  as code (`web/agent/`) and created or updated by `npm run agent:sync`. The
+  browser joins with the official JS SDK through a signed URL from our
+  server. The agent changes the screen only through client tools. Feed
+  changes go into the conversation as contextual updates. The Claude API key
+  path is removed. Offline, the keyword router, cached MP3s and ready-made
+  pages still run the demo.
+- **Why:** "ElevenLabs agent" - one service for voice, listening and the
+  brain.
+- **Who decided:** head (team lead)
+
+## 2026-10-15: Allow is a button only
+
+- **Decision:** On the payment card, only a tap on Allow moves money. Saying
+  "allow", "yes" or "pay" only makes the button pulse. This holds even if
+  the agent says otherwise; the code checks it. Tonight Allow ends in a success
+  screen only, with no real payment.
+- **Why:** Speech to text makes mistakes, and money must never move by
+  mistake. Same rule as before: nothing pays without the owner's approve.
+- **Who decided:** head (team lead)
+
+## 2026-10-15: A real always-on agent
+
+- **Decision:** The agent speaks first by itself. A loop (in the page since
+  the Vercel move) watches fake feeds (email, calendar, sleep and runs,
+  flight) every few seconds and decides when to speak and which scene to
+  open. The agent decides when live, simple rules offline. It never speaks
+  over an open scene or while anyone talks. A script keeps the demo order
+  fixed; the presenter can fire a feed event from a hidden panel. Hotkeys
+  stay as the last resort.
+- **Why:** "Always-on จริง" - the agent should really watch and act, not
+  wait for a presenter key.
+- **Who decided:** head (team lead)
+
+## 2026-10-15: Keep the pages the user likes
+
+- **Decision:** When the user likes a generated page, the agent asks whether
+  to keep it. A kept page is saved in the browser and opens at once next
+  time, with new data and no new generation.
+- **Why:** "แล้วถ้าอันเจอที่ user ชอบแล้วค่อยทำเป็นอะไรที่ไว้ใช้ประจำ" - what
+  the user likes should become something they use every day.
+- **Who decided:** head (team lead)
+
+## 2026-10-15: Generated pages with a like-and-adjust loop
+
+- **Decision:** Keep the four prebuilt scenes. For a task with no scene, the
+  agent draws a new page as JSON from a fixed set of parts, never as HTML or
+  code. Then it asks if the user likes it and proposes one or two changes;
+  the spoken answer changes the page in place.
+- **Why:** "มันต้อง generate ได้ด้วยเพื่อมันมี task ที่มันไม่คุ้น" - the agent
+  will get tasks it does not know. A fixed set of parts keeps it safe.
+- **Who decided:** head (team lead)
+
+## 2026-10-15: Agent OS storyboard
+
+- **Decision:** Agent home, then four scenes: shopping list from email,
+  payment card, training with race sign-up, flight delay. Every scene grows
+  out of the home and folds back. The home has no chat history and no text
+  box. Use cases are the three of the Muse launch video. Details:
+  [agent-os-storyboard.md](agent-os-storyboard.md).
+- **Why:** Each scene shows one message: the agent builds UI, money moves
+  only on approve, multi-step work for you, the agent speaks first.
+- **Who decided:** head (team lead)
+
+## 2026-10-15: Pivot from CryptoMate to Agent OS
+
+- **Decision:** We build **Agent OS**: you talk to an agent, and it answers
+  with real UI instead of text, on one screen, never switching apps. This
+  replaces CryptoMate and the CryptoMate entries below (app flow, payment
+  assistant, tech stack, money story, demo story). The demo app is plain
+  HTML/JS with a small Node server in `web/`, ElevenLabs for the voice,
+  Claude optional (issue #17).
+- **Why:** The team lead changed the idea ("เปลี่ยน"). A demo need not be
+  pretty; quality rises as models improve.
+- **Who decided:** head (team lead)
+
 ## 2026-10-15: Product is CryptoMate
 
 - **Decision:** We build CryptoMate, "เพื่อนคู่ใจที่ดูแลเงิน crypto ของคุณ

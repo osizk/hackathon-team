@@ -1,0 +1,254 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <!-- Basket Body Clip Path -->
+    <clipPath id="basketClip">
+      <path d="M 80 225 Q 200 237 320 225 L 285 332 Q 200 341 115 332 Z"/>
+    </clipPath>
+
+    <!-- Side Shadow Gradient for Basket Roundness -->
+    <linearGradient id="basketShade" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#9C6634" stop-opacity="0.35"/>
+      <stop offset="18%" stop-color="#9C6634" stop-opacity="0"/>
+      <stop offset="82%" stop-color="#9C6634" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#9C6634" stop-opacity="0.35"/>
+    </linearGradient>
+
+    <!-- Bread Crust Gradient -->
+    <linearGradient id="breadGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#DE9E58"/>
+      <stop offset="25%" stop-color="#F3C68F"/>
+      <stop offset="100%" stop-color="#EAA966"/>
+    </linearGradient>
+
+    <!-- Milk Bottle Glass Shimmer -->
+    <linearGradient id="glassGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#E2EDF8"/>
+      <stop offset="40%" stop-color="#F5F9FD"/>
+      <stop offset="100%" stop-color="#D9E6F2"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Ground Soft Shadow -->
+  <ellipse cx="200" cy="348" rx="112" ry="13" fill="#604838" opacity="0.12"/>
+  <ellipse cx="200" cy="347" rx="85" ry="8" fill="#604838" opacity="0.08"/>
+
+  <!-- Large Overarching Basket Handle (Behind Items) -->
+  <path d="M 116 225 C 116 68, 284 68, 284 225" fill="none" stroke="#C38141" stroke-width="16" stroke-linecap="round"/>
+  <path d="M 116 225 C 116 68, 284 68, 284 225" fill="none" stroke="#EBB882" stroke-width="10" stroke-linecap="round"/>
+  <!-- Handle Wicker Wrap Marks -->
+  <path d="M 116 225 C 116 68, 284 68, 284 225" fill="none" stroke="#A7672B" stroke-width="2.5" stroke-dasharray="3 14" stroke-linecap="round"/>
+  <path d="M 116 225 C 116 68, 284 68, 284 225" fill="none" stroke="#FFF0D4" stroke-width="2" stroke-dasharray="3 14" stroke-dashoffset="3" stroke-linecap="round" opacity="0.8"/>
+
+  <!-- Back Interior Rim of Basket -->
+  <path d="M 80 225 Q 200 237 320 225 L 316 235 Q 200 246 84 235 Z" fill="#9E6430"/>
+
+  <!-- ==================== GROCERY ITEMS ==================== -->
+
+  <!-- 1. GREEN VEGETABLES (Background Left/Center) -->
+  <g id="vegetables">
+    <!-- Tall Celery / Leek Stalks -->
+    <path d="M 172 170 L 168 114 C 168 108 175 106 178 112 L 184 170 Z" fill="#88D49E"/>
+    <path d="M 183 170 L 185 104 C 185 98 193 98 195 104 L 193 170 Z" fill="#A9DFBF"/>
+    <!-- Leafy Greens (Kale / Romaine) -->
+    <path d="M 134 168 C 122 152 120 128 138 118 C 146 114 162 116 170 126 C 182 114 204 122 206 142 C 218 160 206 182 192 184 Z" fill="#69C28D"/>
+    <!-- Inner Leaf Tufts -->
+    <path d="M 144 164 C 134 150 138 132 152 126 C 160 122 174 126 178 134 C 188 126 202 134 200 148 C 204 164 194 178 184 180 Z" fill="#82D6A4"/>
+    <path d="M 154 160 C 146 148 150 136 160 132 C 166 128 176 132 178 138 C 186 132 194 138 192 148 C 196 158 188 170 180 172 Z" fill="#A3E4BE"/>
+    <!-- Leaf Veins -->
+    <path d="M 166 176 Q 168 144 174 132" fill="none" stroke="#D5F5E3" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M 168 154 Q 158 148 152 148" fill="none" stroke="#D5F5E3" stroke-width="2" stroke-linecap="round"/>
+    <path d="M 171 144 Q 182 138 186 140" fill="none" stroke="#D5F5E3" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <!-- 2. BREAD LOAF (Baguette, Slanted Right) -->
+  <g id="bread" transform="rotate(22 265 160)">
+    <!-- Loaf Body -->
+    <rect x="246" y="90" width="40" height="135" rx="20" fill="url(#breadGrad)"/>
+    <!-- Crust Highlight & Shadow -->
+    <path d="M 246 110 C 246 95 256 90 266 90 C 254 96 250 108 250 125 L 250 205 C 247 195 246 180 246 165 Z" fill="#C98642" opacity="0.5"/>
+    <path d="M 286 110 C 286 95 276 90 266 90 C 278 96 282 108 282 125 L 282 205 C 285 195 286 180 286 165 Z" fill="#FFE3C2" opacity="0.6"/>
+    <!-- Diagonal Score Cuts (Coupes) -->
+    <ellipse cx="266" cy="114" rx="10" ry="4.5" transform="rotate(-18 266 114)" fill="#FFF3E0" stroke="#B8732E" stroke-width="1.8"/>
+    <ellipse cx="266" cy="138" rx="11" ry="5" transform="rotate(-18 266 138)" fill="#FFF3E0" stroke="#B8732E" stroke-width="1.8"/>
+    <ellipse cx="266" cy="164" rx="11" ry="5" transform="rotate(-18 266 164)" fill="#FFF3E0" stroke="#B8732E" stroke-width="1.8"/>
+    <ellipse cx="266" cy="190" rx="10" ry="4.5" transform="rotate(-18 266 190)" fill="#FFF3E0" stroke="#B8732E" stroke-width="1.8"/>
+  </g>
+
+  <!-- 3. MILK BOTTLE (Middle-Left) -->
+  <g id="milkBottle">
+    <!-- Cap -->
+    <rect x="119" y="118" width="22" height="9" rx="3.5" fill="#8ECAE6"/>
+    <rect x="117" y="125" width="26" height="4" rx="2" fill="#64B5F6"/>
+    <!-- Bottle Neck -->
+    <rect x="122" y="129" width="16" height="16" fill="url(#glassGrad)"/>
+    <!-- Bottle Main Body -->
+    <path d="M 122 145 C 112 153 108 164 108 178 L 108 238 L 152 238 L 152 178 C 152 164 148 153 138 145 Z" fill="url(#glassGrad)"/>
+    <!-- White Milk Fill Inside -->
+    <path d="M 111 176 Q 130 172 149 176 L 149 236 L 111 236 Z" fill="#FFFFFF"/>
+    <!-- Soft Pastel Teal Label -->
+    <rect x="108" y="184" width="44" height="28" rx="3" fill="#BEE1E6"/>
+    <!-- Label Motif (Minimalist Wave & Cute Drop) -->
+    <path d="M 130 192 C 130 192 125 198 125 201 C 125 203.8 127.2 206 130 206 C 132.8 206 135 203.8 135 201 C 135 198 130 192 130 192 Z" fill="#78CADC"/>
+    <path d="M 114 207 Q 122 205 130 207 T 146 207" fill="none" stroke="#9FD4DF" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- Glass Highlights -->
+    <path d="M 112 162 L 112 230" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+    <path d="M 116 154 L 120 148" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+  </g>
+
+  <!-- 4. BANANAS (Center Arching Right) -->
+  <g id="bananas">
+    <!-- Banana 1 (Rear) -->
+    <path d="M 230 166 C 240 194 226 230 178 234 C 168 235 164 227 167 223 C 206 219 220 193 218 168 Z" fill="#F4D06F"/>
+    <!-- Banana 2 (Main Front) -->
+    <path d="M 234 168 C 246 200 230 238 174 241 C 162 242 158 233 162 229 C 208 225 224 195 220 170 Z" fill="#FFE66D"/>
+    <!-- Banana Ridge Lines -->
+    <path d="M 230 172 C 238 198 222 228 174 235" fill="none" stroke="#F1C438" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M 226 170 C 232 194 218 222 178 228" fill="none" stroke="#E2B72E" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+    <!-- Tips (Pale Green & Brown) -->
+    <path d="M 162 229 C 158 233 162 242 174 241 L 169 243 C 159 244 154 236 158 230 Z" fill="#A3B18A"/>
+    <circle cx="160" cy="235" r="2.5" fill="#6B4F35"/>
+    <!-- Stem Base Bundle -->
+    <path d="M 230 168 L 241 161 C 243 159 240 155 237 156 L 227 163 Z" fill="#7F6A55"/>
+    <path d="M 227 166 L 236 160" stroke="#A3B18A" stroke-width="3" stroke-linecap="round"/>
+  </g>
+
+  <!-- 5. APPLES (Two Apples: 1 Pastel Red, 1 Pastel Green) -->
+  <g id="apples">
+    <!-- Apple 1: Soft Pastel Red/Coral (Center-Left) -->
+    <g id="redApple">
+      <!-- Stem -->
+      <path d="M 158 206 Q 161 192 168 190" fill="none" stroke="#6F4E37" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- Tiny Leaf -->
+      <path d="M 164 194 Q 174 191 172 199 Q 164 200 164 194 Z" fill="#84A59D"/>
+      <!-- Apple Fruit -->
+      <path d="M 158 205 C 168 198 180 206 179 220 C 177 234 165 241 158 239 C 151 241 139 234 137 220 C 136 206 148 198 158 205 Z" fill="#F28482"/>
+      <!-- Shading & Highlight -->
+      <path d="M 141 228 C 146 235 154 238 158 238 C 164 238 171 234 175 228 C 170 234 163 236 158 236 C 152 236 145 233 141 228 Z" fill="#D66866"/>
+      <ellipse cx="147" cy="216" rx="4.5" ry="8" transform="rotate(-25 147 216)" fill="#FFFFFF" opacity="0.45"/>
+      <circle cx="144" cy="227" r="1.8" fill="#FFFFFF" opacity="0.45"/>
+    </g>
+
+    <!-- Apple 2: Soft Pastel Light Green (Center-Right, Tucked Beside Bananas) -->
+    <g id="greenApple">
+      <!-- Stem -->
+      <path d="M 197 210 Q 195 198 190 196" fill="none" stroke="#6F4E37" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- Tiny Leaf -->
+      <path d="M 194 202 Q 184 199 186 207 Q 193 207 194 202 Z" fill="#74C69D"/>
+      <!-- Apple Fruit -->
+      <path d="M 197 209 C 207 202 218 209 217 223 C 215 235 204 241 197 240 C 190 241 179 235 177 223 C 176 209 187 202 197 209 Z" fill="#B5E48C"/>
+      <!-- Highlight -->
+      <ellipse cx="187" cy="218" rx="3.5" ry="6.5" transform="rotate(-20 187 218)" fill="#FFFFFF" opacity="0.5"/>
+    </g>
+  </g>
+
+  <!-- 6. EGGS (Pastel Ivory, Blush, and Cream Cluster) -->
+  <g id="eggs">
+    <!-- Egg 1 (Back Ivory) -->
+    <g transform="rotate(-15 229 220)">
+      <ellipse cx="229" cy="220" rx="10" ry="14" fill="#FAF0CA"/>
+      <path d="M 221 224 C 223 230 228 233 233 233 C 237 233 239 231 239 230 C 237 232 233 234 229 234 C 224 234 221 229 221 224 Z" fill="#E4D5A1" opacity="0.6"/>
+      <ellipse cx="226" cy="215" rx="3" ry="6" fill="#FFFFFF" opacity="0.6"/>
+    </g>
+    <!-- Egg 2 (Middle Blush Cream) -->
+    <g transform="rotate(12 245 223)">
+      <ellipse cx="245" cy="223" rx="10" ry="14" fill="#F7EBE1"/>
+      <path d="M 237 227 C 239 233 244 236 249 236 C 253 236 255 234 255 233 C 253 235 249 237 245 237 C 240 237 237 232 237 227 Z" fill="#DEC3B1" opacity="0.6"/>
+      <ellipse cx="242" cy="217" rx="3" ry="6" fill="#FFFFFF" opacity="0.7"/>
+    </g>
+    <!-- Egg 3 (Front Soft Beige-Tan) -->
+    <g transform="rotate(28 260 228)">
+      <ellipse cx="260" cy="228" rx="9.5" ry="13.5" fill="#EED7C5"/>
+      <path d="M 252 232 C 254 238 259 241 264 241 C 268 241 270 239 270 238 C 268 240 264 242 260 242 C 255 242 252 237 252 232 Z" fill="#CCA890" opacity="0.6"/>
+      <ellipse cx="257" cy="222" rx="2.8" ry="5.5" fill="#FFFFFF" opacity="0.65"/>
+    </g>
+  </g>
+
+  <!-- ==================== BASKET FRONT & WEAVE ==================== -->
+
+  <!-- Basket Body Silhouette (Clipped Area) -->
+  <g clip-path="url(#basketClip)">
+    <!-- Base Wicker Tone -->
+    <rect x="70" y="220" width="260" height="125" fill="#DDA15E"/>
+
+    <!-- Woven Horizontal Bands & Staggered Blocks -->
+    <!-- ROW 1 (y: 236) -->
+    <rect x="78" y="235" width="22" height="14" rx="4" fill="#E8B983"/>
+    <rect x="106" y="235" width="22" height="14" rx="4" fill="#F4CF9F"/>
+    <rect x="134" y="235" width="22" height="14" rx="4" fill="#E8B983"/>
+    <rect x="162" y="235" width="22" height="14" rx="4" fill="#F4CF9F"/>
+    <rect x="190" y="235" width="22" height="14" rx="4" fill="#E8B983"/>
+    <rect x="218" y="235" width="22" height="14" rx="4" fill="#F4CF9F"/>
+    <rect x="246" y="235" width="22" height="14" rx="4" fill="#E8B983"/>
+    <rect x="274" y="235" width="22" height="14" rx="4" fill="#F4CF9F"/>
+    <rect x="302" y="235" width="22" height="14" rx="4" fill="#E8B983"/>
+    <!-- Row 1 Separator Shadow -->
+    <path d="M 70 252 Q 200 260 330 252" stroke="#BC7A37" stroke-width="2.5" fill="none"/>
+
+    <!-- ROW 2 (y: 255, Staggered) -->
+    <rect x="92" y="254" width="22" height="14" rx="4" fill="#F4CF9F"/>
+    <rect x="120" y="254" width="22" height="14" rx="4" fill="#E8B983"/>
+    <rect x="148" y="254" width="22" height="14" rx="4" fill="#F4CF9F"/>
+    <rect x="176" y="254" width="22" height="14" rx="4" fill="#E8B983"/>
+    <rect x="204" y="254" width="22" height="14" rx="4" fill="#F4CF9F"/>
+    <rect x="232" y="254" width="22" height="14" rx="4" fill="#E8B983"/>
+    <rect x="260" y="254" width="22" height="14" rx="4" fill="#F4CF9F"/>
+    <rect x="288" y="254" width="22" height="14" rx="4" fill="#E8B983"/>
+    <!-- Row 2 Separator Shadow -->
+    <path d="M 75 271 Q 200 279 325 271" stroke="#BC7A37" stroke-width="2.5" fill="none"/>
+
+    <!-- ROW 3 (y: 274, Staggered) -->
+    <rect x="98" y="273" width="22" height="14" rx="4" fill="#E8B983"/>
+    <rect x="126" y="273" width="22" height="14" rx="4" fill="#F4CF9F"/>
+    <rect x="154" y="273" width="22" height="14" rx="4" fill="#E8B983"/>
+    <rect x="182" y="273" width="22" height="14" rx="4" fill="#F4CF9F"/>
+    <rect x="210" y="273" width="22" height="14" rx="4" fill="#E8B983"/>
+    <rect x="238" y="273" width="22" height="14" rx="4" fill="#F4CF9F"/>
+    <rect x="266" y="273" width="22" height="14" rx="4" fill="#E8B983"/>
+    <!-- Row 3 Separator Shadow -->
+    <path d="M 85 290 Q 200 298 315 290" stroke="#BC7A37" stroke-width="2.5" fill="none"/>
+
+    <!-- ROW 4 (y: 293, Staggered) -->
+    <rect x="108" y="292" width="22" height="14" rx="4" fill="#F4CF9F"/>
+    <rect x="136" y="292" width="22" height="14" rx="4" fill="#E8B983"/>
+    <rect x="164" y="292" width="22" height="14" rx="4" fill="#F4CF9F"/>
+    <rect x="192" y="292" width="22" height="14" rx="4" fill="#E8B983"/>
+    <rect x="220" y="292" width="22" height="14" rx="4" fill="#F4CF9F"/>
+    <rect x="248" y="292" width="22" height="14" rx="4" fill="#E8B983"/>
+    <rect x="276" y="292" width="22" height="14" rx="4" fill="#F4CF9F"/>
+    <!-- Row 4 Separator Shadow -->
+    <path d="M 95 309 Q 200 317 305 309" stroke="#BC7A37" stroke-width="2.5" fill="none"/>
+
+    <!-- ROW 5 (y: 312, Staggered) -->
+    <rect x="116" y="311" width="22" height="14" rx="4" fill="#E8B983"/>
+    <rect x="144" y="311" width="22" height="14" rx="4" fill="#F4CF9F"/>
+    <rect x="172" y="311" width="22" height="14" rx="4" fill="#E8B983"/>
+    <rect x="200" y="311" width="22" height="14" rx="4" fill="#F4CF9F"/>
+    <rect x="228" y="311" width="22" height="14" rx="4" fill="#E8B983"/>
+    <rect x="256" y="311" width="22" height="14" rx="4" fill="#F4CF9F"/>
+
+    <!-- Vertical Weave Highlight Threads -->
+    <path d="M 117 230 L 130 335 M 173 230 L 178 335 M 227 230 L 222 335 M 283 230 L 270 335" stroke="#FFFFFF" stroke-width="1.2" opacity="0.3" stroke-dasharray="6 8"/>
+
+    <!-- Shading Overlay for 3D Volume -->
+    <rect x="70" y="220" width="260" height="125" fill="url(#basketShade)"/>
+  </g>
+
+  <!-- Front Rim of the Basket (Thick Braided Edge) -->
+  <path d="M 76 225 Q 200 238 324 225" fill="none" stroke="#B37233" stroke-width="15" stroke-linecap="round"/>
+  <path d="M 76 225 Q 200 238 324 225" fill="none" stroke="#EBB882" stroke-width="10" stroke-linecap="round"/>
+  <!-- Braided Rim Diagonal Stitches -->
+  <path d="M 76 225 Q 200 238 324 225" fill="none" stroke="#FFF2DE" stroke-width="2.5" stroke-dasharray="3 9" stroke-linecap="round" opacity="0.9"/>
+  <path d="M 76 225 Q 200 238 324 225" fill="none" stroke="#8E5320" stroke-width="2" stroke-dasharray="3 9" stroke-dashoffset="4.5" stroke-linecap="round" opacity="0.7"/>
+
+  <!-- Basket Foot / Base Rim -->
+  <path d="M 116 333 Q 200 342 284 333" fill="none" stroke="#A7672B" stroke-width="9" stroke-linecap="round"/>
+  <path d="M 116 333 Q 200 342 284 333" fill="none" stroke="#DDA15E" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- Side Ear Handles -->
+  <!-- Left Ear Handle -->
+  <path d="M 82 232 C 60 234 58 258 86 263" fill="none" stroke="#A7672B" stroke-width="6.5" stroke-linecap="round"/>
+  <path d="M 82 232 C 60 234 58 258 86 263" fill="none" stroke="#EBB882" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- Right Ear Handle -->
+  <path d="M 318 232 C 340 234 342 258 314 263" fill="none" stroke="#A7672B" stroke-width="6.5" stroke-linecap="round"/>
+  <path d="M 318 232 C 340 234 342 258 314 263" fill="none" stroke="#EBB882" stroke-width="3.5" stroke-linecap="round"/>
+</svg>

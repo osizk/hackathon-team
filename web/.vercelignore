@@ -1,0 +1,6 @@
+logs
+.cache
+tests
+test-results
+playwright-report
+scripts

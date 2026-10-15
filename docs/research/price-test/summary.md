@@ -1,5 +1,7 @@
 # Price test: summary
 
+This belongs to the dropped CryptoMate idea (see [decisions](../../decisions.md)); kept for reference.
+
 50 items, cheapest delivered to Bangkok: Thai shops versus shops abroad.
 Items: [items.md](items.md). Every row: [results.md](results.md).
 Prices read 2026-10-15. 1 USD = 33.62 THB.

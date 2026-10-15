@@ -1,0 +1,295 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 300" width="100%" height="100%">
+  <defs>
+    <!-- Sky Sunrise Gradient -->
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#A5B4FC"/>
+      <stop offset="28%" stop-color="#C4B5FD"/>
+      <stop offset="55%" stop-color="#FBCFE8"/>
+      <stop offset="78%" stop-color="#FED7AA"/>
+      <stop offset="100%" stop-color="#FEF08A"/>
+    </linearGradient>
+
+    <!-- Sun Radial Glows -->
+    <radialGradient id="sunGlowOuter" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFBEB" stop-opacity="0.35"/>
+      <stop offset="60%" stop-color="#FEF08A" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#FED7AA" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="sunGlowMid" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFDF5" stop-opacity="0.6"/>
+      <stop offset="70%" stop-color="#FEF08A" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#FEF08A" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Cloud Gradients -->
+    <linearGradient id="cloudFarGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FDE2E4"/>
+      <stop offset="100%" stop-color="#DDD6FE"/>
+    </linearGradient>
+    <linearGradient id="cloudMidGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFF7ED"/>
+      <stop offset="100%" stop-color="#FED7AA"/>
+    </linearGradient>
+    <linearGradient id="cloudFrontShadow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="55%" stop-color="#FEE2E2"/>
+      <stop offset="100%" stop-color="#E0E7FF"/>
+    </linearGradient>
+
+    <!-- Airplane Shading -->
+    <linearGradient id="fuselageBelly" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#E0E7FF"/>
+    </linearGradient>
+
+    <!-- 4-pointed Sparkle Shape -->
+    <g id="sparkle">
+      <path d="M 0,-7 Q 0,0 7,0 Q 0,0 0,7 Q 0,0 -7,0 Q 0,0 0,-7 Z" fill="#FFFDF0"/>
+    </g>
+  </defs>
+
+  <!-- Sky Background -->
+  <rect width="600" height="300" fill="url(#skyGrad)"/>
+
+  <!-- Subtle Morning Sun Beams -->
+  <g opacity="0.08" fill="#FFFBEB">
+    <polygon points="460,115 160,-20 220,-20"/>
+    <polygon points="460,115 60,30 110,-5"/>
+    <polygon points="460,115 20,130 50,85"/>
+    <polygon points="460,115 130,240 185,260"/>
+    <polygon points="460,115 540,-30 610,-10"/>
+    <polygon points="460,115 630,90 630,50"/>
+  </g>
+
+  <!-- Rising Sun with Soft Concentric Halos -->
+  <circle cx="460" cy="115" r="110" fill="url(#sunGlowOuter)"/>
+  <circle cx="460" cy="115" r="68" fill="url(#sunGlowMid)"/>
+  <circle cx="460" cy="115" r="42" fill="#FEF9C3" opacity="0.6"/>
+  <circle cx="460" cy="115" r="26" fill="#FFFDF5"/>
+
+  <!-- High Cirrus Whisps -->
+  <path d="M 40,48 Q 95,42 150,47 Q 170,49 145,51 Q 85,53 40,48 Z" fill="#FFFFFF" opacity="0.3"/>
+  <path d="M 230,35 Q 280,30 330,35 Q 345,37 325,38 Q 275,40 230,35 Z" fill="#FFFFFF" opacity="0.25"/>
+  <path d="M 490,45 Q 535,40 575,44 Q 590,46 570,47 Q 530,49 490,45 Z" fill="#FFFFFF" opacity="0.28"/>
+
+  <!-- Whimsical Morning Sparkles -->
+  <use href="#sparkle" x="80" y="65" opacity="0.75" transform="scale(1.1)"/>
+  <use href="#sparkle" x="180" y="40" opacity="0.65" transform="scale(0.8)"/>
+  <use href="#sparkle" x="290" y="55" opacity="0.6" transform="scale(0.85)"/>
+  <use href="#sparkle" x="410" y="32" opacity="0.7" transform="scale(0.7)"/>
+  <use href="#sparkle" x="545" y="60" opacity="0.8" transform="scale(1.2)"/>
+  <use href="#sparkle" x="565" y="125" opacity="0.6" transform="scale(0.75)"/>
+  <use href="#sparkle" x="70" y="120" opacity="0.5" transform="scale(0.7)"/>
+
+  <!-- Layer 1: Distant Background Clouds (Soft Lavender/Rose) -->
+  <g fill="url(#cloudFarGrad)" opacity="0.65">
+    <path d="M -20,230 
+             Q 20,185 70,205 
+             Q 130,170 190,200 
+             Q 250,165 310,195 
+             Q 370,160 430,190 
+             Q 490,155 550,185 
+             Q 590,170 620,190 
+             L 620,300 L -20,300 Z"/>
+    <circle cx="85" cy="195" r="35"/>
+    <circle cx="210" cy="180" r="42"/>
+    <circle cx="340" cy="175" r="40"/>
+    <circle cx="475" cy="165" r="48"/>
+  </g>
+
+  <!-- Mid-Sky Soft Floating Cloud (Left) -->
+  <g opacity="0.7" transform="translate(60, 135)">
+    <rect x="0" y="10" width="85" height="20" rx="10" fill="#FFFFFF"/>
+    <circle cx="25" cy="10" r="14" fill="#FFFFFF"/>
+    <circle cx="50" cy="5" r="18" fill="#FFFFFF"/>
+    <circle cx="68" cy="12" r="11" fill="#FFFFFF"/>
+  </g>
+
+  <!-- Layer 2: Midground Sunrise Clouds (Warm Peach / Soft Coral) -->
+  <g fill="url(#cloudMidGrad)" opacity="0.85">
+    <!-- Puffy Horizon Bank Catching Sunlight -->
+    <path d="M -20,250 
+             Q 40,205 100,225 
+             Q 170,185 240,215 
+             Q 310,180 380,210 
+             Q 450,175 520,205 
+             Q 580,185 620,210 
+             L 620,300 L -20,300 Z"/>
+    <circle cx="120" cy="210" r="42"/>
+    <circle cx="180" cy="200" r="36"/>
+    <circle cx="275" cy="195" r="48"/>
+    <circle cx="345" cy="190" r="40"/>
+    <circle cx="440" cy="185" r="52"/>
+    <circle cx="510" cy="180" r="46"/>
+    <circle cx="585" cy="195" r="38"/>
+  </g>
+
+  <!-- Passenger Airplane and Contrails -->
+  <g transform="translate(295, 96) rotate(-8)">
+    <!-- Contrail Trails (Expanding soft puffs trailing from engines) -->
+    <g opacity="0.85">
+      <!-- Far Engine Contrail -->
+      <g opacity="0.45">
+        <circle cx="-35" cy="-14" r="5" fill="#FFFFFF"/>
+        <circle cx="-65" cy="-14" r="9" fill="#FFF7ED"/>
+        <circle cx="-105" cy="-13" r="14" fill="#FDE2E4"/>
+        <circle cx="-155" cy="-12" r="20" fill="#FCE7F3"/>
+        <circle cx="-215" cy="-10" r="27" fill="#EDE9FE"/>
+        <circle cx="-285" cy="-8" r="35" fill="#E0E7FF"/>
+      </g>
+      <!-- Near Engine Main Contrail -->
+      <path d="M 5,30 Q -100,32 -220,38 Q -300,42 -390,48" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" opacity="0.4"/>
+      <ellipse cx="-20" cy="30" rx="9" ry="5" fill="#FFFFFF" opacity="0.9"/>
+      <circle cx="-42" cy="30" r="8" fill="#FFFFFF" opacity="0.85"/>
+      <circle cx="-70" cy="31" r="11" fill="#FFFDF5" opacity="0.8"/>
+      <circle cx="-105" cy="33" r="15" fill="#FFF7ED" opacity="0.75"/>
+      <circle cx="-148" cy="35" r="20" fill="#FDE2E4" opacity="0.65"/>
+      <circle cx="-200" cy="38" r="26" fill="#FCE7F3" opacity="0.55"/>
+      <circle cx="-262" cy="42" r="34" fill="#EDE9FE" opacity="0.4"/>
+      <circle cx="-335" cy="46" r="42" fill="#E0E7FF" opacity="0.25"/>
+    </g>
+
+    <!-- Far Wing (Port) -->
+    <path d="M 5,-12 L -28,-50 C -30,-53 -34,-53 -36,-51 L -37,-49 C -38,-47 -37,-44 -35,-42 L -18,-12 Z" fill="#CBD5E1"/>
+    <!-- Far Winglet -->
+    <path d="M -36,-51 L -33,-59 C -32,-61 -34,-62 -36,-61 L -39,-53 Z" fill="#FB7185"/>
+
+    <!-- Far Horizontal Stabilizer -->
+    <path d="M -104,-9 L -128,-22 C -130,-23 -132,-22 -132,-20 L -131,-18 L -115,-7 Z" fill="#94A3B8"/>
+
+    <!-- Near Horizontal Stabilizer -->
+    <path d="M -102,2 L -128,16 C -130,17 -132,16 -132,14 L -131,12 L -115,0 Z" fill="#E2E8F0"/>
+
+    <!-- Tail Fin (Vertical Stabilizer) -->
+    <path d="M -72,-13 L -110,-65 C -112,-68 -115,-68 -118,-67 L -126,-64 C -128,-63 -128,-61 -127,-59 L -118,-7 Z" fill="#FFFFFF"/>
+    <!-- Tail Fin Coral Livery Accent -->
+    <path d="M -85,-31 L -110,-65 C -112,-68 -115,-68 -118,-67 L -126,-64 C -128,-63 -128,-61 -127,-59 L -122,-44 C -108,-38 -96,-34 -85,-31 Z" fill="#FB7185"/>
+    <!-- Tail Fin Golden Inner Ribbon -->
+    <path d="M -89,-26 L -107,-50 C -104,-48 -101,-46 -98,-44 L -83,-25 Z" fill="#FBBF24"/>
+
+    <!-- Fuselage Main Body -->
+    <path d="M 110,0 C 106,-8 92,-14 62,-14 L -80,-14 C -100,-14 -118,-9 -130,-2 L -132,1 C -122,6 -102,13 -72,14 L 50,14 C 85,14 106,8 110,0 Z" fill="#FFFFFF"/>
+
+    <!-- Fuselage Belly Soft Dawn Reflection / Shading -->
+    <path d="M 110,0 C 106,8 85,14 50,14 L -72,14 C -102,13 -122,6 -132,1 C -115,6 -80,6 -20,6 C 35,6 82,3 110,0 Z" fill="url(#fuselageBelly)"/>
+
+    <!-- Decorative Airline Cheatline (Coral Ribbon & Golden Pinstripe) -->
+    <path d="M 86,0 C 48,0 -35,0 -120,-1 L -121,2 C -35,3 48,3 85,2 C 86,1.3 86,0.7 86,0 Z" fill="#FB7185"/>
+    <path d="M 82,3 C 48,4 -35,4 -115,3 L -115,4.8 C -35,5.8 48,5.8 81,4.8 Z" fill="#FBBF24"/>
+
+    <!-- Cockpit Windshield (Modern Streamlined Visor) -->
+    <path d="M 98,-2 C 95,-7 89,-9 82,-9 L 75,-9 C 74,-9 73,-8 73,-7 L 73,-2 C 73,-1 74,0 75,0 L 96,0 C 97.5,0 98.5,-1 98,-2 Z" fill="#0284C7"/>
+    <!-- Cockpit Glass Reflection -->
+    <polygon points="80,-8 86,-8 78,-1 75,-1" fill="#BAE6FD" opacity="0.8"/>
+
+    <!-- Passenger Cabin Windows (Friendly Rounded Capsules) -->
+    <g fill="#0284C7">
+      <rect x="58" y="-7" width="5.5" height="7.5" rx="2.75"/>
+      <rect x="44" y="-7" width="5.5" height="7.5" rx="2.75"/>
+      <rect x="30" y="-7" width="5.5" height="7.5" rx="2.75"/>
+      <rect x="16" y="-7" width="5.5" height="7.5" rx="2.75"/>
+      <rect x="2" y="-7" width="5.5" height="7.5" rx="2.75"/>
+      <rect x="-12" y="-7" width="5.5" height="7.5" rx="2.75"/>
+      <rect x="-26" y="-7" width="5.5" height="7.5" rx="2.75"/>
+      <rect x="-40" y="-7" width="5.5" height="7.5" rx="2.75"/>
+      <rect x="-54" y="-7" width="5.5" height="7.5" rx="2.75"/>
+    </g>
+    <!-- Window Morning Glints -->
+    <g fill="#E0F2FE">
+      <circle cx="60" cy="-5" r="0.9"/>
+      <circle cx="46" cy="-5" r="0.9"/>
+      <circle cx="32" cy="-5" r="0.9"/>
+      <circle cx="18" cy="-5" r="0.9"/>
+      <circle cx="4" cy="-5" r="0.9"/>
+      <circle cx="-10" cy="-5" r="0.9"/>
+      <circle cx="-24" cy="-5" r="0.9"/>
+      <circle cx="-38" cy="-5" r="0.9"/>
+      <circle cx="-52" cy="-5" r="0.9"/>
+    </g>
+
+    <!-- Near Wing (Starboard) -->
+    <path d="M 22,3 L -24,52 C -26,54 -29,54 -31,52 L -33,49 C -34,47 -33,45 -31,43 L -14,5 Z" fill="#F8FAFC"/>
+    <!-- Wing Underside Soft Shading -->
+    <path d="M -14,5 L -31,43 L -28,44 L -11,6 Z" fill="#E2E8F0"/>
+    <!-- Winglet with Coral Pop -->
+    <path d="M -31,52 L -28,62 C -27,64 -29,65 -31,64 L -35,55 Z" fill="#FB7185"/>
+
+    <!-- Jet Engine Pylon -->
+    <polygon points="14,18 8,24 2,24 8,18" fill="#94A3B8"/>
+    <!-- Jet Engine Nacelle -->
+    <path d="M 22,23 C 25,23 27,26 27,30 C 27,34 25,37 22,37 L -4,37 C -7,37 -9,34 -9,30 C -9,26 -7,23 -4,23 Z" fill="#FFFFFF"/>
+    <!-- Engine Shading -->
+    <path d="M 22,31 C 24,31 26,33 26,35 C 25,36.5 23.5,37 22,37 L -4,37 C -7,37 -9,34 -9,30 L -9,32 C -7,35 -4,35 -2,35 L 16,35 C 18,35 20,33 22,31 Z" fill="#CBD5E1"/>
+    <!-- Engine Intake Cowl & Turbine Fan -->
+    <ellipse cx="22" cy="30" rx="2.5" ry="7" fill="#64748B"/>
+    <ellipse cx="22.5" cy="30" rx="1.5" ry="5.5" fill="#1E293B"/>
+    <circle cx="23" cy="30" r="1.5" fill="#38BDF8"/>
+    <!-- Engine Exhaust Cone -->
+    <polygon points="-9,26 -13,28 -13,32 -9,34" fill="#475569"/>
+    <!-- Engine Decorative Stripe -->
+    <rect x="7" y="23" width="3.5" height="14" fill="#FB7185"/>
+  </g>
+
+  <!-- Layer 3: Foreground Billowing Clouds (Bottom Base) -->
+  <!-- Cloud Under-Shadow Layer -->
+  <g fill="url(#cloudFrontShadow)">
+    <path d="M -20,230 
+             Q 30,195 85,215 
+             Q 145,185 210,210 
+             Q 280,180 350,205 
+             Q 425,175 495,205 
+             Q 560,185 620,215 
+             L 620,300 L -20,300 Z"/>
+    <circle cx="50" cy="225" r="48"/>
+    <circle cx="120" cy="210" r="52"/>
+    <circle cx="185" cy="218" r="46"/>
+    <circle cx="260" cy="205" r="56"/>
+    <circle cx="330" cy="198" r="52"/>
+    <circle cx="410" cy="195" r="58"/>
+    <circle cx="485" cy="190" r="55"/>
+    <circle cx="560" cy="205" r="50"/>
+  </g>
+
+  <!-- Crisp Puffy Cloud Tops (Pure Fluffy Dawn Whites) -->
+  <g fill="#FFFFFF">
+    <!-- Left Cloud Cluster -->
+    <circle cx="30" cy="245" r="42"/>
+    <circle cx="80" cy="220" r="45"/>
+    <circle cx="135" cy="230" r="40"/>
+
+    <!-- Center-Left Cluster -->
+    <circle cx="195" cy="235" r="44"/>
+    <circle cx="250" cy="212" r="50"/>
+    <circle cx="305" cy="225" r="42"/>
+
+    <!-- Center-Right Cluster (Sunlit Prominence) -->
+    <circle cx="365" cy="228" r="46"/>
+    <circle cx="420" cy="205" r="54"/>
+    <circle cx="475" cy="215" r="48"/>
+
+    <!-- Right Cluster -->
+    <circle cx="530" cy="222" r="45"/>
+    <circle cx="585" cy="215" r="48"/>
+    <circle cx="625" cy="235" r="40"/>
+
+    <!-- Base Solid Fill to Frame Bottom -->
+    <rect x="0" y="245" width="600" height="55"/>
+  </g>
+
+  <!-- Floating Friendly Puffs in Foreground -->
+  <g opacity="0.95">
+    <!-- Floating Puff Left -->
+    <g transform="translate(145, 175) scale(0.75)">
+      <rect x="0" y="10" width="60" height="16" rx="8" fill="#FFFFFF"/>
+      <circle cx="18" cy="10" r="12" fill="#FFFFFF"/>
+      <circle cx="36" cy="6" r="14" fill="#FFFFFF"/>
+    </g>
+    <!-- Floating Puff Right (Sun Lit) -->
+    <g transform="translate(470, 160) scale(0.85)">
+      <rect x="0" y="10" width="65" height="18" rx="9" fill="#FFFDF5"/>
+      <circle cx="20" cy="9" r="13" fill="#FFFDF5"/>
+      <circle cx="40" cy="5" r="16" fill="#FFFDF5"/>
+      <circle cx="54" cy="11" r="10" fill="#FFFDF5"/>
+    </g>
+  </g>
+</svg>

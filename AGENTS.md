@@ -6,38 +6,39 @@ Instructions for every agent (Claude Code, Codex) and every person in this repo.
 
 - A hackathon team project for U-Hackathon 2026 by U-topia. The team has
   four people. Stage demo: Friday 16 October 2026, afternoon, about 3 minutes.
-- The product is **CryptoMate**: a friend that keeps your crypto money easy
-  and safe. A web app with an AI agent that shops for you and pays with
-  crypto. The human only approves. See [docs/idea.md](docs/idea.md).
-- Payment goes through our own crypto payment assistant. It checks rules in
-  code, waits for the owner's approve, then pays with the U-Card.
+- The product is an **Agent OS** demo (pivot from CryptoMate, 2026-10-15):
+  you talk to an agent and it answers by voice and with a full-screen UI that
+  grows out of one home screen and folds back. Money moves only on the owner's
+  tap. Storyboard: [docs/agent-os-storyboard.md](docs/agent-os-storyboard.md).
+  The idea: [docs/idea.md](docs/idea.md).
+- The payment card checks rules in code and pays only on a tap of Allow.
+  Real U-topia payment is out of scope for the demo.
 - What to build, part by part: [docs/build-parts.md](docs/build-parts.md).
 
 ## Tech stack
 
 Decided 2026-10-15. Why: [docs/decisions.md](docs/decisions.md).
 
-- Agent base loop: Pi v1.2.0, package `@earendil-works/pi-coding-agent@1.2.0`,
-  on Node.
-- Browser: Playwright as a library in Node, attached by CDP to a dedicated
-  Chrome profile. See [Start the agent's Chrome](#start-the-agents-chrome).
-- U-topia steps: a fixed Playwright script, not model guesses.
-- Approve: in the web app. LINE only if time allows.
-- Shops: use shops we checked work with an agent browser. Shopee, Lazada and
-  Amazon often block agent browsers.
+- Demo app: plain HTML/JS in `web/` with a small Node server. Brain: an
+  ElevenLabs agent (Claude Sonnet 5.5 inside, Thai voice and speech to text),
+  defined as code in `web/agent/`; offline, a keyword router. ElevenLabs TTS
+  for the cached voice lines (issue #17). Deploys to Vercel: functions in
+  `web/api/`, static `web/public/` (issue #19). Tests: Playwright in Chrome.
+- The CryptoMate stack (Pi agent loop, agent browser over CDP, U-topia
+  script) is not used by the demo. Its notes stay below for later.
 - Do not add another framework or service unless an issue asks for it.
 
 ## App flow
 
-1. The user types what they want.
-2. The agent searches and shows a marketplace list. Items are labelled 1, 2, 3.
-3. The user picks one item.
-4. A detail view compares price and shipping across shops.
-5. The user presses buy.
-6. The agent opens the shop, fills the address form and reaches payment.
-7. The payment assistant checks the rules in code.
-8. The owner approves in the web app.
-9. Only then the assistant pays with the U-Card through the U-topia app.
+1. The agent home: a mascot, a voice waveform, one fading subtitle line and a
+   hold-to-talk mic. No chat history and no text box.
+2. The user speaks, or the agent speaks first (flight delay, training).
+3. The agent picks a prebuilt scene and fills it with data, then the scene
+   grows full screen out of the home.
+4. Scenes: shopping list from email, payment approval, flight re-route,
+   training and race sign-up.
+5. A payment runs the rules check in code; only a tap on Allow approves it.
+6. When the task is done, the scene folds back to the agent home.
 
 ## Folders and owners
 
@@ -45,7 +46,7 @@ One folder per part, so four people do not edit the same files.
 
 | Folder | What lives there | Owner |
 | --- | --- | --- |
-| `web/` | Web app: chat box, marketplace list, compare view, approve screen, live screen | A |
+| `web/` | Agent OS demo app: agent home, scenes, server, always-on agent | A |
 | `agent/` | Pi agent loop and its browser tools (open, read, click, type, wait), shopping run | B |
 | `pay/rules/` | Rules check in plain code, with unit tests | B |
 | `pay/approve/` | Payment request waiting for the owner's answer | A |

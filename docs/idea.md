@@ -1,48 +1,54 @@
 # Idea
 
-**CryptoMate** - "เพื่อนคู่ใจที่ดูแลเงิน crypto ของคุณ ให้ง่ายและปลอดภัย".
-A friend that keeps your crypto money easy and safe.
+**Agent OS** - you talk to an agent, and it answers with real UI instead of
+text, on one screen, never switching apps.
 Each decision is also written in [decisions.md](decisions.md).
+
+This replaces the first idea, CryptoMate (a friend that keeps your crypto
+money easy and safe), on 2026-10-15. CryptoMate's money rules live on in the
+payment scene: rules checked in code, and only the owner's tap pays.
 
 ## Problem
 
-Paying with crypto today is hard and risky. Few shops accept it. There are
-fees and price swings. Scams are common.
+Today an assistant answers in text, and you still open five apps to act on
+it. Each app has its own screens, logins and steps.
 
 ## Users
 
-- People who hold crypto and want to spend it on everyday things.
-- Later: builders of shopping agents who need safe payment rules (the rules
-  engine sold as an API).
+- Busy people who want tasks done, not more apps: shopping, travel changes,
+  sign-ups.
+- Later: anyone who wants one agent home instead of a phone full of apps.
 
 ## What the demo shows
 
-About 3 minutes on stage. The agent's Chrome window is shared next to the web
-app.
+About 3 minutes on stage. Storyboard:
+[agent-os-storyboard.md](agent-os-storyboard.md).
 
-1. The user types what they want in the web app.
-2. The agent shows a marketplace list, labelled 1, 2, 3. The user picks one.
-3. A detail view compares price and shipping across shops. The user presses buy.
-4. The agent opens the shop, fills the address form and reaches payment.
-5. The rules check passes. The owner approves in the web app.
-6. The assistant pays with the U-Card in the real U-topia app. This is one
-   real small buy, for example a 60 THB coin pouch.
-7. A fake concert-ticket seller is blocked: the shop is not on the allowed list.
-8. A purchase over the monthly budget is stopped.
-9. A slide shows the money story: a 0.5-1% fee per purchase now, the rules
-   engine as an API later. No real fee is taken on stage.
+1. Agent home: a mascot, a voice waveform, one fading subtitle line, a
+   hold-to-talk mic. No chat history, no text box.
+2. "This week is hectic": the agent reads a fake email and builds a shopping
+   list item by item.
+3. The list becomes a payment card. Money moves only on a tap of Allow.
+4. The agent speaks first about sleep and a 10K race, and signs you up.
+5. The agent speaks first about a delayed flight, and re-books on "yes".
+6. A task it does not know ("help me make a todo list"): it draws a new page,
+   asks if you like it, and changes it as you answer. A page you like can be
+   kept and opens at once next time.
+
+Every task grows out of the home and folds back to it. That is the OS.
 
 ## What we will not build
 
-- A real fee charge. The fee is on a slide only.
-- Support for shops that block agent browsers, such as Shopee, Lazada and Amazon.
-- A U-topia API or SDK. None exists; the agent drives the real app.
-- More than one real payment on stage.
-- LINE approve and the live agent screen in the web app, unless time allows.
+- Real payments. Allow ends in a success screen only.
+- Driving outside websites. Every form is filled inside our own UI.
+- LINE.
+- Accounts or server storage. Kept pages live in the browser.
 
 ## Open questions
 
-- Final shop. Candidate: NaRaYa on Shopify, coin pouch at 60 THB.
-  Runner-up: 7-Eleven ALL Online. Not final.
-- U-topia send screens, OTP and network are not yet seen.
-- LINE approve and the live agent screen: only if time allows.
+- Thai voice: no Thai-only voice in the ElevenLabs account yet. The premade
+  "Jessica" voice speaks Thai with `eleven_v4`.
+- Phone on stage: the microphone needs HTTPS when the page is not on
+  `localhost`.
+- The live ElevenLabs agent is tested with a stubbed SDK only, until the key
+  has the Agents permission.

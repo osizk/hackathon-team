@@ -1,0 +1,47 @@
+// Adapter from a shared handler to a Vercel Node.js function (req, res).
+// Logs go to the function log (console), which shows in Vercel's logs.
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { createHandlers, HttpError } from './handlers.js';
+
+let app = null;
+export const handlers = () => (app ??= createHandlers({ imagesDir: join(tmpdir(), 'agentos-images'), inlineImages: true }));
+
+async function body(req) {
+  if (req.body && typeof req.body === 'object') return req.body;
+  if (typeof req.body === 'string') return req.body ? JSON.parse(req.body) : {};
+  let text = '';
+  for await (const chunk of req) {
+    text += chunk;
+    if (text.length > 60_000) throw new HttpError(413, 'body too large');
+  }
+  return text ? JSON.parse(text) : {};
+}
+
+// fn(app, { headers, body }) -> JSON-able object, or { buffer, type } for binary.
+export function vercelFunction(fn, { method = null } = {}) {
+  return async (req, res) => {
+    try {
+      if (method && req.method !== method) throw new HttpError(405, 'method not allowed');
+      const out = await fn(handlers(), { headers: req.headers, body: method === 'POST' ? await body(req) : {} });
+      res.setHeader('cache-control', 'no-store');
+      if (Buffer.isBuffer(out)) {
+        res.setHeader('content-type', 'audio/mpeg');
+        res.statusCode = 200;
+        return res.end(out);
+      }
+      res.setHeader('content-type', 'application/json');
+      res.statusCode = 200;
+      res.end(JSON.stringify(out));
+    } catch (err) {
+      const status = err instanceof HttpError ? err.status : 500;
+      if (status === 500) {
+        console.error(`[api] ${req.url}: ${err.message}`);
+        handlers().runLog.server('error', { where: req.url, message: err.message });
+      }
+      res.statusCode = status;
+      res.setHeader('content-type', 'application/json');
+      res.end(JSON.stringify({ error: status === 500 ? 'server error' : err.message }));
+    }
+  };
+}
