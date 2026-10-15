@@ -84,7 +84,7 @@ every owner who uses it.
 - [ ] The agent can open a page and read its title in a test run.
 - [ ] No password or cookie is printed in logs.
 
-**Needs:** part 1
+**Needs:** #4
 
 **Role:** B
 
@@ -103,7 +103,7 @@ one to compare price and shipping across shops.
 - [ ] A buy button sends the chosen item to the agent.
 - [ ] The screens work with sample data before the agent is ready.
 
-**Needs:** part 1
+**Needs:** #4
 
 **Role:** A
 
@@ -123,7 +123,7 @@ a payment request.
       contract in `shared/`): shop, item, total.
 - [ ] It sends the payment request to the rules check. It never pays itself.
 
-**Needs:** part 2
+**Needs:** #5
 
 **Role:** B
 
@@ -142,7 +142,7 @@ window, and only after approve.
 - [ ] No card number, password or OTP appears in code, logs or screenshots.
 - [ ] The send screens, OTP and network are written down in the issue once seen.
 
-**Needs:** part 2, part 7
+**Needs:** #5, #10
 
 **Role:** head
 
@@ -162,7 +162,7 @@ window, and only after approve.
       budget, over the cap per payment.
 - [ ] The model has no way to skip it.
 
-**Needs:** part 1
+**Needs:** #4
 
 **Role:** C
 
@@ -180,7 +180,7 @@ approves or rejects it.
 - [ ] A blocked request shows its reason and has no approve button.
 - [ ] Nothing pays while the request waits.
 
-**Needs:** part 3, part 6
+**Needs:** #6, #9
 
 **Role:** A
 
@@ -196,7 +196,7 @@ approves or rejects it.
 - [ ] The screen shows next to the chat without slowing the agent.
 - [ ] Screens with card numbers or OTPs are not streamed.
 
-**Needs:** part 2, part 3
+**Needs:** #5, #6
 
 **Role:** A
 
@@ -212,7 +212,7 @@ approves or rejects it.
 - [ ] The answer reaches `pay/approve/` the same way as the web app's answer.
 - [ ] LINE keys live in `.env` only.
 
-**Needs:** part 7
+**Needs:** #10
 
 **Role:** C
 
@@ -232,7 +232,7 @@ approves or rejects it.
 - [ ] Only one real buy happens on stage, small amount.
 - [ ] The fee slide is ready.
 
-**Needs:** parts 3 to 7, part 12
+**Needs:** #6, #7, #8, #9, #10, #14
 
 **Role:** C, head
 
@@ -250,7 +250,7 @@ approves or rejects it.
 - [ ] A blocked request and a rejected request both stop before pay.
 - [ ] Checkpoint 1 below is passed and any gap is written in the issue.
 
-**Needs:** parts 3 to 7
+**Needs:** #6, #7, #8, #9, #10
 
 **Role:** head
 
