@@ -49,8 +49,18 @@ export function toolConfigs({ search = false } = {}) {
   });
 }
 
+// The one-page fact sheet (what Agent OS is, the money rules, the team), sent to the ElevenLabs
+// knowledge base by scripts/agent-sync.js. 'prompt' puts the whole page in the prompt on every
+// turn; 'rag' retrieves parts of it. Measured 2026-10-16 on a test agent, 5 Thai questions each:
+// first audio 1.66 s with 'prompt', 1.95 s with 'rag', same answers. So 'prompt'.
+export const KNOWLEDGE_NAME = 'Agent OS fact sheet';
+export const KNOWLEDGE_MODE = 'prompt';
+export const knowledgeText = () => readFileSync(join(here, 'knowledge.md'), 'utf8');
+
 // name: a test agent gets its own name (agent-sync --env), so it is never mistaken for the shared one.
-export function agentConfig({ toolIds = [], voiceId = DEFAULT_VOICE, name = AGENT_NAME } = {}) {
+// knowledgeId: the knowledge base document id of the fact sheet (none: no knowledge base).
+export function agentConfig({ toolIds = [], voiceId = DEFAULT_VOICE, name = AGENT_NAME, knowledgeId = null, knowledgeMode = KNOWLEDGE_MODE } = {}) {
+  const rag = knowledgeMode === 'rag';
   return {
     name,
     tags: ['agent-os', 'hackathon'],
@@ -59,11 +69,23 @@ export function agentConfig({ toolIds = [], voiceId = DEFAULT_VOICE, name = AGEN
         first_message: FIRST_MESSAGE,
         language: AGENT_LANGUAGE,
         // The page sends {{today}} at session start; the placeholder only covers a session without it.
-        dynamic_variables: { dynamic_variable_placeholders: { today: 'unknown (ask the user if a date matters)' } },
+        // The page sends {{memory}} (a few facts kept on the user's phone) and {{learned}}
+        // (preferences learned from how they use the app) too.
+        dynamic_variables: {
+          dynamic_variable_placeholders: {
+            today: 'unknown (ask the user if a date matters)',
+            memory: 'nothing yet (first visit)',
+            learned: 'nothing yet',
+          },
+        },
         prompt: {
           prompt: readFileSync(join(here, 'prompt.md'), 'utf8'),
           llm: AGENT_LLM,
           tool_ids: toolIds,
+          ...(knowledgeId
+            ? { knowledge_base: [{ type: 'text', name: KNOWLEDGE_NAME, id: knowledgeId, usage_mode: rag ? 'auto' : 'prompt' }] }
+            : {}),
+          ...(knowledgeId && rag ? { rag: { enabled: true, embedding_model: 'multilingual_e5_large_instruct' } } : {}),
           // Silence and unimportant feed updates must not trigger spoken check-ins.
           built_in_tools: {
             skip_turn: {

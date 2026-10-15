@@ -7,6 +7,7 @@ import { createToolHandlers, keptPagesNote } from './agent-tools.js';
 import { showSubtitle, setLiveVoice } from './voice.js';
 import { logEvent } from './log.js';
 import { apiFetch, goOffline, onOffline, micBlocked } from './api.js';
+import { sessionVariables } from './memory.js';
 
 // @elevenlabs/client, pinned. jsDelivr's +esm build is one self-contained ES module.
 const SDK_URL = 'https://cdn.jsdelivr.net/npm/@elevenlabs/client@1.26.0/+esm';
@@ -169,8 +170,8 @@ export function startLive(ui) {
     ]);
     conversation = await Conversation.startSession({
       signedUrl: ticket.signedUrl,
-      // Fills {{today}} in the agent prompt (Bangkok date from the server).
-      ...(ticket.today ? { dynamicVariables: { today: ticket.today } } : {}),
+      // Fills {{today}} (Bangkok date from the server), {{memory}} and {{learned}} (kept on this phone).
+      dynamicVariables: sessionVariables(ticket),
       connectionType: 'websocket',
       clientTools: wrapTools(createToolHandlers(ui)),
       onConnect: () => { live.connected = true; setBrain('agent'); },

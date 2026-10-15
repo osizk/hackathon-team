@@ -135,7 +135,10 @@ No real money, mail or bookings. Everything below is demo data in
 - the feed events that make the agent speak first
 
 The web search results are real. The agent's answers are live when it runs
-with keys. Saved pages stay in your own browser (`localStorage`).
+with keys. Saved pages stay in your own browser (`localStorage`). So does
+what the agent remembers about you (name, likes, last task) and what it
+learned from how you use it (for example "todo pages: give items due dates").
+Open the site with `?forget=1` to start clean.
 
 ---
 

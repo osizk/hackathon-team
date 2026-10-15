@@ -417,3 +417,14 @@ body.started .tap-hint { display: none; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* Plan line: the steps of a multi-step task, in the bottom panel above the subtitle; a step ticks
+   as it is done. It takes no room while there is no plan. */
+.plan {
+  display: flex; flex-wrap: wrap; gap: 4px 6px; min-width: 0;
+  margin: 0; padding: 0; list-style: none; font-size: 12.5px; line-height: 1.3;
+}
+.plan:not(.show) { display: none; }
+.plan li { padding: 3px 9px; border-radius: 99px; color: var(--ink-2); background: #fff; border: 1px solid #eadcca; }
+.plan li[data-state="now"] { font-weight: 600; color: #fff; background: var(--ink); border-color: var(--ink); }
+.plan li[data-state="done"] { color: #1d6b3a; background: #d6f0de; border-color: #bfe3ca; }

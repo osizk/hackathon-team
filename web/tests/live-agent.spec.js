@@ -150,6 +150,8 @@ test('live: typed text goes to the agent, and feed changes arrive as contextual 
   await expect.poll(() => page.evaluate(() => window.__conv.sent)).toEqual(['this week is hectic']);
   // The offline router must not open anything by itself in live mode.
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'home');
+  // The agent answers (this ends the thinking state; feed updates wait while the agent thinks).
+  await page.evaluate(() => window.__conv.opts.onMessage({ source: 'ai', message: 'ok' }));
 
   // Finish the fake reply before checking feeds: thinking deliberately blocks interruptions.
   await page.evaluate(() => window.__conv.opts.onMessage({ source: 'ai', message: 'Ready.' }));
