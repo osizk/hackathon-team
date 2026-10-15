@@ -30,7 +30,7 @@ export default function mountTraining(el, data, agent) {
       </div>
     </article>
     <div class="race-done" hidden data-testid="race-done">
-      <img class="treadmill" src="/img/mascot-run.svg" alt="Mascot running on a treadmill">
+      <img class="treadmill" data-mascot-pose="running" src="/img/ubot/05-running.jpeg" alt="U-Bot running">
       <h2>You're in! ${race.name}</h2>
       <p>Bib number arrives by email</p>
     </div>`;

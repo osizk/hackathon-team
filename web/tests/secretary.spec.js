@@ -4,7 +4,8 @@ import { home, expectHome, say } from './helpers.js';
 test('today, email tasks and completion share state without duplicating appointments', async ({ page }) => {
   await home(page);
   await page.getByTestId('secretary-email').click();
-  await expect(page.locator('.scene-secretary')).toContainText('ข้อมูลทดสอบ');
+  await expect(page.locator('.secretary-title')).toHaveText('จากอีเมลเป็นงาน');
+  await expect(page.locator('.secretary-badge')).toHaveCount(0);
   await page.getByTestId('import-email').click();
   await page.getByTestId('import-email').click();
   await expect(page.locator('.secretary-task')).toHaveCount(3);

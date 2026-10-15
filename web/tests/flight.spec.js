@@ -5,7 +5,7 @@ test('flight hotkey: agent speaks first, spoken yes re-routes, folds home', asyn
   await home(page, { presenter: true });
   await page.keyboard.press('f');
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'flight');
-  await expect(page.locator('[data-testid=old-flight] .pill')).toHaveText('Delayed 2 h');
+  await expect(page.locator('[data-testid=old-flight] .pill')).toHaveText('ล่าช้า 2 ชม.');
   await expect(page.locator('.tl-new')).toBeHidden();
   await say(page, 'yes change it');
   await expect(page.locator('[data-testid=flight-done]')).toBeVisible();

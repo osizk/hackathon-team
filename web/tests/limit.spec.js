@@ -24,7 +24,7 @@ test('daily limit used up: the page starts offline, says so, and the offline bra
   await expect(page.locator('body')).toHaveAttribute('data-offline', 'limit');
   await expect(page.locator('body')).toHaveAttribute('data-brain', 'keywords');
   await expect(page.locator('[data-testid=notice]')).toBeVisible();
-  await expect(page.locator('[data-testid=notice]')).toContainText('Offline mode');
+  await expect(page.locator('[data-testid=notice]')).toContainText('โหมดออฟไลน์');
   await say(page, 'this week is hectic');
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'shopping', { timeout: 10_000 });
 });

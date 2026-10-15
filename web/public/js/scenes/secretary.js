@@ -23,7 +23,7 @@ export default function mountSecretary(el, data, agent) {
     const previousView = el.dataset.view;
     const state = store.get();
     el.replaceChildren(); el.dataset.view = view;
-    el.append(h('p', 'secretary-badge', 'ข้อมูลทดสอบ · จำลองเวลา 13:15'), h('h1', 'secretary-title', {
+    el.append(h('h1', 'secretary-title', {
       today: 'วันนี้ของคุณ', email: 'จากอีเมลเป็นงาน', notifications: 'มีเรื่องต้องแจ้ง', draft: 'ร่างตอบกลับ',
     }[view]));
     const tabs = h('nav', 'secretary-tabs'); tabs.setAttribute('aria-label', 'Secretary views');

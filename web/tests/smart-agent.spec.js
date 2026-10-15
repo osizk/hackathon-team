@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { expectHome } from './helpers.js';
+import { expectHome, revealHome } from './helpers.js';
 
 // Memory across visits, the returning greeting and the plan line, on the live path with the SDK
 // and the agent routes stubbed (no network, no key).
@@ -33,6 +33,7 @@ async function stubLive(page, memory) {
 }
 
 async function connect(page) {
+  await revealHome(page);
   await page.locator('#mic').dispatchEvent('pointerdown');
   await expect(page.locator('body')).toHaveAttribute('data-brain', 'agent');
   await page.locator('#mic').dispatchEvent('pointerup');
