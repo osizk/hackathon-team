@@ -60,3 +60,18 @@ test('no thanks on keep closes without saving', async ({ page }) => {
   await expectHome(page);
   expect(await page.evaluate(() => localStorage.getItem('agentos.savedScenes'))).toBeNull();
 });
+
+test('urgent: bleeding finger shows first-aid steps at once, a 1669 button, no like question', async ({ page }) => {
+  await home(page);
+  await say(page, 'เลือดผมออกที่นิ้วทำไงดี');
+  await expect(page.locator('body')).toHaveAttribute('data-scene', 'generated');
+  await expect(page.locator('[data-testid=g-badge]')).toHaveText('First aid');
+  await expect(page.locator('.g-steps li')).toHaveCount(4);
+  await expect(page.locator('[data-testid=g-call]')).toHaveAttribute('href', 'tel:1669');
+  await expect(page.locator('[data-testid=g-chips]')).toHaveCount(0);
+  await expect(scene(page)).toHaveAttribute('data-stage', 'urgent');
+  await expect(page.locator('#subtitle')).not.toContainText('ชอบ');
+  await say(page, 'I like it');
+  await expectHome(page);
+  expect(await page.evaluate(() => localStorage.getItem('agentos.savedScenes'))).toBeNull();
+});

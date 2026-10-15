@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validateSpec, cannedTodo, reviseByKeywords } from './genui.js';
+import { validateSpec, cannedTodo, cannedFirstAid, reviseByKeywords } from './genui.js';
 import { keywordRoute, route } from './router.js';
 
 test('validateSpec drops unknown components and keeps strings plain', () => {
@@ -60,4 +60,28 @@ test('Claude generated spec is validated', async () => {
   assert.equal(r.scene, 'generated');
   assert.equal(r.data.spec.blocks.length, 1);
   assert.ok(r.data.spec.match.includes('budget'));
+});
+
+test('bleeding finger opens first aid at once, with a 1669 button and no proposals', () => {
+  const r = keywordRoute('เลือดผมออกที่นิ้วทำไงดี');
+  assert.equal(r.scene, 'generated');
+  assert.equal(r.line, 'first_aid');
+  assert.equal(r.data.spec.urgency, 'urgent');
+  assert.deepEqual(r.data.spec.proposals, []);
+  assert.ok(r.data.spec.blocks.some((b) => b.type === 'call' && b.number === '1669'));
+  assert.equal(keywordRoute('my finger is bleeding', 'payment').scene, 'generated');
+});
+
+test('urgent page: like is never asked or kept', () => {
+  const spec = validateSpec(cannedFirstAid());
+  assert.equal(keywordRoute('I like it', 'generated', { spec, stage: 'urgent' }).action, 'close');
+  assert.notEqual(keywordRoute('yes keep it', 'generated', { spec, stage: 'urgent' }).action, 'keep');
+});
+
+test('serious spec always gets 1669; call only to emergency numbers; urgent drops proposals', () => {
+  const s = validateSpec({ urgency: 'serious', blocks: [{ type: 'steps', items: ['Call for help'] }], proposals: [{ label: 'x' }] });
+  assert.equal(s.blocks[0].number, '1669');
+  assert.deepEqual(s.proposals, []);
+  const bad = validateSpec({ blocks: [{ type: 'call', number: '0812345678' }, { type: 'text', text: 'ok' }] });
+  assert.equal(bad.blocks.length, 1);
 });

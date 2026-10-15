@@ -18,5 +18,7 @@
   "gen_keep_ask",
   "gen_kept",
   "gen_not_kept",
-  "gen_saved"
+  "gen_saved",
+  "first_aid",
+  "get_well"
 ]

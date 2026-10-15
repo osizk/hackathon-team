@@ -5,7 +5,7 @@
 // Money rule: no spoken text can ever approve a payment. Only the Allow button can.
 import { SCENE_DEFAULTS, SCENES } from '../public/js/data.js';
 import { LINES } from '../public/js/lines.js';
-import { cannedTodo, reviseByKeywords, validateSpec, TODO_WORDS, BLOCK_TYPES, ACCENTS } from './genui.js';
+import { cannedTodo, cannedFirstAid, reviseByKeywords, validateSpec, TODO_WORDS, URGENT_WORDS, BLOCK_TYPES, ACCENTS, URGENCY } from './genui.js';
 
 const has = (text, words) => words.some((w) => text.includes(w));
 
@@ -36,6 +36,11 @@ function savedMatch(text, saved) {
 
 // Talk about the generated page that is open: revise it, keep it, or close it.
 function generatedAction(text, { spec, stage } = {}) {
+  // An urgent page is never reviewed or kept: a new sentence is a new request.
+  if (stage === 'urgent' || (spec && spec.urgency && spec.urgency !== 'none')) {
+    const fresh = keywordRoute(text, null);
+    return fresh.scene || fresh.line !== 'unsure' ? fresh : speakLine('get_well', { action: 'close' });
+  }
   if (stage === 'keep') {
     if (has(text, ['no', "don't", 'not', 'ไม่'])) return speakLine('gen_not_kept', { action: 'close' });
     if (has(text, [...YES, 'keep', 'save', 'เก็บ'])) return speakLine('gen_kept', { action: 'keep' });
@@ -53,6 +58,8 @@ export function keywordRoute(rawText, context = null, extra = {}) {
   const text = String(rawText || '').toLowerCase().trim();
   if (!text) return { scene: null, line: 'unsure', say: LINES.unsure };
   if (context === 'generated') return generatedAction(text, extra);
+  // Health, injury or emergency comes first: first-aid steps at once.
+  if (has(text, URGENT_WORDS)) return { scene: 'generated', line: 'first_aid', say: LINES.first_aid, data: { spec: cannedFirstAid() } };
 
   // Inside an open scene, short answers act on that scene.
   if (context === 'payment' && has(text, PAY_WORDS.concat(YES))) {
@@ -91,7 +98,7 @@ const TOOL = {
           'Act on the open scene. Never use confirm to approve a payment. On a generated page: revise = send the changed spec; ' +
           'accept = the user likes it (then ask whether to keep it); keep = user said yes to keeping it; close = user does not want to keep it; ask = ask what to change.',
       },
-      say: { type: 'string', description: 'One or two short sentences in Thai, spoken aloud. For a new or revised generated page, ask if the user likes it and name one or two concrete changes you propose.' },
+      say: { type: 'string', description: 'One or two short sentences in Thai, spoken aloud. For a new or revised generated page, ask if the user likes it and name one or two concrete changes you propose. For an urgent page, say the first step instead, and never ask if they like it.' },
       data: { type: 'object', description: 'Optional data for a prebuilt scene, in the shape of the defaults.' },
       spec: {
         type: 'object',
@@ -103,6 +110,11 @@ const TOOL = {
           title: { type: 'string' },
           subtitle: { type: 'string' },
           accent: { type: 'string', enum: ACCENTS },
+          urgency: {
+            type: 'string',
+            enum: URGENCY,
+            description: 'urgent = health, injury or emergency: short first-aid steps, no proposals. serious = may be life-threatening: also a call block 1669.',
+          },
           blocks: {
             type: 'array',
             items: {
@@ -134,6 +146,8 @@ export async function claudeRoute(text, context, extra, { apiKey, model = 'claud
         'You are the agent of an Agent OS. You answer by opening UI scenes, not with long text. ' +
         `The scene open now is: ${context || 'none (agent home)'}. Scene data defaults: ${JSON.stringify(SCENE_DEFAULTS)}. ` +
         'Use a prebuilt scene when one fits. When none fits a task, open scene generated with a spec. ' +
+        'If the request is about health, injury or an emergency, classify it in spec.urgency (urgent or serious), use a steps block ' +
+        'with short first-aid steps, give no proposals, and do not ask whether the user likes it; when serious add {type:"call",number:"1669"}. ' +
         (context === 'generated' ? `The generated page open now (stage ${extra.stage || 'review'}): ${JSON.stringify(extra.spec)}` : ''),
       tools: [TOOL],
       tool_choice: { type: 'tool', name: 'show_scene' },
@@ -151,6 +165,9 @@ export async function claudeRoute(text, context, extra, { apiKey, model = 'claud
   if (context !== 'generated' && (action === 'confirm' || action === 'decline')) {
     const routed = keywordRoute(action === 'confirm' ? 'yes' : 'no', context);
     if (routed.action) return routed;
+  }
+  if (context === 'generated' && extra.spec?.urgency && extra.spec.urgency !== 'none' && ['accept', 'keep'].includes(action)) {
+    return speakLine('get_well', { action: 'close' });
   }
   if (context === 'generated') {
     if (action === 'revise') {

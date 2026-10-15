@@ -15,6 +15,7 @@ export function loadSaved() {
 }
 
 function saveScene(spec) {
+  if (spec.urgency && spec.urgency !== 'none') return false; // first-aid pages are never kept
   try {
     const all = loadSaved();
     all[spec.kind] = { kind: spec.kind, name: spec.name, match: spec.match, spec, savedAt: new Date().toISOString() };
@@ -119,6 +120,18 @@ function drawBlock(b, spec, onChange, onButton) {
       return btn;
     }
     case 'divider': return h('hr', 'g-divider');
+    case 'steps': {
+      const ol = h('ol', 'g-steps');
+      b.items.forEach((t) => ol.append(h('li', null, t)));
+      return ol;
+    }
+    case 'call': {
+      // Only emergency numbers reach here (checked on the server); digits only.
+      const a = h('a', 'g-call', `📞 ${b.label}`);
+      a.href = `tel:${String(b.number).replace(/\D/g, '')}`;
+      a.dataset.testid = 'g-call';
+      return a;
+    }
   }
   return h('div');
 }
@@ -137,7 +150,8 @@ export default function mountGenerated(el, data, agent) {
     agent.close();
     return {};
   }
-  let stage = fromSaved ? 'saved' : 'review';
+  const urgent = Boolean(spec.urgency && spec.urgency !== 'none');
+  let stage = urgent ? 'urgent' : fromSaved ? 'saved' : 'review';
   let version = 0;
 
   const draw = (flash = false) => {
@@ -146,7 +160,7 @@ export default function mountGenerated(el, data, agent) {
     el.dataset.version = String(version);
     el.dataset.stage = stage;
     el.replaceChildren();
-    const badge = h('p', 'g-badge', fromSaved ? 'Saved scene' : 'Generated for you');
+    const badge = h('p', `g-badge${urgent ? ' g-badge-urgent' : ''}`, urgent ? 'First aid' : fromSaved ? 'Saved scene' : 'Generated for you');
     badge.dataset.testid = 'g-badge';
     const title = h('h1', 'g-title', spec.title);
     title.dataset.testid = 'g-title';
@@ -171,6 +185,7 @@ export default function mountGenerated(el, data, agent) {
   return {
     state: () => ({ spec, stage: stage === 'saved' ? 'review' : stage }),
     async onAction(action, res, talking) {
+      if (urgent && action !== 'close') return;
       if (action === 'revise' && res.spec) {
         spec = res.spec;
         version += 1;

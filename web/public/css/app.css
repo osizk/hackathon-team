@@ -312,3 +312,13 @@ body.listening .mic { animation: pulse 1.2s ease-out infinite; }
 .statusbar #clock { pointer-events: auto; cursor: default; padding: 4px 8px; margin: -4px -8px; }
 .presenter { position: absolute; top: 44px; left: 12px; z-index: 60; display: grid; gap: 6px; padding: 10px; border-radius: 14px; background: rgba(20, 16, 14, .9); }
 .presenter button { padding: 8px 12px; border: 0; border-radius: 10px; font: 600 13px var(--font); text-align: left; cursor: pointer; }
+.g-badge-urgent { background: var(--bad); }
+.g-steps { margin: 10px 0; padding: 0; list-style: none; counter-reset: step; display: grid; gap: 10px; }
+.g-steps li { counter-increment: step; display: flex; gap: 12px; align-items: flex-start; padding: 12px; border-radius: 14px; background: #fff; border: 1px solid #f3d6e2; font-size: 17px; line-height: 1.4; animation: rise-in .35s ease both; }
+.g-steps li::before { content: counter(step); flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--g); color: #fff; font-weight: 800; }
+.g-call {
+  display: block; margin: 14px 0; padding: 20px; border-radius: 20px; text-align: center; text-decoration: none;
+  font: 800 22px var(--font); color: #fff; background: var(--bad); box-shadow: 0 10px 26px rgba(217, 83, 79, .4);
+  animation: pulse-red 1.6s ease-out infinite;
+}
+@keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(217, 83, 79, .5); } 100% { box-shadow: 0 0 0 18px rgba(217, 83, 79, 0); } }

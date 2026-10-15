@@ -15,10 +15,18 @@
 //   field     { label, placeholder? }
 //   button    { label }
 //   divider   {}
+//   steps     { items: [string] }                 (numbered steps, e.g. first aid)
+//   call      { label, number }                   (big tel: button; only emergency numbers)
+// urgency: 'none' | 'urgent' | 'serious'. Urgent pages (health, injury, emergency) show steps at once:
+// no like question, no proposed changes, never kept. Serious ones always get a 1669 call button.
 
 export const TODO_WORDS = ['todo', 'to-do', 'to do', 'checklist', 'task list', 'รายการที่ต้องทำ', 'สิ่งที่ต้องทำ', 'ทูดู', 'เช็คลิสต์', 'ลิสต์งาน'];
 export const ACCENTS = ['orange', 'green', 'blue', 'purple', 'pink', 'dark'];
-export const BLOCK_TYPES = ['text', 'stat', 'progress', 'checklist', 'list', 'card', 'chart', 'field', 'button', 'divider'];
+export const BLOCK_TYPES = ['text', 'stat', 'progress', 'checklist', 'list', 'card', 'chart', 'field', 'button', 'divider', 'steps', 'call'];
+export const URGENCY = ['none', 'urgent', 'serious'];
+// Thai emergency lines: 1669 medical, 191 police, 199 fire.
+export const CALL_NUMBERS = ['1669', '191', '199'];
+const CALL_1669 = { type: 'call', label: 'Call 1669 (emergency medical)', number: '1669' };
 
 const str = (v, max = 120) => (typeof v === 'string' || typeof v === 'number' ? String(v).slice(0, max) : '');
 const arr = (v, max) => (Array.isArray(v) ? v.slice(0, max) : []);
@@ -49,6 +57,11 @@ function cleanBlock(b) {
     case 'field': return { type: 'field', label: str(b.label, 40), placeholder: str(b.placeholder, 60) };
     case 'button': return { type: 'button', label: str(b.label, 30) };
     case 'divider': return { type: 'divider' };
+    case 'steps': return { type: 'steps', items: arr(b.items, 8).map((i) => str(i, 160)).filter(Boolean) };
+    case 'call': {
+      const number = str(b.number, 8).replace(/\D/g, '');
+      return CALL_NUMBERS.includes(number) ? { type: 'call', label: str(b.label, 50) || `Call ${number}`, number } : null;
+    }
   }
   return null;
 }
@@ -56,8 +69,10 @@ function cleanBlock(b) {
 // Keep only known components and bounded strings. Returns null if nothing usable is left.
 export function validateSpec(spec) {
   if (!spec || typeof spec !== 'object') return null;
-  const blocks = arr(spec.blocks, 14).map(cleanBlock).filter(Boolean);
+  let blocks = arr(spec.blocks, 14).map(cleanBlock).filter(Boolean);
   if (!blocks.length) return null;
+  const urgency = URGENCY.includes(spec.urgency) ? spec.urgency : 'none';
+  if (urgency === 'serious' && !blocks.some((b) => b.type === 'call' && b.number === '1669')) blocks = [CALL_1669, ...blocks];
   const kind = str(spec.kind, 24).toLowerCase().replace(/[^a-z0-9-]/g, '') || 'page';
   const name = str(spec.name, 40) || str(spec.title, 40) || 'Page';
   return {
@@ -69,7 +84,8 @@ export function validateSpec(spec) {
     subtitle: str(spec.subtitle, 80),
     accent: ACCENTS.includes(spec.accent) ? spec.accent : 'orange',
     blocks,
-    proposals: arr(spec.proposals, 2).map((p, i) => ({ id: str(p?.id, 20) || `p${i}`, label: str(p?.label ?? p, 40) })).filter((p) => p.label),
+    urgency,
+    proposals: urgency !== 'none' ? [] : arr(spec.proposals, 2).map((p, i) => ({ id: str(p?.id, 20) || `p${i}`, label: str(p?.label ?? p, 40) })).filter((p) => p.label),
   };
 }
 
@@ -168,4 +184,34 @@ export function reviseByKeywords(spec, rawText) {
 
   const applied = [...used, ...ids];
   return { action: 'revise', spec: { ...next, applied, proposals: nextProposals(next, applied) } };
+}
+
+// ---------- Urgent requests: first aid at once ----------
+
+export const URGENT_WORDS = ['เลือด', 'เจ็บ', 'ล้ม', 'bleeding', 'blood', 'hurt', 'injur'];
+
+export function cannedFirstAid() {
+  return {
+    kind: 'first-aid',
+    name: 'First aid',
+    match: [],
+    urgency: 'urgent',
+    title: 'Bleeding finger: first aid',
+    subtitle: 'Do these now',
+    accent: 'pink',
+    blocks: [
+      {
+        type: 'steps',
+        items: [
+          'กดแผลให้แน่นด้วยผ้าสะอาด 10 นาที ห้ามเปิดดู',
+          'ยกมือให้สูงกว่าระดับหัวใจ',
+          'เลือดหยุดแล้ว ล้างแผลด้วยน้ำสะอาด',
+          'ปิดแผลด้วยพลาสเตอร์หรือผ้าก๊อซ',
+        ],
+      },
+      { type: 'card', title: 'โทร 1669 ทันทีถ้า', text: 'เลือดไม่หยุดใน 10 นาที · แผลลึกหรือกว้าง · เลือดพุ่ง · นิ้วชาหรือขยับไม่ได้' },
+      CALL_1669,
+    ],
+    proposals: [],
+  };
 }
