@@ -7,6 +7,8 @@
 //   POST /api/agent/ack       { id, ok }        -> page opened the pushed scene (or was busy)
 //   POST /api/feeds/event     { event }         -> presenter nudges a fake feed (e.g. flight-delayed)
 //   GET  /api/agent/status                      -> feeds and agent state, for the presenter
+//   POST /api/image           { prompt, scene } -> { url } or { error }: a picture for a generated page
+//   GET  /api/image/<key>.png                   -> a cached picture
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize, dirname } from 'node:path';
@@ -15,6 +17,7 @@ import { loadEnv } from './lib/env.js';
 import { route } from './lib/router.js';
 import { elevenTts, ttsReady } from './lib/tts.js';
 import { liveReady, signedUrl } from './lib/live-session.js';
+import { createImageService } from './lib/images.js';
 import { createFeeds, DEMO_SCRIPT } from './lib/feeds.js';
 import { createAgentLoop } from './lib/agent-loop.js';
 
@@ -22,6 +25,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 loadEnv(join(here, '..', '.env'));
 
 const PUBLIC = join(here, 'public');
+const images = createImageService({ dir: join(here, '.cache', 'images') });
 const agent = createAgentLoop({
   feeds: createFeeds(),
   script: process.env.AGENT_SCRIPT === 'off' ? [] : DEMO_SCRIPT,
@@ -86,6 +90,18 @@ const server = createServer(async (req, res) => {
       return send(res, agent.fire(String(event)) ? 200 : 400, { ok: true });
     }
     if (url.pathname === '/api/agent/status') return send(res, 200, agent.status());
+    if (url.pathname === '/api/image' && req.method === 'POST') {
+      const { prompt, scene } = await readJson(req);
+      const out = await images.get(prompt, String(scene || 'default'));
+      if (out.error) console.warn(`[image] ${out.error}`);
+      return send(res, 200, out);
+    }
+    if (url.pathname.startsWith('/api/image/')) {
+      const file = images.file(url.pathname.slice('/api/image/'.length));
+      if (!file) return send(res, 404, { error: 'not found' });
+      res.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'max-age=86400' });
+      return res.end(await readFile(file));
+    }
     if (url.pathname === '/api/tts' && req.method === 'POST') {
       if (!ttsReady()) return send(res, 503, { error: 'no ElevenLabs key' });
       const { text } = await readJson(req);

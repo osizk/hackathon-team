@@ -322,3 +322,12 @@ body.listening .mic { animation: pulse 1.2s ease-out infinite; }
   animation: pulse-red 1.6s ease-out infinite;
 }
 @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(217, 83, 79, .5); } 100% { box-shadow: 0 0 0 18px rgba(217, 83, 79, 0); } }
+.g-image { margin: 10px 0; }
+.g-frame { position: relative; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: linear-gradient(100deg, #e9e4dd 30%, #f4f0ea 50%, #e9e4dd 70%) 0 0 / 200% 100%; animation: shimmer 1.4s linear infinite; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+.g-frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .8s ease; }
+.g-image.loaded .g-frame { animation: none; }
+.g-image.loaded img { opacity: 1; }
+.g-image.failed .g-frame { animation: none; background: #ece7e0; }
+.g-image.failed .g-frame::after { content: "🖼"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 34px; opacity: .45; }
+.g-image figcaption { margin-top: 6px; font-size: 13px; opacity: .7; }

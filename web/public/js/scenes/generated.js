@@ -120,6 +120,27 @@ function drawBlock(b, spec, onChange, onButton) {
       return btn;
     }
     case 'divider': return h('hr', 'g-divider');
+    case 'image': {
+      // Grey frame at once; the picture fades in when the server has it. On any error the frame stays with an icon.
+      const fig = h('figure', 'g-image');
+      fig.dataset.testid = 'g-image';
+      const frame = h('div', 'g-frame');
+      fig.append(frame);
+      if (b.caption) fig.append(h('figcaption', null, b.caption));
+      fetch('/api/image', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ prompt: b.prompt, scene: spec.kind }) })
+        .then((r) => r.json())
+        .then((out) => {
+          if (!out.url) throw new Error(out.error || 'no image');
+          const img = h('img');
+          img.alt = b.caption || b.prompt;
+          img.onload = () => fig.classList.add('loaded');
+          img.onerror = () => fig.classList.add('failed');
+          img.src = out.url;
+          frame.append(img);
+        })
+        .catch(() => fig.classList.add('failed'));
+      return fig;
+    }
     case 'steps': {
       const ol = h('ol', 'g-steps');
       b.items.forEach((t) => ol.append(h('li', null, t)));

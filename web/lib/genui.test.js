@@ -70,3 +70,8 @@ test('serious spec always gets 1669; call only to emergency numbers; urgent drop
   const bad = validateSpec({ blocks: [{ type: 'call', number: '0812345678' }, { type: 'text', text: 'ok' }] });
   assert.equal(bad.blocks.length, 1);
 });
+
+test('image block: prompt required, at most 2 per page', () => {
+  const s = validateSpec({ blocks: [1, 2, 3].map((i) => ({ type: 'image', prompt: `pic ${i}` })).concat([{ type: 'image' }]) });
+  assert.equal(s.blocks.length, 2);
+});

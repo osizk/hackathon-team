@@ -24,6 +24,7 @@ the repo root (copy [.env.example](.env.example)). `.env` is never committed.
 | Key | With it | Without it |
 | --- | --- | --- |
 | `ELEVENLABS_API_KEY` + `ELEVENLABS_AGENT_ID` | The brain is a live ElevenLabs agent (Claude Sonnet 5.5, Thai voice and speech to text). It opens scenes, draws new pages and decides when to speak first, only through client tools | Keywords pick the scene, a todo request gets one ready-made page, simple rules decide when to speak first |
+| `ELEVENLABS_API_KEY` with Image & Video (Pro plan) | Generated pages can show pictures: a grey frame first, then the picture fades in. Cached by prompt, at most 3 new pictures per page | The frame stays with a small picture icon |
 | `ELEVENLABS_API_KEY` alone | `npm run voice` saves every fixed line as a Thai MP3; new sentences are spoken live | The saved MP3s in `web/public/voice/` still play; anything else uses the browser voice |
 
 Create or update the live agent from code (needs the key's Agents permission,

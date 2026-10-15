@@ -17,12 +17,14 @@
 //   divider   {}
 //   steps     { items: [string] }                 (numbered steps, e.g. first aid)
 //   call      { label, number }                   (big tel: button; only emergency numbers)
+//   image     { prompt, caption? }                (picture made by the server; at most 2 per page)
 // urgency: 'none' | 'urgent' | 'serious'. Urgent pages (health, injury, emergency) show steps at once:
 // no like question, no proposed changes, never kept. Serious ones always get a 1669 call button.
 
 export const TODO_WORDS = ['todo', 'to-do', 'to do', 'checklist', 'task list', 'รายการที่ต้องทำ', 'สิ่งที่ต้องทำ', 'ทูดู', 'เช็คลิสต์', 'ลิสต์งาน'];
 export const ACCENTS = ['orange', 'green', 'blue', 'purple', 'pink', 'dark'];
-export const BLOCK_TYPES = ['text', 'stat', 'progress', 'checklist', 'list', 'card', 'chart', 'field', 'button', 'divider', 'steps', 'call'];
+export const BLOCK_TYPES = ['text', 'stat', 'progress', 'checklist', 'list', 'card', 'chart', 'field', 'button', 'divider', 'steps', 'call', 'image'];
+export const MAX_IMAGES = 2;
 export const URGENCY = ['none', 'urgent', 'serious'];
 // Thai emergency lines: 1669 medical, 191 police, 199 fire.
 export const CALL_NUMBERS = ['1669', '191', '199'];
@@ -57,6 +59,7 @@ function cleanBlock(b) {
     case 'field': return { type: 'field', label: str(b.label, 40), placeholder: str(b.placeholder, 60) };
     case 'button': return { type: 'button', label: str(b.label, 30) };
     case 'divider': return { type: 'divider' };
+    case 'image': return str(b.prompt, 200) ? { type: 'image', prompt: str(b.prompt, 200), caption: str(b.caption, 80) } : null;
     case 'steps': return { type: 'steps', items: arr(b.items, 8).map((i) => str(i, 160)).filter(Boolean) };
     case 'call': {
       const number = str(b.number, 8).replace(/\D/g, '');
@@ -69,7 +72,8 @@ function cleanBlock(b) {
 // Keep only known components and bounded strings. Returns null if nothing usable is left.
 export function validateSpec(spec) {
   if (!spec || typeof spec !== 'object') return null;
-  let blocks = arr(spec.blocks, 14).map(cleanBlock).filter(Boolean);
+  let pictures = 0;
+  let blocks = arr(spec.blocks, 14).map(cleanBlock).filter(Boolean).filter((b) => b.type !== 'image' || ++pictures <= MAX_IMAGES);
   if (!blocks.length) return null;
   const urgency = URGENCY.includes(spec.urgency) ? spec.urgency : 'none';
   if (urgency === 'serious' && !blocks.some((b) => b.type === 'call' && b.number === '1669')) blocks = [CALL_1669, ...blocks];

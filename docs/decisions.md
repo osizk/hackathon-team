@@ -15,6 +15,17 @@ Copy this block for a new decision:
 - **Who decided:** names, or "whole team".
 ```
 
+## 2026-10-15: Pictures in generated pages
+
+- **Decision:** Generated pages can have an image part with a short prompt.
+  The page shows a grey frame at once; the server asks the ElevenLabs Image &
+  Video API (`gemini-2.5-flash-image`) and the picture fades in. Pictures are
+  cached by prompt, capped per page, and any error keeps the frame with an
+  icon. The four storyboard scenes keep their ready-made pictures.
+- **Why:** "เปิด" - pages the agent makes should look as good as the
+  prebuilt ones.
+- **Who decided:** head (team lead)
+
 ## 2026-10-15: The brain is an ElevenLabs agent
 
 - **Decision:** The agent's brain is an ElevenLabs agent (ElevenAgents) with

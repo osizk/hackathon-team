@@ -75,3 +75,22 @@ test('urgent: bleeding finger shows first-aid steps at once, a 1669 button, no l
   await expectHome(page);
   expect(await page.evaluate(() => localStorage.getItem('agentos.savedScenes'))).toBeNull();
 });
+
+test('image block: grey frame at once; without a key the frame stays with an icon', async ({ page }) => {
+  await home(page);
+  await page.evaluate(() => window.agentOS.openScene('generated', {
+    spec: { kind: 'trip', title: 'Trip', accent: 'blue', blocks: [{ type: 'image', prompt: 'beach at sunset', caption: 'Hua Hin' }, { type: 'text', text: 'Pack light' }], proposals: [] },
+  }));
+  await expect(page.locator('[data-testid=g-image]')).toBeVisible();
+  await expect(page.locator('[data-testid=g-image] figcaption')).toHaveText('Hua Hin');
+  await expect(page.locator('[data-testid=g-image]')).toHaveClass(/failed/);
+});
+
+test('image block: picture fades in when the server returns one', async ({ page }) => {
+  await page.route('**/api/image', (r) => r.fulfill({ json: { url: '/img/race.svg' } }));
+  await home(page);
+  await page.evaluate(() => window.agentOS.openScene('generated', {
+    spec: { kind: 'run', title: 'Run', blocks: [{ type: 'image', prompt: 'runner' }], proposals: [] },
+  }));
+  await expect(page.locator('[data-testid=g-image]')).toHaveClass(/loaded/);
+});

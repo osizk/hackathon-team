@@ -33,7 +33,7 @@ export const TOOL_DEFS = [
       '{kind, name, match:[words], title, subtitle, accent: orange|green|blue|purple|pink|dark, urgency: none|urgent|serious, ' +
       'blocks:[...], proposals:[{id,label}]}. Block types: text{text} stat{label,value} progress{label,value 0-100 or "auto"} ' +
       'checklist{items:[{text,done,due,tag}]} list{items} card{title,text} chart{bars:[{label,value}]} field{label,placeholder} ' +
-      'button{label} divider{} steps{items} call{label,number 1669|191|199}. After it opens, ask if the user likes it and propose one or two changes ' +
+      'button{label} divider{} steps{items} call{label,number 1669|191|199} image{prompt,caption} (a short picture prompt; at most 2).  After it opens, ask if the user likes it and propose one or two changes ' +
       '(unless urgent).',
     params: { spec_json: { type: 'string', description: 'The UI spec as a JSON string', required: true } },
   },
