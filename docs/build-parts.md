@@ -8,7 +8,7 @@ Folders and owners: [AGENTS.md](../AGENTS.md#folders-and-owners).
 Hard rules for every part: [Money safety](../AGENTS.md#money-safety).
 Hours are for one person directing a coding agent.
 
-Critical path: parts 1, 2, 4, 5, 11, about 10.5 hours.
+Critical path: parts 1, 2, 4, 5, 12, 11, about 12 hours.
 Cut first if late: part 9 (LINE approve), then part 8 (live screen).
 Never cut: part 6 (rules check), part 7 (approve step), the backup video in
 part 11.
@@ -22,11 +22,34 @@ The estimate has no part 10. The numbers below keep the estimate's numbers.
 | 3 | Marketplace list and price compare | 1.5 | A |
 | 4 | Shopping run | 2 | B |
 | 5 | U-topia driver | 3 | head |
-| 6 | Rules check | 1 | B |
+| 6 | Rules check | 1 | C |
 | 7 | Owner approve step | 1.5 | A |
 | 8 | Live agent screen, if time | 2 | A |
 | 9 | LINE approve, if time | 1.5 | C |
 | 11 | Stage prep | 2 | C, head |
+| 12 | Integration | 1.5 | head |
+
+## Module contracts
+
+The parts hand data to each other. Agree these hand-offs first (part 1, first
+30 minutes) and write them in `shared/`. Then each person builds against mock
+data and nobody waits for another part.
+
+```text
+agent --ItemList--> web
+agent --PaymentRequest--> pay/rules --RulesResult--> pay/approve --> web
+web --OwnerAnswer (approve or reject)--> pay/utopia
+```
+
+| Type | From | To | Fields |
+| --- | --- | --- | --- |
+| ItemList | `agent/` | `web/` | Items numbered 1, 2, 3. Each item: number, name, and a price and shipping for each shop that sells it. |
+| PaymentRequest | `agent/` | `pay/rules/` | Shop, item, total (amount and currency). |
+| RulesResult | `pay/rules/` | `pay/approve/`, then `web/` | The payment request it checked. For each rule (monthly budget left, cap per payment, allowed shop): pass or fail, and a reason the web app can show. |
+| OwnerAnswer | `web/` | `pay/utopia/` | Which payment request it answers, and approve or reject. |
+
+Change a contract only in its own small pull request on `shared/`, and tell
+every owner who uses it.
 
 ## Part 1: Skeleton
 
@@ -34,6 +57,9 @@ The estimate has no part 10. The numbers below keep the estimate's numbers.
 
 **Done when:**
 
+- [ ] The module contracts above (ItemList, PaymentRequest, RulesResult,
+      OwnerAnswer) are agreed and committed in `shared/`, with sample data for
+      each. Do this first, in the first 30 minutes.
 - [ ] The Pi starter (`@earendil-works/pi-coding-agent@1.2.0`) runs in `agent/`.
 - [ ] A web app shell runs in `web/` and shows an empty page.
 - [ ] The folders `web/`, `agent/`, `pay/`, `shared/` exist, as in AGENTS.md.
@@ -44,7 +70,7 @@ The estimate has no part 10. The numbers below keep the estimate's numbers.
 
 **Role:** B
 
-**Folder:** all four folders (first commit only)
+**Folder:** all four folders (first commit only); `shared/` for the contracts
 
 ## Part 2: Agent browser
 
@@ -93,15 +119,15 @@ a payment request.
 - [ ] The agent finds the item in a shop checked to work.
 - [ ] It adds the item to the cart and fills the checkout address form.
 - [ ] It stops at the payment step.
-- [ ] It reads the total and builds a payment request (type in `shared/`):
-      shop, item, amount, currency.
+- [ ] It reads the total and builds a payment request (the PaymentRequest
+      contract in `shared/`): shop, item, total.
 - [ ] It sends the payment request to the rules check. It never pays itself.
 
 **Needs:** part 2
 
 **Role:** B
 
-**Folder:** `agent/`, `shared/` (payment request type)
+**Folder:** `agent/`
 
 ## Part 5: U-topia driver
 
@@ -130,14 +156,15 @@ window, and only after approve.
 
 - [ ] It checks the monthly budget left, the cap per payment and the allowed
       shop list.
-- [ ] It returns allow or block, with a reason the web app can show.
+- [ ] It returns a RulesResult (contract in `shared/`): pass or fail per rule,
+      with a reason the web app can show.
 - [ ] Unit tests cover: allowed buy, shop not on the list, over the monthly
       budget, over the cap per payment.
 - [ ] The model has no way to skip it.
 
 **Needs:** part 1
 
-**Role:** B
+**Role:** C
 
 **Folder:** `pay/rules/`
 
@@ -205,8 +232,37 @@ approves or rejects it.
 - [ ] Only one real buy happens on stage, small amount.
 - [ ] The fee slide is ready.
 
-**Needs:** parts 3 to 7
+**Needs:** parts 3 to 7, part 12
 
 **Role:** C, head
 
 **Folder:** `docs/`; the reset script's folder is decided in the issue
+
+## Part 12: Integration
+
+**Goal:** Every part is wired together and the full flow runs end to end.
+
+**Done when:**
+
+- [ ] The happy path runs end to end on mock data: list, pick, buy, rules
+      check, approve, U-topia script, with no real payment.
+- [ ] Every hand-off uses the contracts in `shared/`, not private formats.
+- [ ] A blocked request and a rejected request both stop before pay.
+- [ ] Checkpoint 1 below is passed and any gap is written in the issue.
+
+**Needs:** parts 3 to 7
+
+**Role:** head
+
+**Folder:** none of its own; wiring fixes go to the owner of the folder, or a
+small pull request in the folder with its owner's review
+
+## Checkpoints
+
+1. **Happy path on mock data.** The whole flow runs end to end, with no real
+   payment: the agent makes the item list, the web app shows it, the buy goes
+   through the rules check and the approve step, and the U-topia script stops
+   at the final confirm. Target: when part 12 is done.
+2. **Real run, the night before the demo.** One run with the real shop and the
+   real U-topia app, small amount. Then record the backup video. Do this
+   before the final rehearsals in part 11 end.

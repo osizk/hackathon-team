@@ -47,7 +47,7 @@ One folder per part, so four people do not edit the same files.
 | --- | --- | --- |
 | `web/` | Web app: chat box, marketplace list, compare view, approve screen, live screen | A |
 | `agent/` | Pi agent loop and its browser tools (open, read, click, type, wait), shopping run | B |
-| `pay/rules/` | Rules check in plain code, with unit tests | B |
+| `pay/rules/` | Rules check in plain code, with unit tests | C |
 | `pay/approve/` | Payment request waiting for the owner's answer | A |
 | `pay/utopia/` | Fixed U-topia script in the owner's logged-in window | head |
 | `shared/` | Shared types, for example the payment request | B |
