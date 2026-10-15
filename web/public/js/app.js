@@ -11,6 +11,9 @@ import { createListener } from './stt.js';
 import { connectAgent, fireFeed } from './agent-link.js';
 import { live, checkLive, prepareLive, startLive, setMic, sendText, sendContext, sendFeed, silenceAgent, afterAgentSentence } from './live-agent.js';
 import { T, TEST, PRESENTER, wait } from './timing.js';
+import { plan, watchScenes } from './plan.js';
+import { hasMemory } from './memory.js';
+import { noteFeed, proactiveWatch, forgetOnRequest } from './learn.js';
 
 const $ = (id) => document.getElementById(id);
 const stage = $('stage');
@@ -292,9 +295,13 @@ function tickClock() {
   $('clock').textContent = `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
+// The returning visitor's greeting, sent to the live agent as a marked message (see prompt.md).
+export const SESSION_START = '[session start] The user just opened the app again. Greet them in one short sentence with what you remember, then wait. Call no tool.';
+
 // The mascot greets once, after the first tap (browsers block sound before a gesture).
-// Always the saved greet line (same voice as the live agent, whose first message is empty), so
-// there is exactly one greeting whether or not the live agent connects later.
+// The saved greet line (same voice as the live agent, whose first message is empty), so there is
+// exactly one greeting whether or not the live agent connects later; a returning visitor is
+// greeted by the live agent instead (it knows their name and last task).
 function setupGreeting() {
   let greeted = false;
   const first = (e) => {
@@ -304,6 +311,12 @@ function setupGreeting() {
     window.removeEventListener('pointerdown', first, true);
     window.removeEventListener('keydown', first, true);
     if (e.target.closest?.('#mic, input, form, .presenter, .suggest, .home-btn') || (e.type === 'keydown' && e.key !== 'Enter')) return; // the user is about to talk or type
+    // A returning visitor with the live agent: the agent greets with what it remembers.
+    if (live.available && hasMemory()) {
+      logEvent('greet', { via: 'agent' });
+      startLive(toolUi).then(() => sendText(SESSION_START)).catch(() => speak({ line: 'greet', text: LINES.greet }));
+      return;
+    }
     logEvent('greet', { via: 'local' });
     speak({ line: 'greet', text: LINES.greet });
   };
@@ -312,6 +325,7 @@ function setupGreeting() {
 }
 
 async function boot() {
+  forgetOnRequest(); // ?forget=1: start with no memory and nothing learned
   tickClock();
   setInterval(tickClock, 15000);
   const fallback = setupFallback();
@@ -325,9 +339,10 @@ async function boot() {
   health.catch(() => {});
   await Promise.all([initVoice(health), checkLive(health)]);
   document.body.dataset.scene = 'home';
+  watchScenes(plan, proactiveWatch);
   // The user's first touch, tap or key fetches the live agent's signed URL ahead of the first turn.
   for (const type of ['pointerdown', 'keydown', 'focusin']) window.addEventListener(type, prepareLive, { capture: true, passive: true });
-  connectAgent({ onProactive: (scene) => proactive(scene), onFeed: (text) => live.connected && sendFeed(text) });
+  connectAgent({ onProactive: (scene) => proactive(scene), onFeed: (text) => live.connected && (noteFeed(), sendFeed(text)) });
   document.body.dataset.ready = '1';
   // For tests and the presenter console.
   window.agentOS = { openScene, closeScene, handleUserText, proactive, fireFeed };

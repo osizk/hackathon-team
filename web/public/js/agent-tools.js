@@ -2,8 +2,20 @@
 // Each tool gets plain parameters from the agent and returns a short text result to it.
 // The money rule lives here too: no tool can approve a payment. Only the owner's tap on Allow can.
 import { validateSpec } from './genui.js';
+import { plan as screenPlan } from './plan.js';
+import { remember as keepFact, forgetMemory, MEMORY_KEYS } from './memory.js';
+import * as learner from './learn.js';
 
 export const PROACTIVE_SCENES = ['shopping', 'payment', 'flight', 'training'];
+
+// Optional on the first tool call of a task with several steps: the screen shows the plan line.
+const PLAN_PARAM = {
+  type: 'string',
+  description:
+    'Only for a task of 2 to 4 steps: the steps in the user\'s language, 2 to 4 words each, separated by |, ' +
+    'for example "อ่านอีเมล|ทำลิสต์|รอคุณกด Allow". The screen shows the plan and ticks a step as each tool finishes. Leave it out for one-step tasks.',
+  required: false,
+};
 
 // Tool definitions, shared by the agent config (scripts/agent-sync.js) and the browser.
 // Parameters are kept flat (strings and enums) so any tool schema format can carry them;
@@ -17,6 +29,7 @@ export const TOOL_DEFS = [
     params: {
       scene: { type: 'string', enum: PROACTIVE_SCENES, description: 'Which scene to open', required: true },
       data_json: { type: 'string', description: 'Optional JSON object with scene data in the shape of the defaults', required: false },
+      plan: PLAN_PARAM,
     },
   },
   {
@@ -35,7 +48,7 @@ export const TOOL_DEFS = [
       'checklist{items:[{text,done,due,tag}]} list{items} card{title,text} chart{bars:[{label,value}]} field{label,placeholder} ' +
       'button{label} divider{} steps{items} call{label,number 1669|191|199} image{prompt,caption} (a short picture prompt; at most 2).  After it opens, ask if the user likes it and propose one or two changes ' +
       '(unless urgent).',
-    params: { spec_json: { type: 'string', description: 'The UI spec as a JSON string', required: true } },
+    params: { spec_json: { type: 'string', description: 'The UI spec as a JSON string', required: true }, plan: PLAN_PARAM },
   },
   {
     name: 'revise_ui',
@@ -56,12 +69,24 @@ export const TOOL_DEFS = [
     description:
       'Search the web for real, current information (events, places, prices, opening hours, news). Returns a short answer and ' +
       'sources. Then show it with render_ui; the page lists the sources as links by itself. Search once per request.',
-    params: { query: { type: 'string', description: 'What to search for, in a few words (English or Thai)', required: true } },
+    params: { query: { type: 'string', description: 'What to search for, in a few words (English or Thai)', required: true }, plan: PLAN_PARAM },
   },
   {
     name: 'keep_scene',
     description: 'The user liked the open generated page and said yes to keeping it: save it so it opens at once next time.',
     params: {},
+  },
+  {
+    name: 'remember',
+    description:
+      'Save one short fact about the user on their phone, so you know it on their next visit. name = what to call them; ' +
+      'likes = what they like or care about (it replaces the old value, so keep what still holds); note = one other useful fact. ' +
+      'The last task is saved by itself. Call it without saying anything first, and do not tell the user unless they ask. ' +
+      'forget_all when the user asks you to forget them.',
+    params: {
+      key: { type: 'string', enum: [...MEMORY_KEYS.filter((k) => k !== 'last_task'), 'forget_all'], description: 'Which fact; forget_all = the user asked you to forget everything (facts and what you learned)', required: true },
+      value: { type: 'string', description: 'The fact, a few words (empty to forget it)', required: true },
+    },
   },
 ];
 
@@ -83,10 +108,80 @@ const parseJson = (text) => {
   }
 };
 
+// Tools that finish a step of the plan line, and what each saves as the user's last task.
+const STEP_TOOLS = ['open_scene', 'scene_action', 'render_ui', 'revise_ui', 'web_search', 'keep_scene'];
+const FAILED = /^(error|refused|web search failed|web search is not|no results|no page)/;
+const SCENE_TASKS = {
+  shopping: 'groceries list from the weekly email',
+  payment: 'a payment approval',
+  flight: 'a delayed flight re-route',
+  training: '10K training plan and race sign-up',
+};
+export function lastTask(name, params = {}) {
+  if (name === 'open_scene') return SCENE_TASKS[params.scene] || null;
+  if (name === 'web_search') return params.query ? `searched the web: ${params.query}` : null;
+  if (name === 'render_ui') {
+    const title = parseJson(params.spec_json)?.title;
+    return title ? `made a page: ${title}` : null;
+  }
+  return null;
+}
+
 // ui: { current(): { name, ctl } | null, openScene(name, data), closeScene(), action(name, extra), nudgeAllow(),
 //       search(query) -> { answer, results: [{ title, url, content }] } | { error } }
+// Optional for tests: ui.plan (the plan line) and ui.remember(key, value) (the memory).
 export function createToolHandlers(ui) {
+  const plan = ui.plan || screenPlan;
+  const remember = ui.remember || keepFact;
+  const learn = ui.learn || learner;
+  const handlers = createScreenHandlers(ui, learn);
+  handlers.remember = ({ key, value } = {}) => {
+    if (key === 'forget_all') {
+      (ui.forget || (() => { forgetMemory(); learn.forgetLearned(); }))();
+      return 'forgot everything about the user on this phone; say so in one short sentence';
+    }
+    return remember(key, value) ? `remembered ${key}; do not mention it` : `error: key must be one of ${MEMORY_KEYS.join(', ')}`;
+  };
+  // Every tool: start the plan line if one came with it; a step tool that worked ticks it and
+  // saves the last task. A sync result stays sync (the payment refusal is immediate).
+  return Object.fromEntries(
+    Object.entries(handlers).map(([name, fn]) => [
+      name,
+      (params = {}) => {
+        const planned = Boolean(params?.plan) && plan.start(params.plan);
+        plan.busy(true);
+        // Released a moment later: the scene watcher hears this tool's own scene change after it ends.
+        const release = () => setTimeout(() => plan.busy(false), 0);
+        let out;
+        try {
+          out = fn(params);
+        } catch (err) {
+          release();
+          throw err;
+        }
+        const done = (result) => {
+          release();
+          if (STEP_TOOLS.includes(name) && !FAILED.test(String(result))) {
+            plan.tick();
+            const task = lastTask(name, params);
+            if (task) remember('last_task', task);
+          } else if (planned) plan.clear(); // the task did not start: no plan to show
+          return result;
+        };
+        return out && typeof out.then === 'function' ? out.then(done, (err) => { release(); throw err; }) : done(out);
+      },
+    ]),
+  );
+}
+
+function createScreenHandlers(ui, learn) {
   const generated = () => (ui.current()?.name === 'generated' ? ui.current() : null);
+  // The proposals of the last page drawn, until the user takes one (revise) or passes them over.
+  let offered = null;
+  const passedOver = () => {
+    if (offered?.spec.proposals?.length) learn.noteIgnored(offered.spec, offered.spec.proposals);
+    offered = null;
+  };
   // Sources of the last web search: the next page drawn shows them as links.
   let sources = [];
 
@@ -97,6 +192,7 @@ export function createToolHandlers(ui) {
       const data = parseJson(data_json);
       if (data === null) return 'error: data_json is not valid JSON';
       await ui.openScene(scene, data);
+      learn.agentOpened(scene);
       return `opened ${scene}`;
     },
 
@@ -121,7 +217,9 @@ export function createToolHandlers(ui) {
       if (!spec) return 'error: spec has no usable blocks; use only the fixed components';
       spec = withSources(spec, sources);
       sources = [];
+      passedOver();
       await ui.openScene('generated', { spec });
+      if (spec.urgency === 'none') offered = { spec };
       return spec.urgency === 'none' ? 'page shown; now ask if the user likes it and propose one or two changes' : 'first-aid page shown';
     },
 
@@ -131,8 +229,12 @@ export function createToolHandlers(ui) {
       let spec = validateSpec(parseJson(spec_json));
       if (!spec) return 'error: spec has no usable blocks';
       // A revise keeps the sources of the page it changes.
-      spec = withSources(spec, open.ctl.state?.().spec?.blocks.find((b) => b.type === 'sources')?.items);
+      const before = open.ctl.state?.().spec;
+      spec = withSources(spec, before?.blocks.find((b) => b.type === 'sources')?.items);
       ui.action('revise', { spec });
+      // Learn what the user asked to change, for the next page like it.
+      learn.noteRevise(before, spec);
+      offered = null;
       return 'page redrawn';
     },
 
@@ -161,6 +263,8 @@ export function createToolHandlers(ui) {
       const spec = open.ctl.state?.().spec;
       if (spec?.urgency && spec.urgency !== 'none') return 'refused: first-aid pages are never kept';
       ui.action('keep');
+      learn.noteKeep(spec);
+      passedOver();
       return `kept "${spec?.name || 'page'}"; it opens at once next time`;
     },
   };
