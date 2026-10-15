@@ -1,7 +1,7 @@
 // Every fixed line the agent says in the demo. scripts/render-voice.js turns
 // each one into public/voice/<id>.mp3, so the stage voice works without Wi-Fi.
 export const LINES = {
-  greet: 'สวัสดี วันนี้มีอะไรให้ช่วยไหม',
+  greet: 'สวัสดีมีอะไรให้ช่วยมั้ย',
   unsure: 'ขอโทษนะ ยังไม่เข้าใจ ลองพูดอีกครั้งได้ไหม',
   shop_intro: 'สัปดาห์นี้ยุ่งใช่ไหม เดี๋ยวเช็คอีเมลให้นะ',
   shop_found: 'เจอรายการของที่ต้องซื้อในอีเมลแล้ว จัดให้ตามนี้เลยนะ',

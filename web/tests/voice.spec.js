@@ -80,15 +80,16 @@ test('speak first offline for every scene: proactive, generated and urgent', asy
 });
 
 test('greeting: the first tap greets once, never again; the tap hint goes away', async ({ page }) => {
-  await home(page, { presenter: true });
+  await page.goto('/?test=1&presenter=1');
+  await expect(page.locator('body')).toHaveAttribute('data-ready', '1');
   await expect(page.locator('[data-testid=tap-hint]')).toBeVisible();
   await page.mouse.click(200, 200);
   await expect(page.locator('[data-testid=tap-hint]')).toBeHidden();
-  await expect(page.locator('#subtitle')).toContainText('วันนี้มีอะไรให้ช่วยไหม');
+  await expect(page.locator('#subtitle')).toContainText('สวัสดีมีอะไรให้ช่วยมั้ย');
   await page.mouse.click(200, 220);
   await page.mouse.click(200, 240);
   await page.waitForTimeout(600);
-  const greets = (await runlog(page)).filter((e) => e.type === 'audio_start' && e.id === 'greet');
+  const greets = (await runlog(page)).filter((e) => e.type === 'greet');
   expect(greets).toHaveLength(1);
 });
 

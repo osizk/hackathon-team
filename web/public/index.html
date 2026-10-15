@@ -3,12 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f6efe4">
-  <title>Agent OS</title>
-  <link rel="icon" href="/img/mascot.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#f5f2ff">
+  <title>Q-Bot</title>
+  <link rel="icon" href="/img/ubot/03-idle.jpeg" type="image/jpeg">
   <link rel="stylesheet" href="/css/app.css">
   <!-- Every module at once, instead of one import level after another. -->
   <link rel="modulepreload" href="/js/app.js">
+  <link rel="modulepreload" href="/js/i18n.js">
+  <link rel="modulepreload" href="/js/mascot.js">
   <link rel="modulepreload" href="/js/lines.js">
   <link rel="modulepreload" href="/js/data.js">
   <link rel="modulepreload" href="/js/scenes/index.js">
@@ -32,7 +34,7 @@
 </head>
 <body>
   <div class="phone" id="phone">
-    <header class="statusbar"><span id="clock">9:41</span><span class="status-icons">●●● 5G ▮</span></header>
+    <header class="statusbar"><span id="clock">9:41</span><div class="language-switch" role="group" aria-label="UI language"><button type="button" data-language="th" aria-pressed="true">Thai</button><button type="button" data-language="en" aria-pressed="false">Eng</button></div><span class="status-icons">●●● 5G ▮</span></header>
     <p class="notice" id="notice" data-testid="notice" role="status" hidden></p>
 
     <nav class="scene-toolbar" aria-label="Task navigation">
@@ -41,21 +43,17 @@
     <div class="workspace">
     <main class="home" id="home" aria-label="Agent home">
       <section class="intro" data-testid="intro">
-        <h1>Agent OS</h1>
-        <p>คุยกับเอเจนต์แทนการเปิดแอป มันตอบด้วยเสียงและหน้าจอเต็ม แล้วพับกลับมาที่นี่</p>
-        <small>Talk to one agent instead of opening apps. Tap a suggestion, type, or hold the mic.</small>
+        <h1>Q-Bot</h1>
       </section>
       <div class="mascot-wrap" id="mascotWrap">
-        <img class="mascot" id="mascot" src="/img/mascot.svg" alt="Agent mascot">
+        <img class="mascot" id="mascot" src="/img/ubot/03-idle.jpeg" alt="Q-Bot waiting">
       </div>
       <div class="wave" id="wave" aria-hidden="true">
         <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
       </div>
       <p class="tap-hint" id="tapHint" data-testid="tap-hint">แตะหน้าจอเพื่อเปิดเสียง · Tap to turn on sound</p>
-      <nav class="suggest" id="suggest" aria-label="Try saying" data-testid="suggest">
-        <p>ลองพูดว่า · Try saying</p>
-      </nav>
       <button class="secretary-button shopping-shortcut" id="catalogBtn" type="button" data-testid="shopify-catalog">เลือกสินค้า · Shopify</button>
+      <button class="memory-entry" id="memoryEntry" type="button" data-testid="memory-entry" aria-label="agent จำอะไรไว้ · What I remember">agent จำอะไรไว้<small>What I remember</small></button>
     </main>
 
     <section class="stage" id="stage" aria-live="polite"></section>

@@ -11,8 +11,13 @@ import { createListener } from './stt.js';
 import { connectAgent, fireFeed } from './agent-link.js';
 import { live, checkLive, prepareLive, startLive, setMic, sendText, sendContext, sendFeed, silenceAgent, afterAgentStarts } from './live-agent.js';
 import { T, TEST, PRESENTER, wait } from './timing.js';
+import { plan, watchScenes } from './plan.js';
+import { hasMemory } from './memory.js';
+import { noteFeed, proactiveWatch, forgetOnRequest } from './learn.js';
 import { createSecretary } from './secretary.js';
 import { setupSecretaryDemo } from './secretary-demo.js';
+import { initMascot } from './mascot.js';
+import { initLanguage } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 const stage = $('stage');
@@ -38,6 +43,14 @@ function makeAgent(token) {
     open: (name, data) => alive() && openScene(name, data),
     // Same as the user saying it (chips and buttons on generated pages).
     request: (text) => alive() && handleUserText(text),
+    // A tap on a model-written page: the live agent hears it as a scene event; offline it is like saying the label.
+    event: (text, label) => {
+      if (!alive()) return;
+      logEvent('page_tap', { text });
+      if (!live.connected) return label && handleUserText(label);
+      if (label) showSubtitle(`“${label}”`, 1600);
+      sendText(`[scene event] ${text}`);
+    },
     close: () => alive() && closeScene(),
   };
 }
@@ -97,15 +110,6 @@ async function sayThenOpen({ line, text }, name, data, current = () => true) {
   return show;
 }
 
-// Sentences a judge can tap; each is sent as if spoken. One per kind of answer:
-// a prebuilt scene, a generated page, the urgent first-aid case, and a web search (live) or
-// the training scene (offline).
-export const SUGGESTIONS = [
-  { say: 'สัปดาห์นี้ยุ่งมาก', en: 'This week is hectic', kind: 'scene' },
-  { say: 'ช่วยทำ to-do list ให้หน่อย', en: 'Make me a to-do list', kind: 'generated' },
-  { say: 'นิ้วโดนมีดบาด เลือดไหลไม่หยุด', en: 'I cut my finger, it keeps bleeding', kind: 'urgent' },
-  { say: 'หางานวิ่ง 10K ในกรุงเทพเดือนหน้าให้หน่อย', en: 'Find a 10K run in Bangkok next month', kind: 'search' },
-];
 
 // The agent speaks first (always-on feed event offline, or a presenter hotkey).
 async function proactive(name) {
@@ -216,21 +220,10 @@ function setupFallback() {
   return { show: () => input.focus() };
 }
 
-function setupSuggestions() {
+function setupHomeButton() {
   $('catalogBtn').addEventListener('click', () => openScene('shopping', { catalog: true }));
-  const nav = $('suggest');
-  for (const s of SUGGESTIONS) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.dataset.kind = s.kind;
-    btn.setAttribute('aria-label', `${s.say} · ${s.en}`);
-    btn.append(s.say);
-    const en = document.createElement('small');
-    en.textContent = s.en;
-    btn.append(en);
-    btn.addEventListener('click', () => { logEvent('suggestion', { kind: s.kind }); submitText(s.say, 'suggestion'); });
-    nav.append(btn);
-  }
+  // The memory page: no talking needed to see or change what the agent remembers.
+  $('memoryEntry').addEventListener('click', () => openScene('memory'));
   $('homeBtn').addEventListener('click', () => closeScene());
 }
 
@@ -291,6 +284,10 @@ function setupMic(fallback) {
     if (live.connected) setMic(false);
     else listener?.stop();
   };
+  // Asleep (the session ended for idle or time): a tap on the mascot wakes the agent too.
+  $('mascotWrap').addEventListener('click', () => {
+    if (document.body.dataset.brain === 'asleep') startLive(toolUi).catch(() => {});
+  });
   mic.addEventListener('pointerdown', start);
   mic.addEventListener('pointerup', stop);
   mic.addEventListener('pointerleave', stop);
@@ -304,30 +301,45 @@ function tickClock() {
   $('clock').textContent = `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
+// The returning visitor's greeting, sent to the live agent as a marked message (see prompt.md).
+export const SESSION_START = '[session start] The user just opened the app again. Greet them in one short sentence with what you remember, then wait. Call no tool.';
+
 // The mascot greets once, after the first tap (browsers block sound before a gesture).
-// Always the saved greet line (same voice as the live agent, whose first message is empty), so
-// there is exactly one greeting whether or not the live agent connects later.
+// The saved greet line (same voice as the live agent, whose first message is empty), so there is
+// exactly one greeting whether or not the live agent connects later; a returning visitor is
+// greeted by the live agent instead (it knows their name and last task).
 function setupGreeting() {
   let greeted = false;
   const first = (e) => {
     if (greeted) return;
+    if (e.target.closest?.('#mic, input, form, .presenter, .language-switch, .shopping-shortcut, .memory-entry, .home-btn, .secretary-shortcuts, dialog') || (e.type === 'keydown' && e.key !== 'Enter')) return;
     greeted = true;
-    document.body.classList.add('started');
     window.removeEventListener('pointerdown', first, true);
     window.removeEventListener('keydown', first, true);
-    if (e.target.closest?.('#mic, input, form, .presenter, .suggest, .home-btn, .secretary-shortcuts, .shopping-shortcut, dialog') || (e.type === 'keydown' && e.key !== 'Enter')) return; // the user is about to talk or type
+    // Returning visitors hear the live agent's remembered greeting.
+    if (live.available && hasMemory()) {
+      logEvent('greet', { via: 'agent' });
+      startLive(toolUi).then(() => {
+        document.body.classList.add('started');
+        return sendText(SESSION_START);
+      }).catch(() => speak({ text: LINES.greet, onStart: () => document.body.classList.add('started') }));
+      return;
+    }
     logEvent('greet', { via: 'local' });
-    speak({ line: 'greet', text: LINES.greet });
+    speak({ text: LINES.greet, onStart: () => document.body.classList.add('started') });
   };
   window.addEventListener('pointerdown', first, true);
   window.addEventListener('keydown', first, true);
 }
 
 async function boot() {
+  forgetOnRequest(); // ?forget=1: start with no memory and nothing learned
+  initLanguage();
+  initMascot();
   tickClock();
   setInterval(tickClock, 15000);
   const fallback = setupFallback();
-  setupSuggestions();
+  setupHomeButton();
   setupHotkeys(fallback);
   setupMic(fallback);
   setupGreeting();
@@ -337,9 +349,10 @@ async function boot() {
   health.catch(() => {});
   await Promise.all([initVoice(health), checkLive(health)]);
   document.body.dataset.scene = 'home';
+  watchScenes(plan, proactiveWatch);
   // The user's first touch, tap or key fetches the live agent's signed URL ahead of the first turn.
   for (const type of ['pointerdown', 'keydown', 'focusin']) window.addEventListener(type, prepareLive, { capture: true, passive: true });
-  connectAgent({ onProactive: (scene) => proactive(scene), onFeed: (text) => live.connected && sendFeed(text), onIdle: () => {
+  connectAgent({ onProactive: (scene) => proactive(scene), onFeed: (text) => live.connected && (noteFeed(), sendFeed(text)), onIdle: () => {
     if (document.querySelector('dialog[open]') || document.body.classList.contains('thinking') || document.activeElement?.matches('input, textarea, select')) return false;
     return secretary.flush();
   } });

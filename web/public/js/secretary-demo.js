@@ -13,7 +13,7 @@ export function setupSecretaryDemo(store, { open, reset }) {
     return el;
   };
   const shortcuts = make('section', null, 'secretary-shortcuts');
-  shortcuts.setAttribute('aria-label', 'เลขาส่วนตัว · ข้อมูลทดสอบ');
+  shortcuts.setAttribute('aria-label', 'เลขาส่วนตัว');
   const actions = make('div', null, 'secretary-actions');
   const dialog = make('dialog', null, 'secretary-demo');
   dialog.id = 'secretary-demo'; dialog.setAttribute('aria-labelledby', 'demo-title');
@@ -27,7 +27,6 @@ export function setupSecretaryDemo(store, { open, reset }) {
   };
   const type = select('เหตุการณ์', Object.entries(NOTICE_TYPES).map(([key, value]) => [key, value.label]));
   const delay = select('แจ้งเมื่อ', [['0', 'ทันทีเมื่อหน้าหลักว่าง'], ['10', 'อีก 10 วินาที'], ['30', 'อีก 30 วินาที']]);
-  const status = make('p', 'เดโมเลขา · ข้อมูลทดสอบ', 'secretary-note'); status.setAttribute('role', 'status');
   const feedback = make('p', '', 'secretary-note'); feedback.setAttribute('role', 'status');
   dialog.append(feedback, button('เริ่มทดสอบ', () => {
     if (!store.schedule(type.value, Number(delay.value))) { feedback.textContent = 'ทดสอบเรื่องนี้แล้ว กดรีเซ็ตเพื่อเริ่มใหม่'; return; }
@@ -35,14 +34,9 @@ export function setupSecretaryDemo(store, { open, reset }) {
   }, 'schedule-notice'), button('รีเซ็ตเดโม', () => {
     reset(); feedback.textContent = ''; dialog.close();
   }, 'reset-secretary'), button('ปิด', () => dialog.close(), 'close-demo'));
-  actions.append(button('สรุปวันนี้', () => open('today'), 'secretary-today'), button('อีเมล → งาน', () => open('email'), 'secretary-email'), button('ทดสอบแจ้งเตือน', () => { feedback.textContent = ''; dialog.showModal(); }, 'secretary-demo'));
-  shortcuts.append(actions, status);
-  document.getElementById('suggest').before(shortcuts);
+  actions.append(button('สรุปวันนี้', () => open('today'), 'secretary-today'), button('อีเมล → งาน', () => open('email'), 'secretary-email'), button('ทดสอบการแจ้งเตือน', () => { feedback.textContent = ''; dialog.showModal(); }, 'secretary-demo'));
+  shortcuts.append(actions);
+  document.getElementById('home').append(shortcuts);
   document.getElementById('phone').append(dialog);
-  store.subscribe(() => {
-    const state = store.get();
-    const scheduled = state.notices.filter((n) => n.status === 'scheduled').length;
-    const pending = state.notices.filter((n) => n.status === 'pending').length;
-    status.textContent = `ข้อมูลทดสอบ · รอเวลา ${scheduled} · รอหน้าหลักว่าง ${pending} · เมลทั่วไป ${state.quietEmails}`;
-  });
+
 }
