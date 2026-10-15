@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createFeeds } from '../public/js/feeds.js';
-import { createAgentLoop } from '../public/js/agent-loop.js';
+import { createAgentLoop, describeChanges, flightReason } from '../public/js/agent-loop.js';
 import { decideByRules } from '../public/js/brain.js';
 
 function setup(opts = {}) {
@@ -81,4 +81,30 @@ test('live mode: feed changes become a contextual update, only when idle', async
   assert.equal(msgs.length, 1);
   assert.match(msgs[0].text, /delayed 120 minutes/);
   loop.stop();
+});
+
+test('feed updates carry their concrete reason', () => {
+  const feeds = createFeeds();
+  feeds.fire('flight-delayed');
+  const flight = describeChanges(feeds.get(), ['flight']);
+  assert.match(flight, /delayed 120 minutes \(ground delay at BKK\)/);
+  assert.match(flight, /Why it matters: it now lands at 11:15 instead of 09:15, after the 11:00 Client meeting, Chiang Mai \(it clashes\)/);
+  assert.match(flight, /FD 3433, lands at 09:55/);
+
+  feeds.fire('sleep-synced');
+  assert.match(describeChanges(feeds.get(), ['health']), /Why it matters: sleep score 86 .* Bangkok City 10K sign-up just opened/);
+
+  feeds.fire('email-shopping');
+  assert.match(describeChanges(feeds.get(), ['email']), /Why it matters: it is only a promo email; nothing needs the user now/);
+});
+
+test('a short delay with no clash says so and offers no faster flight', () => {
+  const feeds = createFeeds();
+  feeds.fire('flight-delayed');
+  feeds.get().flight.delayMinutes = 30;
+  const reason = flightReason(feeds.get());
+  assert.deepEqual([reason.lands, reason.clash], ['09:45', false]);
+  const text = describeChanges(feeds.get(), ['flight']);
+  assert.match(text, /nothing on the calendar clashes/);
+  assert.doesNotMatch(text, /faster flight/);
 });

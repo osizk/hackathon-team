@@ -104,22 +104,51 @@ export function createAgentLoop({ feeds, script = [], tickMs = 3000, decide = de
   };
 }
 
-// One plain sentence per changed feed, for the live agent.
+const toMin = (hhmm) => {
+  const [h, m] = String(hhmm).split(':').map(Number);
+  return h * 60 + m;
+};
+const toHhmm = (min) => `${String(Math.floor(min / 60) % 24).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`;
+
+// Why a flight change matters: the new landing time against the user's calendar that day.
+export function flightReason(feeds) {
+  const f = feeds.flight;
+  const lands = toHhmm(toMin(f.arrive) + f.delayMinutes);
+  const meeting = feeds.calendar.events.find((e) => e.day === f.day);
+  const clash = meeting && toMin(lands) > toMin(meeting.time);
+  return {
+    lands,
+    clash: Boolean(clash),
+    why: clash
+      ? `it now lands at ${lands} instead of ${f.arrive}, after the ${meeting.time} ${meeting.title} (it clashes)`
+      : `it now lands at ${lands}; nothing on the calendar clashes`,
+  };
+}
+
+// One plain sentence per changed feed for the live agent, each with its concrete reason
+// ("Why it matters: ..."), so the agent can say why it speaks first, or why it stays quiet.
 export function describeChanges(feeds, changed) {
   const say = {
     email: () => {
       const m = feeds.email.messages.at(-1);
-      return `New email from ${m.from}: "${m.subject}" (${m.kind}).`;
+      const why = m.kind === 'shopping' ? 'it is a shopping list the user may want bought' : `it is only a ${m.kind} email; nothing needs the user now`;
+      return `New email from ${m.from}: "${m.subject}" (${m.kind}). Why it matters: ${why}.`;
     },
-    calendar: () => `Calendar: ${feeds.calendar.events.map((e) => `${e.day} ${e.time} ${e.title}`).join('; ')}.`,
+    calendar: () => `Calendar: ${feeds.calendar.events.map((e) => `${e.day} ${e.time} ${e.title}`).join('; ')}. Why it matters: the schedule changed.`,
     health: () =>
       feeds.health.synced
-        ? `Sleep data synced: sleep score ${feeds.health.sleepScore}. ${feeds.health.raceOpen ? 'Sign-up for the Bangkok City 10K is open.' : ''}`
+        ? `Sleep data synced: sleep score ${feeds.health.sleepScore}.${feeds.health.raceOpen ? ` Sign-up for the ${feeds.health.race} is open.` : ''} ` +
+          `Why it matters: ${feeds.health.raceOpen ? `sleep score ${feeds.health.sleepScore} means the user is rested enough to train, and the ${feeds.health.race} sign-up just opened` : 'only a sleep score; nothing to act on'}.`
         : 'Health data reset.',
-    flight: () =>
-      feeds.flight.status === 'delayed'
-        ? `Flight ${feeds.flight.code} tomorrow at ${feeds.flight.depart} is delayed ${feeds.flight.delayMinutes} minutes. The user has a meeting at ${feeds.calendar.events[0]?.time} in Chiang Mai. A faster flight has a seat.`
-        : `Flight ${feeds.flight.code} is on time.`,
+    flight: () => {
+      const f = feeds.flight;
+      if (f.status !== 'delayed') return `Flight ${f.code} is on time.`;
+      const { why, clash } = flightReason(feeds);
+      return (
+        `Flight ${f.code} ${f.day} at ${f.depart} (${f.from} to ${f.to}) is delayed ${f.delayMinutes} minutes${f.cause ? ` (${f.cause})` : ''}. ` +
+        `Why it matters: ${why}.${clash && f.faster ? ` A faster flight, ${f.faster.code}, lands at ${f.faster.arrive} and has a seat.` : ''}`
+      );
+    },
   };
   return `[feed update] ${changed.map((k) => say[k]?.() || `${k} changed.`).join(' ')}`.trim();
 }
