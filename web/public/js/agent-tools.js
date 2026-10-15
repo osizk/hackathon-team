@@ -121,14 +121,30 @@ export function lastTask(name, params = {}) {
   if (name === 'open_scene') return SCENE_TASKS[params.scene] || null;
   if (name === 'web_search') return params.query ? `searched the web: ${params.query}` : null;
   if (name === 'render_ui') {
-    const title = parseJson(params.spec_json)?.title;
-    return title ? `made a page: ${title}` : null;
+    const spec = parseJson(params.spec_json);
+    if (spec?.saved) return `reopened the kept page: ${spec.saved}`;
+    return spec?.title ? `made a page: ${spec.title}` : null;
   }
   return null;
 }
 
+// The [screen] note that tells the live agent which pages the user kept, and how to reopen one:
+// render_ui with spec_json {"saved":"<kind>"} (the saved spec reference). Empty when nothing is kept.
+export function keptPagesNote(saved = {}) {
+  const pages = Object.values(saved || {}).filter((p) => p?.kind);
+  if (!pages.length) return '';
+  const list = pages
+    .map((p) => `"${p.name || p.kind}" (reference: {"saved":"${p.kind}"}; words: ${(p.match || []).join(', ') || p.kind})`)
+    .join('; ');
+  return (
+    `[screen] Pages the user kept earlier: ${list}. When the user asks for one of these, reopen it at once: ` +
+    'call render_ui with spec_json set to its reference, for example {"saved":"' + pages[0].kind + '"}. Do not draw it again.'
+  );
+}
+
 // ui: { current(): { name, ctl } | null, openScene(name, data), closeScene(), action(name, extra), nudgeAllow(),
-//       search(query) -> { answer, results: [{ title, url, content }] } | { error } }
+//       search(query) -> { answer, results: [{ title, url, content }] } | { error },
+//       saved() -> { [kind]: { kind, name, match, spec } }, tellAgent(text) }
 // Optional for tests: ui.plan (the plan line) and ui.remember(key, value) (the memory).
 export function createToolHandlers(ui) {
   const plan = ui.plan || screenPlan;
@@ -213,7 +229,15 @@ function createScreenHandlers(ui, learn) {
     },
 
     async render_ui({ spec_json } = {}) {
-      let spec = validateSpec(parseJson(spec_json));
+      const parsed = parseJson(spec_json);
+      // A kept page's reference: reopen the saved page as it was kept.
+      if (typeof parsed?.saved === 'string') {
+        const kept = ui.saved?.()[parsed.saved];
+        if (!kept) return `error: no kept page "${parsed.saved}"; draw a new page with a full spec`;
+        await ui.openScene('generated', { savedKind: kept.kind });
+        return `reopened the kept page "${kept.name || kept.kind}"; say it is ready, do not ask if they like it`;
+      }
+      let spec = validateSpec(parsed);
       if (!spec) return 'error: spec has no usable blocks; use only the fixed components';
       spec = withSources(spec, sources);
       sources = [];
@@ -263,6 +287,7 @@ function createScreenHandlers(ui, learn) {
       const spec = open.ctl.state?.().spec;
       if (spec?.urgency && spec.urgency !== 'none') return 'refused: first-aid pages are never kept';
       ui.action('keep');
+      ui.tellAgent?.(keptPagesNote(ui.saved?.()));
       learn.noteKeep(spec);
       passedOver();
       return `kept "${spec?.name || 'page'}"; it opens at once next time`;
