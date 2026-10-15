@@ -6,8 +6,9 @@ import { SCENES } from './scenes/index.js';
 import { savedIndex } from './scenes/generated.js';
 import { initVoice, speak, showSubtitle, interruptAll } from './voice.js';
 import { logEvent } from './log.js';
+import { apiFetch, passcodeGate } from './api.js';
 import { createListener } from './stt.js';
-import { connectAgent } from './agent-link.js';
+import { connectAgent, fireFeed } from './agent-link.js';
 import { live, checkLive, startLive, setMic, sendText, sendContext, sendFeed, silenceAgent, afterAgentSentence } from './live-agent.js';
 import { T, TEST, wait } from './timing.js';
 
@@ -90,7 +91,7 @@ async function proactive(name) {
 }
 
 async function routeText(text) {
-  const res = await fetch('/api/route', {
+  const res = await apiFetch('/api/route', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ text, context: open?.name || null, saved: savedIndex(), ...(open?.ctl.state?.() || {}) }),
@@ -259,6 +260,7 @@ function setupGreeting() {
 }
 
 async function boot() {
+  await passcodeGate();
   tickClock();
   setInterval(tickClock, 15000);
   const fallback = setupFallback();
@@ -269,10 +271,10 @@ async function boot() {
   await initVoice();
   document.body.dataset.scene = 'home';
   await checkLive();
-  connectAgent({ onProactive: (scene) => proactive(scene), onFeed: (text) => live.connected && sendFeed(text), isLive: () => live.connected });
+  connectAgent({ onProactive: (scene) => proactive(scene), onFeed: (text) => live.connected && sendFeed(text) });
   document.body.dataset.ready = '1';
   // For tests and the presenter console.
-  window.agentOS = { openScene, closeScene, handleUserText, proactive };
+  window.agentOS = { openScene, closeScene, handleUserText, proactive, fireFeed };
 }
 
 boot();

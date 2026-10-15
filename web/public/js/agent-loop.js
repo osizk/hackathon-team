@@ -1,14 +1,16 @@
-// The always-on agent: a loop on the server that watches the feeds every few seconds and
-// decides by itself when to speak and which scene to open, pushing to the page over SSE.
+// The always-on agent: a loop in the page that watches the feeds every few seconds and
+// decides by itself when to speak and which scene to open. (It runs in the browser, so the
+// app needs no long-running server: it deploys as static files plus small functions.)
 // It never speaks while a scene is open, while the agent talks, or while the user talks.
 // Offline, simple rules decide and the page opens the scene. When the page runs the live
 // ElevenLabs agent, feed changes go into the conversation as contextual updates instead,
 // and the agent decides whether to speak.
 import { decide as defaultDecide, PROACTIVE } from './brain.js';
-import { LINES } from '../public/js/lines.js';
+import { LINES } from './lines.js';
 
-export function createAgentLoop({ feeds, script = [], tickMs = 3000, decide = defaultDecide, log = console.log, onEvent = () => {} }) {
-  const clients = new Set();
+// emit(event, data): 'proactive' { id, scene, line, say } offline, or 'feed' { changed, text } when live.
+// The page answers a 'proactive' with ack({ id, ok }).
+export function createAgentLoop({ feeds, script = [], tickMs = 3000, decide = defaultDecide, log = console.log, onEvent = () => {}, emit = () => {} }) {
   let presence = { scene: 'home', talking: false, listening: false, live: false };
   let seen = feeds.versions();
   let handled = {};
@@ -21,13 +23,10 @@ export function createAgentLoop({ feeds, script = [], tickMs = 3000, decide = de
 
   const busy = () => presence.scene !== 'home' || presence.talking || presence.listening;
 
-  function push(event, data) {
-    const msg = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
-    for (const res of clients) res.write(msg);
-  }
+  const push = (event, data) => emit(event, data);
 
   async function tick() {
-    if (deciding || pending || !clients.size || busy()) return;
+    if (deciding || pending || busy()) return;
     const now = feeds.versions();
     const changed = Object.keys(now).filter((k) => now[k] !== seen[k]);
     if (!changed.length && !retry) return;
@@ -63,16 +62,6 @@ export function createAgentLoop({ feeds, script = [], tickMs = 3000, decide = de
 
   return {
     tick,
-    addClient(res) {
-      clients.add(res);
-      res.write(`event: hello\ndata: ${JSON.stringify({ tickMs })}\n\n`);
-      // A push that never got an ack (page reloaded) is offered again.
-      if (pending) {
-        pending = null;
-        retry = true;
-      }
-    },
-    removeClient: (res) => clients.delete(res),
     setPresence(next) {
       const prev = presence;
       presence = { scene: String(next.scene || 'home'), talking: Boolean(next.talking), listening: Boolean(next.listening), live: Boolean(next.live) };
@@ -107,7 +96,7 @@ export function createAgentLoop({ feeds, script = [], tickMs = 3000, decide = de
       if (event === 'reset') seen = feeds.versions();
       return ok;
     },
-    status: () => ({ presence, handled, pending, feeds: feeds.get(), clients: clients.size }),
+    status: () => ({ presence, handled, pending, feeds: feeds.get() }),
     stop() {
       clearInterval(interval);
       timers.forEach(clearTimeout);

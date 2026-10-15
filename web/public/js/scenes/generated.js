@@ -3,6 +3,7 @@
 // The agent asks if the user likes it; spoken answers revise the spec and it redraws in place.
 // A page the user likes can be kept as a saved scene in localStorage.
 import { T } from '../timing.js';
+import { apiFetch } from '../api.js';
 
 const STORE = 'agentos.savedScenes';
 
@@ -127,7 +128,7 @@ function drawBlock(b, spec, onChange, onButton) {
       const frame = h('div', 'g-frame');
       fig.append(frame);
       if (b.caption) fig.append(h('figcaption', null, b.caption));
-      fetch('/api/image', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ prompt: b.prompt, scene: spec.kind }) })
+      apiFetch('/api/image', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ prompt: b.prompt, scene: spec.kind }) })
         .then((r) => r.json())
         .then((out) => {
           if (!out.url) throw new Error(out.error || 'no image');

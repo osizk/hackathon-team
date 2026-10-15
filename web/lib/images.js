@@ -24,8 +24,10 @@ function reasonFor(status, body) {
   return `http ${status}`;
 }
 
-export function createImageService({ env = process.env, dir, fetchImpl = fetch, pollMs = 2000, timeoutMs = 45000, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) }) {
-  mkdirSync(dir, { recursive: true });
+// inline: true (Vercel) returns the signed content_url instead of caching the file on disk.
+export function createImageService({ env = process.env, dir, inline = false, fetchImpl = fetch, pollMs = 2000, timeoutMs = 45000, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) }) {
+  const memo = new Map(); // inline mode: prompt key -> content_url
+  if (!inline) mkdirSync(dir, { recursive: true });
   const inflight = new Map();
   const perScene = new Map();
   // After a plan or permission error, stop calling: every later picture fails fast and quietly.
@@ -49,6 +51,10 @@ export function createImageService({ env = process.env, dir, fetchImpl = fetch, 
       const job = await r.json().catch(() => ({}));
       if (!r.ok) return { error: reasonFor(r.status, job) };
       if (job.status === 'failed') return { error: `failed: ${job.failure_reason || 'unknown'}` };
+      if (job.status === 'completed' && job.content_url && inline) {
+        memo.set(key, job.content_url);
+        return { url: job.content_url };
+      }
       if (job.status === 'completed' && job.content_url) {
         const img = await fetchImpl(job.content_url);
         if (!img.ok) return { error: `download ${img.status}` };
@@ -66,7 +72,8 @@ export function createImageService({ env = process.env, dir, fetchImpl = fetch, 
       const prompt = cleanPrompt(rawPrompt);
       if (!prompt) return { error: 'empty prompt' };
       const key = promptKey(prompt);
-      if (existsSync(join(dir, `${key}.png`))) return { url: `/api/image/${key}.png`, cached: true };
+      if (inline && memo.has(key)) return { url: memo.get(key), cached: true };
+      if (!inline && existsSync(join(dir, `${key}.png`))) return { url: `/api/image/${key}.png`, cached: true };
       if (inflight.has(key)) return inflight.get(key);
       if (!env.ELEVENLABS_API_KEY) return { error: 'no ELEVENLABS_API_KEY' };
       if (unavailable) return { error: unavailable, quiet: true };

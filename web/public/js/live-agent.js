@@ -6,6 +6,7 @@
 import { createToolHandlers } from './agent-tools.js';
 import { showSubtitle, setLiveVoice } from './voice.js';
 import { logEvent } from './log.js';
+import { apiFetch } from './api.js';
 
 // @elevenlabs/client, pinned. jsDelivr's +esm build is one self-contained ES module.
 const SDK_URL = 'https://cdn.jsdelivr.net/npm/@elevenlabs/client@1.26.0/+esm';
@@ -24,7 +25,7 @@ export const stripTags = (text) => String(text).replace(/\[[^\]]{1,30}\]\s*/g, '
 
 export async function checkLive() {
   try {
-    live.available = (await (await fetch('/api/health')).json()).brain === 'elevenlabs-agent';
+    live.available = (await (await apiFetch('/api/health')).json()).brain === 'elevenlabs-agent';
   } catch {
     live.available = false;
   }
@@ -107,7 +108,7 @@ export function startLive(ui) {
   if (!live.available) return Promise.reject(new Error('live agent not configured'));
   if (starting) return starting;
   starting = (async () => {
-    const session = await (await fetch('/api/agent/session')).json();
+    const session = await (await apiFetch('/api/agent/session')).json();
     if (!session.live) throw new Error(session.reason || 'no live session');
     const { Conversation } = await import(SDK_URL);
     await checkMic();

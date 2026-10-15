@@ -1,13 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createFeeds } from './feeds.js';
-import { createAgentLoop } from './agent-loop.js';
-import { decideByRules } from './brain.js';
+import { createFeeds } from '../public/js/feeds.js';
+import { createAgentLoop } from '../public/js/agent-loop.js';
+import { decideByRules } from '../public/js/brain.js';
 
 function setup(opts = {}) {
   const pushed = [];
-  const loop = createAgentLoop({ feeds: createFeeds(), tickMs: 1e9, log: () => {}, ...opts });
-  loop.addClient({ write: (m) => { if (m.startsWith('event: proactive')) pushed.push(JSON.parse(m.split('data: ')[1])); } });
+  const loop = createAgentLoop({ feeds: createFeeds(), tickMs: 1e9, log: () => {}, emit: (event, data) => { if (event === 'proactive') pushed.push(data); }, ...opts });
   return { loop, pushed };
 }
 
@@ -72,8 +71,7 @@ test('rules wait on a plain email', () => {
 test('live mode: feed changes become a contextual update, only when idle', async () => {
   const feeds = createFeeds();
   const msgs = [];
-  const loop = createAgentLoop({ feeds, tickMs: 1e9, log: () => {} });
-  loop.addClient({ write: (m) => { if (m.startsWith('event: feed')) msgs.push(JSON.parse(m.split('data: ')[1])); } });
+  const loop = createAgentLoop({ feeds, tickMs: 1e9, log: () => {}, emit: (event, data) => { if (event === 'feed') msgs.push(data); } });
   loop.setPresence({ scene: 'payment', live: true });
   loop.fire('flight-delayed');
   await loop.tick();

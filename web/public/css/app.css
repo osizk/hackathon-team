@@ -335,3 +335,10 @@ body.listening .mic { animation: pulse 1.2s ease-out infinite; }
 /* Until the first tap: browsers block sound before a gesture. */
 .tap-hint { position: absolute; top: 18%; left: 50%; translate: -50% 0; margin: 0; padding: 8px 16px; border-radius: 99px; font-size: 14px; font-weight: 600; color: var(--ink-2); background: rgba(255, 255, 255, .7); animation: breathe 2.4s ease-in-out infinite; }
 body.started .tap-hint { display: none; }
+
+/* Passcode gate (deployed site only) */
+body.gated .home, body.gated .statusbar { visibility: hidden; }
+.gate { position: absolute; inset: 0; z-index: 70; display: grid; place-content: center; gap: 12px; padding: 32px; background: var(--cream); text-align: center; }
+.gate p { margin: 0 0 6px; font-size: 24px; font-weight: 800; }
+.gate input { width: 240px; padding: 14px; border-radius: 14px; border: 2px solid var(--accent); font: 18px var(--font); text-align: center; }
+.gate small { color: var(--bad); }

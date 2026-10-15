@@ -22,7 +22,8 @@ Decided 2026-10-15. Why: [docs/decisions.md](docs/decisions.md).
 - Demo app: plain HTML/JS in `web/` with a small Node server. Brain: an
   ElevenLabs agent (Claude Sonnet 5.5 inside, Thai voice and speech to text),
   defined as code in `web/agent/`; offline, a keyword router. ElevenLabs TTS
-  for the cached voice lines (issue #17). Tests: Playwright in Chrome.
+  for the cached voice lines (issue #17). Deploys to Vercel: functions in
+  `web/api/`, static `web/public/` (issue #19). Tests: Playwright in Chrome.
 - The CryptoMate stack (Pi agent loop, agent browser over CDP, U-topia
   script) is not used by the demo. Its notes stay below for later.
 - Do not add another framework or service unless an issue asks for it.

@@ -24,6 +24,7 @@ How to run and test: [README.md](../README.md).
 | 5 | Generated pages, like-and-adjust, keep liked pages | `web/lib/genui.js`, `scenes/generated.js` | Done |
 | 6 | Always-on agent | `web/lib/agent-loop.js`, `web/lib/feeds.js`, `web/lib/brain.js`, `web/public/js/agent-link.js` | Done |
 | 7 | Repo docs up to date | `README.md`, `docs/` | Done |
+| 8 | Ready for Vercel | `web/api/`, `web/lib/handlers.js`, `web/vercel.json` | Done, deploy pending |
 
 ### Part 1: Agent home, scene system, payment card
 
@@ -60,11 +61,18 @@ ready-made page.
 
 ### Part 6: Always-on agent
 
-A loop on the server watches fake feeds (email, calendar, sleep and runs,
+A loop in the page watches fake feeds (email, calendar, sleep and runs,
 flight) every few seconds. It decides by itself when to speak and which scene
-to open, and pushes it to the page over SSE. It never speaks over an open
+to open. It never speaks over an open
 scene or while anyone talks. A script fires the feed events in a fixed order;
 the presenter can fire one from a hidden panel.
+
+### Part 8: Ready for Vercel
+
+The server routes are Vercel functions in `web/api/`, sharing code with the
+local server (`web/lib/handlers.js`). The always-on loop runs in the page, so
+no long-running server is needed. A passcode protects the deployed site. The
+deploy steps are in the README.
 
 ### Part 7: Docs
 

@@ -56,7 +56,7 @@ const quiet = async () => {
   await page.waitForTimeout(1500);
 };
 
-await page.goto(BASE);
+await page.goto(`${BASE}/?script=off`); // steps fire their own feed events
 await page.evaluate(() => {
   window.__said = [];
   window.__spoke = 0;
@@ -129,7 +129,7 @@ await step('urgent: bleeding finger shows first aid, no like question', async ()
 await step('always-on: a flight delay feed event makes the agent open the flight card', async () => {
   await quiet();
   if ((await scene()) !== 'home') throw new Error(`a closed page came back: ${await scene()}`);
-  await page.request.post(`${BASE}/api/feeds/event`, { data: { event: 'flight-delayed' } });
+  await page.evaluate(() => window.agentOS.fireFeed('flight-delayed'));
   await until(async () => (await scene()) === 'flight', 60000, 'flight scene');
   await page.click('[data-testid=yes]');
   await home();
@@ -138,7 +138,7 @@ await step('always-on: a flight delay feed event makes the agent open the flight
 await step('always-on: a promo email alone does not open anything', async () => {
   await page.waitForTimeout(3000);
   const before = await page.evaluate(() => window.__said.length);
-  await page.request.post(`${BASE}/api/feeds/event`, { data: { event: 'email-shopping' } });
+  await page.evaluate(() => window.agentOS.fireFeed('email-shopping'));
   await page.waitForTimeout(15000);
   if ((await scene()) !== 'home') throw new Error(`opened ${await scene()}`);
   const after = await page.evaluate((n) => window.__said.slice(n).join(' | '), before);

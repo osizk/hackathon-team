@@ -7,6 +7,7 @@
 // Every audio start and end goes to the run log with its source.
 import { T, MUTED } from './timing.js';
 import { logEvent } from './log.js';
+import { apiFetch } from './api.js';
 
 let manifest = new Set();
 let liveTts = false;
@@ -24,7 +25,7 @@ export async function initVoice() {
     if (res.ok) manifest = new Set(await res.json());
   } catch { /* no cached voice yet */ }
   try {
-    liveTts = (await (await fetch('/api/health')).json()).tts;
+    liveTts = (await (await apiFetch('/api/health')).json()).tts;
   } catch { /* server without health route */ }
 }
 
@@ -68,7 +69,7 @@ function browserSpeak(text) {
 }
 
 async function liveSpeak(text) {
-  const res = await fetch('/api/tts', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text }) });
+  const res = await apiFetch('/api/tts', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text }) });
   if (!res.ok) throw new Error(`tts ${res.status}`);
   const url = URL.createObjectURL(await res.blob());
   try { await playAudio(url, text); } finally { URL.revokeObjectURL(url); }

@@ -61,9 +61,37 @@ Storyboard: [docs/agent-os-storyboard.md](docs/agent-os-storyboard.md).
    It draws a page, asks if you like it, and changes it when you answer.
    Say you like it, and it offers to keep the page for next time.
 
-Steps 3 and 4 come from the always-on agent on the server. It watches fake
-feeds and speaks when the page is idle. A script fires the feed events after
-the payment and training scenes close, so the order stays the same.
+Steps 3 and 4 come from the always-on agent, a loop that runs in the page. It
+watches fake feeds and speaks when the page is idle. A script fires the feed
+events after the payment and training scenes close, so the order stays the
+same. Open the page with `?script=off` to turn the script off.
+
+## Deploy on Vercel
+
+The app deploys as static files (`web/public/`) plus small functions
+(`web/api/`). The always-on agent runs in the page, so no server process is
+needed. One-time steps for the captain:
+
+1. Log in: `npx vercel login`.
+2. From `web/`, link the project: `cd web && npx vercel link`. The project's
+   root directory is `web` (`vercel.json` is there).
+3. Set the env vars for Production. Each command asks for the value:
+
+   ```text
+   npx vercel env add ELEVENLABS_API_KEY production
+   npx vercel env add ELEVENLABS_AGENT_ID production
+   npx vercel env add ELEVENLABS_TOOL_IDS production
+   npx vercel env add AGENT_OS_PASSCODE production
+   ```
+
+   Use the same values as in `.env`. `AGENT_OS_PASSCODE` is a short code you
+   give the team. The site asks for it once per browser tab. Every route that
+   can call ElevenLabs refuses without it.
+4. Deploy: `npx vercel --prod`.
+
+On Vercel, the run log goes to the function log: Vercel dashboard > the
+project > Logs. Search for `[runlog]`. Locally, the run log stays in
+`web/logs/` as before.
 
 ## Run log: find what to fix
 

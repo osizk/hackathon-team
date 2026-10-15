@@ -15,6 +15,17 @@ Copy this block for a new decision:
 - **Who decided:** names, or "whole team".
 ```
 
+## 2026-10-15: Deploy on Vercel
+
+- **Decision:** The demo also runs on Vercel (issue #19). The always-on loop
+  and fake feeds run in the page; the server routes are Vercel functions
+  sharing code with the local server; logs go to Vercel's function log; a
+  passcode in a Vercel env var protects every route that can call
+  ElevenLabs. Local `npm start` keeps working, with no passcode.
+- **Why:** "Vercel" - a link the team and judges can open without our
+  laptop.
+- **Who decided:** head (team lead)
+
 ## 2026-10-15: Pictures in generated pages
 
 - **Decision:** Generated pages can have an image part with a short prompt.
@@ -52,10 +63,10 @@ Copy this block for a new decision:
 
 ## 2026-10-15: A real always-on agent
 
-- **Decision:** The agent speaks first by itself. A loop on the server
-  watches fake feeds (email, calendar, sleep and runs, flight) every few
-  seconds, decides when to speak and which scene to open, and pushes it to
-  the page. The agent decides when live, simple rules offline. It never speaks
+- **Decision:** The agent speaks first by itself. A loop (in the page since
+  the Vercel move) watches fake feeds (email, calendar, sleep and runs,
+  flight) every few seconds and decides when to speak and which scene to
+  open. The agent decides when live, simple rules offline. It never speaks
   over an open scene or while anyone talks. A script keeps the demo order
   fixed; the presenter can fire a feed event from a hidden panel. Hotkeys
   stay as the last resort.

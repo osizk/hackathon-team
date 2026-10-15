@@ -51,10 +51,11 @@ npm run voice   # once, with ELEVENLABS_API_KEY in .env: pre-renders every line 
 npm start       # http://localhost:5173
 ```
 
-Scenes 3 and 4 start by themselves: the always-on agent on the server watches
-fake feeds and speaks when the page is idle. The demo script fires "sleep
-synced" 6 seconds after the payment card closes, and "flight delayed" 6
-seconds after the training page closes. Set `AGENT_SCRIPT=off` to stop it.
+Scenes 3 and 4 start by themselves: the always-on agent (a loop in the page)
+watches fake feeds and speaks when the page is idle. The demo script fires
+"sleep synced" 6 seconds after the payment card closes, and "flight delayed"
+6 seconds after the training page closes. Open the page with `?script=off` to
+stop it.
 
 After scene 4, ask "help me make a todo list" to show a generated page and
 the like-and-adjust loop (see [decisions](decisions.md)).

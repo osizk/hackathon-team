@@ -1,4 +1,6 @@
-// Browser half of the run log: events are buffered and posted to /api/log (server appends to the JSONL).
+// Browser half of the run log: events are buffered and posted to /api/log (local: appended to the
+// JSONL run log; Vercel: written to the function log).
+import { apiFetch } from './api.js';
 let buffer = [];
 let timer = null;
 const session = Math.random().toString(36).slice(2, 8);
@@ -8,8 +10,7 @@ function flush() {
   if (!buffer.length) return;
   const body = JSON.stringify({ events: buffer });
   buffer = [];
-  if (navigator.sendBeacon && document.visibilityState === 'hidden') navigator.sendBeacon('/api/log', new Blob([body], { type: 'application/json' }));
-  else fetch('/api/log', { method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true }).catch(() => {});
+  apiFetch('/api/log', { method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true }).catch(() => {});
 }
 
 const keep = new URLSearchParams(location.search).has('test');

@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { home, expectHome } from './helpers.js';
 
-const fire = (page, event) => page.request.post('/api/feeds/event', { data: { event } });
+const fire = (page, event) => page.evaluate((e) => window.agentOS.fireFeed(e), event);
 
 test('a flight feed event makes the agent speak first and open the flight card, no hotkey', async ({ page }) => {
   await home(page);

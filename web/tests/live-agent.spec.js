@@ -19,7 +19,6 @@ export const Conversation = {
 };`;
 
 async function liveHome(page) {
-  await page.request.post('/api/feeds/event', { data: { event: 'reset' } });
   await page.addInitScript(() => {
     const track = { stop() {}, getSettings: () => ({ echoCancellation: true, noiseSuppression: true, autoGainControl: true }) };
     navigator.mediaDevices.getUserMedia = async () => ({ getTracks: () => [track], getAudioTracks: () => [track] });
@@ -86,7 +85,7 @@ test('live: typed text goes to the agent, and feed changes arrive as contextual 
   // The offline router must not open anything by itself in live mode.
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'home');
 
-  await page.request.post('/api/feeds/event', { data: { event: 'flight-delayed' } });
+  await page.evaluate(() => window.agentOS.fireFeed('flight-delayed'));
   await expect.poll(() => page.evaluate(() => window.__conv.context.join(' ')), { timeout: 5000 }).toContain('delayed 120 minutes');
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'home');
 });
