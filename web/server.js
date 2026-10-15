@@ -62,7 +62,9 @@ const server = createServer(async (req, res) => {
     const file = join(PUBLIC, path);
     if (!file.startsWith(PUBLIC)) return send(res, 403, { error: 'forbidden' });
     const body = await readFile(file);
-    res.writeHead(200, { 'content-type': TYPES[extname(file)] || 'application/octet-stream' });
+    // Same as vercel.json: voice clips and pictures may be cached for an hour.
+    const cache = /^\/(voice|img)\//.test(path) ? { 'cache-control': 'public, max-age=3600, stale-while-revalidate=86400' } : {};
+    res.writeHead(200, { 'content-type': TYPES[extname(file)] || 'application/octet-stream', ...cache });
     res.end(body);
   } catch (err) {
     if (err instanceof HttpError) return send(res, err.status, errorBody(err));

@@ -6,7 +6,7 @@
 import { createToolHandlers } from './agent-tools.js';
 import { showSubtitle, setLiveVoice } from './voice.js';
 import { logEvent } from './log.js';
-import { apiFetch, goOffline, onOffline } from './api.js';
+import { apiFetch, goOffline, onOffline, micBlocked } from './api.js';
 
 // @elevenlabs/client, pinned. jsDelivr's +esm build is one self-contained ES module.
 const SDK_URL = 'https://cdn.jsdelivr.net/npm/@elevenlabs/client@1.26.0/+esm';
@@ -15,7 +15,10 @@ const MIC = { echoCancellation: true, noiseSuppression: true, autoGainControl: t
 
 let conversation = null;
 let starting = null;
+let sdk = null; // the SDK import, started as soon as the live agent is known to be there
+let session = null; // { at, promise }: a signed URL fetched ahead, on the user's first touch
 let mode = 'listening';
+let speakingSince = 0;
 let modeWaiters = [];
 let silenced = false;
 export const live = { available: false, connected: false, search: false };
@@ -23,9 +26,32 @@ export const live = { available: false, connected: false, search: false };
 const setBrain = (brain) => { document.body.dataset.brain = brain; };
 export const stripTags = (text) => String(text).replace(/\[[^\]]{1,30}\]\s*/g, '').trim();
 
-export async function checkLive() {
+// A signed URL may start a conversation for 15 minutes; a prefetched one is used for 10.
+const SESSION_FRESH_MS = 10 * 60 * 1000;
+
+// Load the SDK (two modules from the CDN) ahead, so the first tap does not wait for it.
+const loadSdk = () => (sdk ??= import(SDK_URL).catch((err) => { sdk = null; throw err; }));
+
+// Fetch a signed URL ahead, on the user's first touch (it counts one session of the daily limit,
+// so not on page load). startLive uses it if it is still fresh.
+export function prepareLive() {
+  if (!live.available || conversation || starting) return;
+  if (session && Date.now() - session.at < SESSION_FRESH_MS) return;
+  const promise = apiFetch('/api/agent/session').then((r) => r.json());
+  promise.then((s) => s.offline && goOffline(s.offline), () => {});
+  session = { at: Date.now(), promise };
+}
+
+function takeSession() {
+  const ahead = session && Date.now() - session.at < SESSION_FRESH_MS ? session.promise : null;
+  session = null; // a signed URL starts one conversation only
+  return ahead ? ahead.catch(() => apiFetch('/api/agent/session').then((r) => r.json())) : apiFetch('/api/agent/session').then((r) => r.json());
+}
+
+// health: the /api/health answer, fetched once by app.js for voice and brain together.
+export async function checkLive(healthPromise = apiFetch('/api/health').then((r) => r.json())) {
   try {
-    const health = await (await apiFetch('/api/health')).json();
+    const health = await healthPromise;
     live.available = health.brain === 'elevenlabs-agent' && !health.offline;
     live.search = Boolean(health.search);
     if (health.offline) goOffline(health.offline);
@@ -33,6 +59,7 @@ export async function checkLive() {
     live.available = false;
   }
   setBrain(live.available ? 'agent-ready' : 'keywords');
+  if (live.available) loadSdk().catch(() => {});
   return live.available;
 }
 
@@ -56,7 +83,9 @@ function setMode(next) {
   if (next === mode) return;
   mode = next;
   const speaking = mode === 'speaking';
+  if (speaking) speakingSince = Date.now();
   document.body.classList.toggle('speaking', speaking);
+  if (speaking) document.body.classList.remove('thinking');
   logEvent(speaking ? 'audio_start' : 'audio_end', { source: 'agent', id: 'agent' });
   // The user is holding the mic: the agent must not be heard (it would talk into the mic).
   if (speaking && document.body.classList.contains('listening')) silenceAgent();
@@ -76,11 +105,13 @@ const waitMode = (want, ms) =>
     modeWaiters.push((m) => (m === want ? (clearTimeout(timer), resolve(true), true) : false));
   });
 
-// Let the agent finish the sentence it is saying before a scene grows (it speaks first, then acts).
-export async function afterAgentSentence(maxMs = 4000) {
+// The agent speaks first, then acts: the scene grows once its sentence has played for `leadMs`
+// (the same 0.9 s lead as the offline path), or when the sentence ends if that is sooner.
+// Never before the sentence starts (600 ms at most to start).
+export async function afterAgentSentence(leadMs = 900) {
   if (!live.connected) return;
   if (mode !== 'speaking') await waitMode('speaking', 600);
-  if (mode === 'speaking') await waitMode('listening', maxMs);
+  if (mode === 'speaking') await waitMode('listening', Math.max(0, speakingSince + leadMs - Date.now()));
 }
 
 // An app line said by the agent's own voice (one voice, never two).
@@ -127,15 +158,20 @@ export function startLive(ui) {
   if (!live.available) return Promise.reject(new Error('live agent not configured'));
   if (starting) return starting;
   starting = (async () => {
-    const session = await (await apiFetch('/api/agent/session')).json();
-    if (session.offline) goOffline(session.offline);
-    if (!session.live) throw new Error(session.reason || 'no live session');
-    const { Conversation } = await import(SDK_URL);
-    await checkMic();
+    // The signed URL, the SDK and the mic check run at once, not one after the other.
+    const [ticket, { Conversation }] = await Promise.all([
+      takeSession().then((s) => {
+        if (s.offline) goOffline(s.offline);
+        if (!s.live) throw new Error(s.reason || 'no live session');
+        return s;
+      }),
+      loadSdk(),
+      checkMic(),
+    ]);
     conversation = await Conversation.startSession({
-      signedUrl: session.signedUrl,
+      signedUrl: ticket.signedUrl,
       // Fills {{today}} in the agent prompt (Bangkok date from the server).
-      ...(session.today ? { dynamicVariables: { today: session.today } } : {}),
+      ...(ticket.today ? { dynamicVariables: { today: ticket.today } } : {}),
       connectionType: 'websocket',
       clientTools: wrapTools(createToolHandlers(ui)),
       onConnect: () => { live.connected = true; setBrain('agent'); },
@@ -156,6 +192,7 @@ export function startLive(ui) {
       onMessage: ({ source, message }) => {
         if (!message) return;
         if (source === 'ai') {
+          document.body.classList.remove('thinking');
           // v3 voices take audio tags like [happy]; they are for the voice, not the subtitle.
           showSubtitle(stripTags(message), 3200);
           logEvent('agent_reply', { text: stripTags(message) });
@@ -177,6 +214,7 @@ export function startLive(ui) {
     starting = null;
     live.available = false;
     setBrain('keywords');
+    if (['NotAllowedError', 'NotFoundError', 'SecurityError'].includes(err.name)) micBlocked();
     throw err;
   });
   return starting;

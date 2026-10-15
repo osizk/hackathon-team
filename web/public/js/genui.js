@@ -212,7 +212,8 @@ const LIKE = ['like it', 'love it', 'perfect', 'looks good', 'great', 'done', 't
 const DISLIKE = ['ไม่ชอบ', "don't like", 'do not like', 'hate'];
 const YES = ['yes', 'ok', 'okay', 'sure', 'both', 'เอา', 'ได้', 'ใช่', 'ทั้งคู่', 'ทั้งสอง', 'จัดไป'];
 const BOTH = ['both', 'ทั้งคู่', 'ทั้งสอง', 'all'];
-const ADD = /^(?:please\s+)?(?:add|เพิ่ม)\s*(.+)$/i;
+// "add X" anywhere, also after a like: "ชอบ แต่ขอเพิ่มรายการออกกำลังกาย".
+const ADD = /(?:\badd\b|เพิ่ม)\s*(?:an?\s+|items?\s+|รายการ\s*)?(.+)$/i;
 
 // Revise a spec from what the user said, without a model.
 // Returns { action: 'revise', spec } | { action: 'accept' } | { action: 'ask' }.
@@ -225,12 +226,12 @@ export function reviseByKeywords(spec, rawText) {
   if (!ids.length && has(text, YES) && !has(text, LIKE)) {
     ids = (has(text, BOTH) ? spec.proposals : spec.proposals.slice(0, 1)).map((p) => p.id).filter((id) => REVISIONS[id]);
   }
-  if (!ids.length && has(text, LIKE)) return { action: 'accept' };
+  const added = String(rawText || '').trim().match(ADD);
+  if (!ids.length && !added && has(text, LIKE)) return { action: 'accept' };
 
   let next = spec;
   for (const id of ids) next = REVISIONS[id].apply(next);
 
-  const added = String(rawText || '').trim().match(ADD);
   if (!ids.length && added) {
     next = eachChecklist(next, (items) => [...items, { text: added[1].slice(0, 80) }]);
     ids = ['add'];

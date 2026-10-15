@@ -6,5 +6,15 @@
     "api/**/*.js": {
       "maxDuration": 60
     }
-  }
+  },
+  "headers": [
+    {
+      "source": "/voice/(.*)",
+      "headers": [{ "key": "cache-control", "value": "public, max-age=3600, stale-while-revalidate=86400" }]
+    },
+    {
+      "source": "/img/(.*)",
+      "headers": [{ "key": "cache-control", "value": "public, max-age=3600, stale-while-revalidate=86400" }]
+    }
+  ]
 }

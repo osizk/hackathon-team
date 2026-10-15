@@ -8,7 +8,7 @@ import { validateSpec } from '../public/js/genui.js';
 
 const ok = (body) => async (url, opts) => ({ ok: true, status: 200, json: async () => body, url, opts });
 
-test('tavilySearch: basic depth, bearer key, 5 results, http(s) links only, trimmed text', async () => {
+test('tavilySearch: fast depth, bearer key, 5 results, http(s) links only, trimmed text', async () => {
   let sent;
   const fetchImpl = async (url, opts) => {
     sent = { url, opts, body: JSON.parse(opts.body) };
@@ -27,7 +27,7 @@ test('tavilySearch: basic depth, bearer key, 5 results, http(s) links only, trim
   const out = await tavilySearch('  10K Bangkok  ', { TAVILY_API_KEY: 'tvly-x' }, fetchImpl);
   assert.equal(sent.url, 'https://api.tavily.com/search');
   assert.equal(sent.opts.headers.authorization, 'Bearer tvly-x');
-  assert.deepEqual(sent.body, { query: '10K Bangkok', search_depth: 'basic', max_results: 5, include_answer: 'basic', topic: 'general' });
+  assert.deepEqual(sent.body, { query: '10K Bangkok', search_depth: 'fast', max_results: 5, include_answer: 'basic', topic: 'general' });
   assert.equal(out.answer, 'There is a 10K on 9 Nov.');
   assert.deepEqual(out.results, [
     { title: 'Bangkok 10K', url: 'https://run.example/bkk', content: 'Race on 9 Nov' },
