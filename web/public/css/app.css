@@ -35,6 +35,11 @@
 .product-search-form label { display: grid; gap: 8px; }
 .product-search-form input { width: 100%; min-width: 0; min-height: 44px; border: 1px solid #d7c5ae; border-radius: 12px; padding: 12px; font: inherit; user-select: text; }
 .product-result { overflow-wrap: anywhere; }
+.catalog-product { overflow-wrap: anywhere; }
+.catalog-product img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: contain; margin-bottom: 16px; border-radius: 12px; }
+.catalog-price { font-size: 22px; font-weight: 700; }
+.catalog-store-link { display: inline-block; min-height: 44px; padding: 12px; color: #8b3a22; text-decoration: underline; }
+.catalog-product [aria-pressed="true"] { background: var(--ink); color: var(--card); }
 .product-result a { color: #8b3a22; text-decoration: underline; }
 .product-result a:focus-visible, .product-search-form input:focus-visible { outline: 3px solid #bb482c; outline-offset: 3px; }
 .secretary-summary { color: var(--ink-2); line-height: 1.6; }

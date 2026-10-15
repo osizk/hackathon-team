@@ -23,7 +23,8 @@ export const TOOL_DEFS = [
     description:
       'Open a prebuilt full-screen scene. shopping = read the weekly shopping email and build the list; payment = payment approval card; ' +
       'flight = delayed flight with a faster option; training = sleep score, run plan and 10K race sign-up that fills itself. ' +
-      'For REAL product search, use shopping with data_json {"search":true,"query":"product and budget"}. The page searches Tavily itself and displays sources; do not also call web_search. No checkout or payment happens in this mode.',
+      'For product discovery across Shopify merchants, use shopping with data_json {"catalog":true,"query":"product requirements","budget":1500}. Budget is optional THB. The page searches Shopify Global Catalog and shows real product cards for owner selection. ' +
+      'This does not place orders or pay.',
     params: {
       scene: { type: 'string', enum: PROACTIVE_SCENES, description: 'Which scene to open', required: true },
       data_json: { type: 'string', description: 'Optional JSON object with scene data in the shape of the defaults', required: false },
@@ -60,23 +61,13 @@ export const TOOL_DEFS = [
     params: { level: { type: 'string', enum: ['urgent', 'serious'], description: 'How urgent', required: true } },
   },
   {
-    name: 'web_search',
-    // Offered only when the server has a search key (TAVILY_API_KEY); see toolDefs().
-    needs: 'search',
-    description:
-      'Search the web for real, current information (events, places, prices, opening hours, news). Returns a short answer and ' +
-      'sources. Then show it with render_ui; the page lists the sources as links by itself. Search once per request.',
-    params: { query: { type: 'string', description: 'What to search for, in a few words (English or Thai)', required: true } },
-  },
-  {
     name: 'keep_scene',
     description: 'The user liked the open generated page and said yes to keeping it: save it so it opens at once next time.',
     params: {},
   },
 ];
 
-// The tools to offer: web_search only when search is available.
-export const toolDefs = ({ search = false } = {}) => TOOL_DEFS.filter((t) => t.needs !== 'search' || search);
+export const toolDefs = () => TOOL_DEFS;
 
 const withSources = (spec, sources) =>
   !sources?.length || spec.blocks.some((b) => b.type === 'sources')
@@ -108,12 +99,9 @@ export function keptPagesNote(saved = {}) {
 }
 
 // ui: { current(): { name, ctl } | null, openScene(name, data), closeScene(), action(name, extra), nudgeAllow(),
-//       search(query) -> { answer, results: [{ title, url, content }] } | { error },
 //       saved() -> { [kind]: { kind, name, match, spec } }, tellAgent(text) }
 export function createToolHandlers(ui) {
   const generated = () => (ui.current()?.name === 'generated' ? ui.current() : null);
-  // Sources of the last web search: the next page drawn shows them as links.
-  let sources = [];
 
   return {
     secretary_action({ action, minutes = '1' } = {}) {
@@ -157,8 +145,6 @@ export function createToolHandlers(ui) {
       }
       let spec = validateSpec(parsed);
       if (!spec) return 'error: spec has no usable blocks; use only the fixed components';
-      spec = withSources(spec, sources);
-      sources = [];
       await ui.openScene('generated', { spec });
       return spec.urgency === 'none' ? 'page shown; now ask if the user likes it and propose one or two changes' : 'first-aid page shown';
     },
@@ -183,15 +169,6 @@ export function createToolHandlers(ui) {
       return `marked ${spec.urgency}`;
     },
 
-    async web_search({ query } = {}) {
-      if (!ui.search) return 'web search is not available; answer from what you know and say so';
-      const out = await ui.search(String(query || ''));
-      if (!out || out.error) return `web search failed (${out?.error || 'no answer'}); answer from what you know and say so`;
-      sources = out.results.map(({ title, url }) => ({ title, url }));
-      if (!out.results.length) return 'no results; answer from what you know and say so';
-      const lines = out.results.map((r, i) => `${i + 1}. ${r.title}: ${r.content}`);
-      return [`answer: ${out.answer || '(none)'}`, ...lines, 'Now call render_ui with this information; the page shows the sources by itself.'].join('\n').slice(0, 3000);
-    },
 
     keep_scene() {
       const open = generated();

@@ -11,7 +11,6 @@ import { join, dirname, resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadEnv } from '../lib/env.js';
 import { agentConfig, toolConfigs, AGENT_NAME } from '../agent/config.js';
-import { searchReady } from '../lib/search.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const envArg = process.argv.indexOf('--env');
@@ -59,9 +58,7 @@ async function call(method, path, body) {
 
 async function syncTools(known) {
   const ids = {};
-  const search = searchReady();
-  console.log(`web_search tool: ${search ? 'offered' : 'not offered (search disabled)'}`);
-  for (const tool of toolConfigs({ search })) {
+  for (const tool of toolConfigs()) {
     const id = known[tool.name];
     if (id) {
       try {
@@ -82,7 +79,7 @@ async function syncTools(known) {
 
 async function main() {
   if (process.argv.includes('--dry-run')) {
-    console.log(JSON.stringify({ tools: toolConfigs({ search: searchReady() }), agent: agentConfig({ toolIds: ['<tool ids>'] }) }, null, 2));
+    console.log(JSON.stringify({ tools: toolConfigs(), agent: agentConfig({ toolIds: ['<tool ids>'] }) }, null, 2));
     return;
   }
   if (!process.env.ELEVENLABS_API_KEY) {

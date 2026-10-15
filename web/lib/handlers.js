@@ -1,5 +1,5 @@
 // What the server does, shared by the local server (server.js) and the Vercel functions (api/).
-// Every route that can spend ElevenLabs or Tavily credit checks the daily usage limit first (lib/usage.js).
+// Every route that can spend provider credit checks the daily usage limit first (lib/usage.js).
 // When the limit is reached, or ElevenLabs says the credit ran out, the answer carries
 // `offline: 'limit' | 'credit'` and the page switches to its offline brain by itself.
 import { route } from './router.js';
@@ -8,7 +8,7 @@ import { liveReady, signedUrl, today } from './live-session.js';
 import { createImageService } from './images.js';
 import { createRunLog, createConsoleLog } from './runlog.js';
 import { createUsage, LimitError } from './usage.js';
-import { searchReady, tavilySearch } from './search.js';
+import { searchShopifyCatalog } from './shopify-catalog.js';
 
 export class HttpError extends Error {
   // extra: more fields for the JSON error body, e.g. { offline: 'limit' }
@@ -44,11 +44,16 @@ export function createHandlers({ env = process.env, logDir = null, imagesDir, in
     runLog,
     images,
     usage,
+    async catalog(headers = {}, body = {}) {
+      await take('calls', headers);
+      try { return await searchShopifyCatalog(body, env); }
+      catch (err) { return { error: err.name === 'TimeoutError' ? 'Shopify ค้นหานานเกินไป กรุณาลองใหม่' : err.message }; }
+    },
     async health() {
       return {
         brain: liveReady(env) ? 'elevenlabs-agent' : 'keywords',
         tts: ttsReady(env),
-        search: searchReady(env),
+        search: false,
         offline: liveReady(env) && (await usage.siteFull()) ? 'limit' : null,
       };
     },
@@ -78,19 +83,6 @@ export function createHandlers({ env = process.env, logDir = null, imagesDir, in
         return await elevenTts(String(text).slice(0, 400), env);
       } catch (err) {
         throw err.outOfCredit ? outOfCredit(err, 'tts') : err;
-      }
-    },
-    // Web search for the live agent's web_search tool. Errors come back as { error } (the agent
-    // then answers without it); only the daily limit is a 429 that switches the page offline.
-    async search(headers = {}, { query } = {}) {
-      if (!searchReady(env)) throw new HttpError(503, 'search is not configured');
-      await take('calls', headers);
-      try {
-        return await tavilySearch(query, env);
-      } catch (err) {
-        const message = err.name === 'TimeoutError' ? 'search timeout' : err.message;
-        runLog.server('error', { where: 'search', message });
-        return { error: message };
       }
     },
     async image(headers = {}, { prompt, scene } = {}) {

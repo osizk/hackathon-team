@@ -1,6 +1,6 @@
-// Daily usage limit, checked before every call that spends ElevenLabs or Tavily credit.
+// Daily usage limit, checked before every call that spends provider credit.
 // Two counters per UTC day: live sessions (joining the ElevenLabs agent) and calls (TTS, web
-// search, pictures). Each has a limit for the whole site and one per visitor.
+// catalog search, pictures). Each has a limit for the whole site and one per visitor.
 // A visitor is a hash of the client IP (never stored as the IP itself).
 //
 // Store: Vercel functions keep no memory between calls, so the limit needs a shared store.
