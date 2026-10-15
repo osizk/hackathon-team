@@ -1,6 +1,6 @@
 // Web search for the live agent, through Tavily (free tier; docs checked October 2026):
 //   POST https://api.tavily.com/search, Authorization: Bearer <TAVILY_API_KEY>
-//   { query, search_depth: 'basic' (1 credit), max_results, include_answer }
+//   { query, search_depth: 'fast' (1 credit, about 1 s; 'basic' took about 2.8 s), max_results, include_answer }
 //   -> { query, answer?, results: [{ title, url, content, score }], response_time }
 //   432 = plan usage limit, 433 = pay-as-you-go limit, 429 = rate limit, 401 = bad key.
 // The key stays on the server. Without it, search is not offered at all.
@@ -31,7 +31,7 @@ export async function tavilySearch(query, env = process.env, fetchImpl = fetch) 
   const res = await fetchImpl('https://api.tavily.com/search', {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: `Bearer ${env.TAVILY_API_KEY}` },
-    body: JSON.stringify({ query: q, search_depth: 'basic', max_results: MAX_RESULTS, include_answer: 'basic', topic: 'general' }),
+    body: JSON.stringify({ query: q, search_depth: 'fast', max_results: MAX_RESULTS, include_answer: 'basic', topic: 'general' }),
     signal: AbortSignal.timeout(12000),
   });
   if (!res.ok) throw new Error(reasonFor(res.status));

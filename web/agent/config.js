@@ -17,6 +17,12 @@ export const AGENT_TTS_MODEL = 'eleven_v3_conversational';
 export const AGENT_LANGUAGE = 'th';
 // Empty: the agent waits for the user. The app greets once on the first tap (greet.mp3, same voice).
 export const FIRST_MESSAGE = '';
+// Turn latency (field names checked with GET /v1/convai/agents/{id}, October 2026):
+// - speculative_turn: start the LLM reply during the silence before the turn is surely over.
+//   The shared agent already had it on; now it is in code.
+// - soft_timeout_config stays off (-1). Tried on a test agent with a 2.5 s Thai filler: it fired after
+//   10 of 11 tool calls (while the LLM writes its line after the tool), so the agent said
+//   "อืม แป๊บนึงนะ" right after the page had opened, never before a slow first reply.
 
 // One client tool config per tool, in the ElevenLabs ClientToolConfig shape.
 // search: offer web_search (only when TAVILY_API_KEY is set where the agent is synced).
@@ -43,14 +49,17 @@ export function toolConfigs({ search = false } = {}) {
   });
 }
 
-export function agentConfig({ toolIds = [], voiceId = DEFAULT_VOICE } = {}) {
+// name: a test agent gets its own name (agent-sync --env), so it is never mistaken for the shared one.
+export function agentConfig({ toolIds = [], voiceId = DEFAULT_VOICE, name = AGENT_NAME } = {}) {
   return {
-    name: AGENT_NAME,
+    name,
     tags: ['agent-os', 'hackathon'],
     conversation_config: {
       agent: {
         first_message: FIRST_MESSAGE,
         language: AGENT_LANGUAGE,
+        // The page sends {{today}} at session start; the placeholder only covers a session without it.
+        dynamic_variables: { dynamic_variable_placeholders: { today: 'unknown (ask the user if a date matters)' } },
         prompt: {
           prompt: readFileSync(join(here, 'prompt.md'), 'utf8'),
           llm: AGENT_LLM,
@@ -67,6 +76,10 @@ export function agentConfig({ toolIds = [], voiceId = DEFAULT_VOICE } = {}) {
         },
       },
       tts: { voice_id: voiceId, model_id: AGENT_TTS_MODEL },
+      turn: {
+        speculative_turn: true,
+        soft_timeout_config: { timeout_seconds: -1 },
+      },
       asr: { quality: 'high', provider: 'scribe_realtime' },
     },
     // Private agent: the browser can only join with a signed URL from our server.

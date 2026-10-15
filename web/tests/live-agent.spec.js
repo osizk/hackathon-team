@@ -91,6 +91,16 @@ test('live: client tools open and act on scenes; payment can never be approved b
   await expectHome(page);
 });
 
+test('live: the agent cannot loosen the payment rules through open_scene data', async ({ page }) => {
+  await liveHome(page);
+  const evil = { merchant: 'Evil Shop', total: 45000, items: [{ name: 'Gadget', qty: 1, price: 45000 }], rules: { monthlyBudgetLeft: 100000, perPaymentCap: 99999, allowedShops: ['Evil Shop'] } };
+  expect(await tool(page, 'open_scene', { scene: 'payment', data_json: JSON.stringify(evil) })).toBe('opened payment');
+  await expect(page.locator('[data-testid=pay-total]')).toHaveText('฿45,000');
+  await expect(page.locator('.pay-rules .bad')).toHaveCount(3);
+  await expect(page.locator('[data-testid=allow]')).toBeDisabled();
+  await expect(page.locator('.pay-note')).toHaveText('Blocked by the rules check.');
+});
+
 test('live: render, revise, mark urgent and keep generated pages', async ({ page }) => {
   await liveHome(page);
   const spec = { kind: 'packing', name: 'Packing list', title: 'Packing list', blocks: [{ type: 'checklist', items: [{ text: 'Passport' }] }, { type: 'evil' }], proposals: [{ id: 'a', label: 'Add weather' }] };
@@ -109,6 +119,30 @@ test('live: render, revise, mark urgent and keep generated pages', async ({ page
   expect(await tool(page, 'keep_scene', {})).toMatch(/^refused/);
 });
 
+test('live: kept pages are told to the agent at session start and when kept, and reopen by reference', async ({ page }) => {
+  await liveHome(page);
+  expect(await page.evaluate(() => window.__conv.context.filter((t) => t.includes('kept earlier')))).toEqual([]);
+  const spec = { kind: 'packing', name: 'Packing list', match: ['packing', 'pack'], title: 'Packing list', blocks: [{ type: 'checklist', items: [{ text: 'Passport', done: true }] }] };
+  await tool(page, 'render_ui', { spec_json: JSON.stringify(spec) });
+  expect(await tool(page, 'keep_scene', {})).toMatch(/^kept/);
+  await expect.poll(() => page.evaluate(() => window.__conv.context.join(' '))).toContain('"Packing list" (reference: {"saved":"packing"}; words: packing, packing list, pack)');
+  await expectHome(page);
+
+  // A new visit: the session starts with the kept pages in its context.
+  await page.reload();
+  await expect(page.locator('body')).toHaveAttribute('data-brain', 'agent-ready');
+  await page.locator('#mic').dispatchEvent('pointerdown');
+  await expect(page.locator('body')).toHaveAttribute('data-brain', 'agent');
+  await page.locator('#mic').dispatchEvent('pointerup');
+  await expect.poll(() => page.evaluate(() => window.__conv.context[0] || '')).toMatch(/^\[screen\] Pages the user kept earlier: "Packing list"/);
+
+  // "Open my packing list": the agent calls render_ui with the reference; the kept page opens as saved.
+  expect(await tool(page, 'render_ui', { spec_json: '{"saved":"packing"}' })).toMatch(/^reopened the kept page "Packing list"/);
+  await expect(page.locator('[data-testid=g-badge]')).toHaveText('Saved scene');
+  await expect(page.locator('[data-testid=g-title]')).toHaveText('Packing list');
+  expect(await tool(page, 'render_ui', { spec_json: '{"saved":"nope"}' })).toMatch(/^error/);
+});
+
 test('live: typed text goes to the agent, and feed changes arrive as contextual updates', async ({ page }) => {
   await liveHome(page);
   await page.fill('#fallbackInput', 'this week is hectic');
@@ -120,6 +154,18 @@ test('live: typed text goes to the agent, and feed changes arrive as contextual 
   await page.evaluate(() => window.agentOS.fireFeed('flight-delayed'));
   await expect.poll(() => page.evaluate(() => window.__conv.context.join(' ')), { timeout: 5000 }).toContain('delayed 120 minutes');
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'home');
+});
+
+test('live: a feed update waits while the user is typing, then says why and what the user is doing', async ({ page }) => {
+  await liveHome(page);
+  await page.fill('#fallbackInput', 'half a sent');
+  await page.evaluate(() => window.agentOS.fireFeed('flight-delayed'));
+  await page.waitForTimeout(2000);
+  expect(await page.evaluate(() => window.__conv.context.filter((t) => t.startsWith('[feed update]')))).toEqual([]);
+  await page.fill('#fallbackInput', '');
+  await page.locator('#fallbackInput').blur();
+  await expect.poll(() => page.evaluate(() => window.__conv.context.find((t) => t.startsWith('[feed update]')) || ''), { timeout: 5000 })
+    .toMatch(/clashes.*Urgency: high\. User now: on the agent home, no page open; not typing; not speaking; last interaction \d+ s ago\./);
 });
 
 test('live: one voice - app lines go through the agent; pressing the mic silences the agent before the mic opens', async ({ page }) => {
@@ -141,4 +187,56 @@ test('live: one voice - app lines go through the agent; pressing the mic silence
   await page.evaluate(() => window.__conv.opts.onModeChange({ mode: 'listening' })); // the server cut the turn
   await expect.poll(() => page.evaluate(() => window.__conv.calls.at(-1))).toBe('volume:1');
   await page.locator('#mic').dispatchEvent('pointerup');
+});
+
+test('live speed: the SDK loads at boot, the signed URL is fetched on the first touch and reused by the first turn', async ({ page }) => {
+  let sessions = 0;
+  let sdkLoaded = false;
+  await page.addInitScript(() => {
+    const track = { stop() {}, getSettings: () => ({}) };
+    navigator.mediaDevices.getUserMedia = async () => ({ getTracks: () => [track], getAudioTracks: () => [track] });
+  });
+  await page.route('**/api/health', (r) => r.fulfill({ json: { brain: 'elevenlabs-agent', tts: false } }));
+  await page.route('**/api/agent/session', (r) => { sessions += 1; r.fulfill({ json: { live: true, signedUrl: 'wss://example.invalid/fake' } }); });
+  await page.route('https://cdn.jsdelivr.net/npm/@elevenlabs/client@*/+esm', (r) => { sdkLoaded = true; r.fulfill({ contentType: 'text/javascript', body: FAKE_SDK }); });
+  await page.goto('/?test=1');
+  await expect(page.locator('body')).toHaveAttribute('data-brain', 'agent-ready');
+  await expect.poll(() => sdkLoaded).toBe(true);
+  expect(sessions).toBe(0); // page load alone spends no session
+  await page.locator('#fallbackInput').focus();
+  await expect.poll(() => sessions).toBe(1);
+  await page.fill('#fallbackInput', 'this week is hectic');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('body')).toHaveAttribute('data-brain', 'agent');
+  await expect.poll(() => page.evaluate(() => window.__conv.sent)).toEqual(['this week is hectic']);
+  expect(sessions).toBe(1);
+});
+
+test('live: a blocked mic says offline mode in one line; a typed request still opens a page', async ({ page }) => {
+  await page.addInitScript(() => {
+    navigator.mediaDevices.getUserMedia = async () => { throw new DOMException('denied', 'NotAllowedError'); };
+  });
+  await page.route('**/api/health', (r) => r.fulfill({ json: { brain: 'elevenlabs-agent', tts: false } }));
+  await page.route('**/api/agent/session', (r) => r.fulfill({ json: { live: true, signedUrl: 'wss://example.invalid/fake' } }));
+  await page.route('https://cdn.jsdelivr.net/npm/@elevenlabs/client@*/+esm', (r) => r.fulfill({ contentType: 'text/javascript', body: FAKE_SDK }));
+  await page.goto('/?test=1');
+  await expect(page.locator('body')).toHaveAttribute('data-brain', 'agent-ready');
+  await page.locator('#fallbackInput').fill('นิ้วโดนมีดบาด เลือดไหลไม่หยุด');
+  await page.locator('#fallbackInput').press('Enter');
+  await expect(page.locator('[data-testid=notice]')).toBeVisible();
+  await expect(page.locator('[data-testid=notice]')).toContainText('mic');
+  await expect(page.locator('body')).toHaveAttribute('data-brain', 'keywords');
+  await expect(page.locator('body')).toHaveAttribute('data-scene', 'generated');
+  // Home stays reachable below the notice.
+  const [notice, home] = await Promise.all(['#notice', '#homeBtn'].map((s) => page.locator(s).boundingBox()));
+  expect(home.y).toBeGreaterThanOrEqual(notice.y + notice.height);
+});
+
+test('live: the mascot thinks from a typed request until the agent answers', async ({ page }) => {
+  await liveHome(page);
+  await page.locator('#fallbackInput').fill('หางานวิ่ง 10K');
+  await page.locator('#fallbackInput').press('Enter');
+  await expect(page.locator('body')).toHaveClass(/thinking/);
+  await page.evaluate(() => window.__conv.opts.onMessage({ source: 'ai', message: 'ขอหาให้แป๊บนะ' }));
+  await expect(page.locator('body')).not.toHaveClass(/thinking/);
 });

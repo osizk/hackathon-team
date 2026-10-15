@@ -375,7 +375,7 @@ body.scene-open .home-btn { display: block; }
 .g-button { width: 100%; flex: none; margin-top: 10px; background: var(--g); }
 .g-divider { border: 0; border-top: 1px dashed rgba(127, 127, 127, .35); margin: 14px 0; }
 .g-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
-.g-chip { padding: 9px 14px; border-radius: 99px; border: 1.5px solid var(--g); background: transparent; color: inherit; font: 600 14px var(--font); cursor: pointer; }
+.g-chip { min-height: 44px; padding: 9px 14px; border-radius: 99px; border: 1.5px solid var(--g); background: transparent; color: inherit; font: 600 14px var(--font); cursor: pointer; }
 .g-chip:last-child { background: var(--g); color: #fff; }
 
 /* ---------- Hidden presenter control (tap the clock 3 times) ---------- */

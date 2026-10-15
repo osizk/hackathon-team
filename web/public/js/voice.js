@@ -19,14 +19,17 @@ let liveVoice = null; // (text) => Promise, set while the live agent is connecte
 
 const $ = (id) => document.getElementById(id);
 
-export async function initVoice() {
+// health: the /api/health answer (a promise), shared with the brain check in app.js.
+export async function initVoice(health = apiFetch('/api/health').then((r) => r.json())) {
+  const cached = fetch('/voice/manifest.json').then((res) => (res.ok ? res.json() : []));
   try {
-    const res = await fetch('/voice/manifest.json');
-    if (res.ok) manifest = new Set(await res.json());
+    manifest = new Set(await cached);
+    // The greeting plays on the first tap: have it in the cache before then.
+    if (manifest.has('greet') && !MUTED) fetch('/voice/greet.mp3').catch(() => {});
   } catch { /* no cached voice yet */ }
   try {
-    const health = await (await apiFetch('/api/health')).json();
-    liveTts = health.tts && !health.offline;
+    const h = await health;
+    liveTts = h.tts && !h.offline;
   } catch { /* server without health route */ }
 }
 

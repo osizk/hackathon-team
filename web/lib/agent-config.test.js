@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { agentConfig, toolConfigs } from '../agent/config.js';
+import { today } from '../lib/live-session.js';
 import { setEnvLines, parseToolIds, formatToolIds } from '../scripts/agent-sync.js';
 import { TOOL_DEFS, toolDefs } from '../public/js/agent-tools.js';
 
@@ -48,4 +49,19 @@ test('tool ids round-trip as name:id pairs', () => {
   assert.equal(formatToolIds(ids), 'open_scene:tool_a,keep_scene:tool_b');
   assert.deepEqual(parseToolIds(formatToolIds(ids)), ids);
   assert.deepEqual(parseToolIds(''), {});
+});
+
+test('the prompt takes {{today}}, with a placeholder; today() is the Bangkok date', () => {
+  const agent = agentConfig().conversation_config.agent;
+  assert.match(agent.prompt.prompt, /\{\{today\}\}/);
+  assert.ok(agent.dynamic_variables.dynamic_variable_placeholders.today);
+  // 20:00 UTC on 15 Oct is already Friday 16 Oct in Bangkok (UTC+7).
+  assert.equal(today(new Date('2026-10-15T20:00:00Z')), 'Friday 16 October 2026 (2026-10-16)');
+});
+
+test('turn latency: speculative turn on, no filler line (it fired after tool calls)', () => {
+  const turn = agentConfig().conversation_config.turn;
+  assert.equal(turn.speculative_turn, true);
+  assert.equal(turn.soft_timeout_config.timeout_seconds, -1);
+  assert.equal(agentConfig({ name: 'x [test]' }).name, 'x [test]');
 });

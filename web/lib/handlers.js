@@ -4,7 +4,7 @@
 // `offline: 'limit' | 'credit'` and the page switches to its offline brain by itself.
 import { route } from './router.js';
 import { elevenTts, ttsReady } from './tts.js';
-import { liveReady, signedUrl } from './live-session.js';
+import { liveReady, signedUrl, today } from './live-session.js';
 import { createImageService } from './images.js';
 import { createRunLog, createConsoleLog } from './runlog.js';
 import { createUsage, LimitError } from './usage.js';
@@ -60,7 +60,7 @@ export function createHandlers({ env = process.env, logDir = null, imagesDir, in
         return { live: false, reason: err.message, offline: 'limit' };
       }
       try {
-        return { live: true, signedUrl: await signedUrl(env) };
+        return { live: true, signedUrl: await signedUrl(env), today: today() };
       } catch (err) {
         if (err.outOfCredit) {
           outOfCredit(err, 'signed url');

@@ -3,13 +3,13 @@
 import { LINES } from './lines.js';
 import { SCENE_DEFAULTS } from './data.js';
 import { SCENES } from './scenes/index.js';
-import { savedIndex } from './scenes/generated.js';
+import { savedIndex, loadSaved } from './scenes/generated.js';
 import { initVoice, speak, showSubtitle, interruptAll } from './voice.js';
 import { logEvent } from './log.js';
 import { apiFetch } from './api.js';
 import { createListener } from './stt.js';
 import { connectAgent, fireFeed } from './agent-link.js';
-import { live, checkLive, startLive, setMic, sendText, sendContext, sendFeed, silenceAgent, afterAgentStarts } from './live-agent.js';
+import { live, checkLive, prepareLive, startLive, setMic, sendText, sendContext, sendFeed, silenceAgent, afterAgentStarts } from './live-agent.js';
 import { T, TEST, PRESENTER, wait } from './timing.js';
 import { createSecretary } from './secretary.js';
 import { setupSecretaryDemo } from './secretary-demo.js';
@@ -22,6 +22,7 @@ const secretary = createSecretary({ notify: async (notices, current) => {
   return sayThenOpen({ text }, 'secretary', { view: 'notifications', noticeIds: notices.map((n) => n.id) },
     () => current() && !open && !document.body.classList.contains('listening') && !document.body.classList.contains('thinking'));
 } });
+let thinkingTimer = null;
 
 if (TEST) document.body.classList.add('test');
 
@@ -60,6 +61,7 @@ export function openScene(name, data = {}) {
     stage.classList.add('open');
   }
   stage.appendChild(el);
+  document.body.classList.remove('thinking');
   document.body.classList.add('scene-open');
   document.body.dataset.scene = name;
 
@@ -141,9 +143,14 @@ const toolUi = {
     open.ctl.onAction(action, { minutes });
     return JSON.stringify(secretary.get());
   },
+  // Kept pages, so the live agent can reopen one by its reference (render_ui {"saved": kind}).
+  saved: () => loadSaved(),
+  tellAgent: (text) => text && live.connected && sendContext(text),
   // Web search on the server (Tavily); only when the server has a search key.
   search: async (query) => {
     if (!live.search) return { error: 'web search is not set up' };
+    showSubtitle('กำลังค้นเว็บ… · Searching the web…', 0);
+    document.body.classList.add('thinking');
     const t0 = Date.now();
     const res = await apiFetch('/api/search', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ query }) });
     const out = res.ok ? await res.json() : { error: `search ${res.status}` };
@@ -158,7 +165,11 @@ export async function handleUserText(text) {
   if (!text) return;
   // Live agent: it hears the text and answers through its tools.
   if (live.connected) {
-    showSubtitle(`“${text}”`, 1200);
+    showSubtitle(`“${text}”`, 2400);
+    // The mascot thinks until the agent speaks or a page opens (a web search can take a while).
+    document.body.classList.add('thinking');
+    clearTimeout(thinkingTimer);
+    thinkingTimer = setTimeout(() => document.body.classList.remove('thinking'), 30000);
     sendText(text);
     return;
   }
@@ -222,6 +233,7 @@ function setupSuggestions() {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.dataset.kind = s.kind;
+    btn.setAttribute('aria-label', `${s.say} · ${s.en}`);
     btn.append(s.say);
     const en = document.createElement('small');
     en.textContent = s.en;
@@ -330,8 +342,13 @@ async function boot() {
   setupMic(fallback);
   setupGreeting();
   logEvent('page_open', { test: TEST });
+  // One /api/health call for the voice and the brain, fetched while the voice manifest loads.
+  const health = apiFetch('/api/health').then((r) => r.json());
+  health.catch(() => {});
+  await Promise.all([initVoice(health), checkLive(health)]);
   document.body.dataset.scene = 'home';
-  await Promise.all([initVoice(), checkLive()]);
+  // The user's first touch, tap or key fetches the live agent's signed URL ahead of the first turn.
+  for (const type of ['pointerdown', 'keydown', 'focusin']) window.addEventListener(type, prepareLive, { capture: true, passive: true });
   connectAgent({ onProactive: (scene) => proactive(scene), onFeed: (text) => live.connected && sendFeed(text), onIdle: () => {
     if (document.querySelector('dialog[open]') || document.body.classList.contains('thinking') || document.activeElement?.matches('input, textarea, select')) return false;
     return secretary.flush();

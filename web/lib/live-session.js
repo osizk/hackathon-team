@@ -12,3 +12,11 @@ export async function signedUrl(env = process.env, fetchImpl = fetch) {
   if (!body.signed_url) throw new Error('no signed_url in response');
   return body.signed_url;
 }
+
+// Today's date in Bangkok, for the agent's {{today}} dynamic variable, so "next month" or
+// "tomorrow" resolve right. Example: "Friday 16 October 2026 (2026-10-16)".
+export function today(now = new Date()) {
+  const part = (opts) => new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Bangkok', ...opts }).format(now);
+  const iso = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok' }).format(now);
+  return `${part({ weekday: 'long' })} ${part({ day: 'numeric', month: 'long', year: 'numeric' })} (${iso})`;
+}
