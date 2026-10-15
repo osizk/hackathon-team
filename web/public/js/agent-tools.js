@@ -71,11 +71,12 @@ export function createToolHandlers(ui) {
   const generated = () => (ui.current()?.name === 'generated' ? ui.current() : null);
 
   return {
-    open_scene({ scene, data_json } = {}) {
+    // Returns after the scene has grown (the agent's sentence first), so a next tool sees it.
+    async open_scene({ scene, data_json } = {}) {
       if (!PROACTIVE_SCENES.includes(scene)) return `error: unknown scene "${scene}"`;
       const data = parseJson(data_json);
       if (data === null) return 'error: data_json is not valid JSON';
-      ui.openScene(scene, data);
+      await ui.openScene(scene, data);
       return `opened ${scene}`;
     },
 
@@ -95,10 +96,10 @@ export function createToolHandlers(ui) {
       return `${action} done on ${open.name}`;
     },
 
-    render_ui({ spec_json } = {}) {
+    async render_ui({ spec_json } = {}) {
       const spec = validateSpec(parseJson(spec_json));
       if (!spec) return 'error: spec has no usable blocks; use only the fixed components';
-      ui.openScene('generated', { spec });
+      await ui.openScene('generated', { spec });
       return spec.urgency === 'none' ? 'page shown; now ask if the user likes it and propose one or two changes' : 'first-aid page shown';
     },
 

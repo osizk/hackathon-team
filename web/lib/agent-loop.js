@@ -7,7 +7,7 @@
 import { decide as defaultDecide, PROACTIVE } from './brain.js';
 import { LINES } from '../public/js/lines.js';
 
-export function createAgentLoop({ feeds, script = [], tickMs = 3000, decide = defaultDecide, log = console.log }) {
+export function createAgentLoop({ feeds, script = [], tickMs = 3000, decide = defaultDecide, log = console.log, onEvent = () => {} }) {
   const clients = new Set();
   let presence = { scene: 'home', talking: false, listening: false, live: false };
   let seen = feeds.versions();
@@ -37,6 +37,7 @@ export function createAgentLoop({ feeds, script = [], tickMs = 3000, decide = de
       const text = describeChanges(feeds.get(), changed);
       log(`[agent] feeds changed: ${changed.join(', ')} -> contextual update to the live agent`);
       push('feed', { changed, text });
+      onEvent('push', { kind: 'feed', changed, presence });
       return;
     }
     deciding = true;
@@ -45,9 +46,11 @@ export function createAgentLoop({ feeds, script = [], tickMs = 3000, decide = de
       seen = now;
       retry = false;
       log(`[agent] feeds changed: ${changed.join(', ') || '(retry)'} -> ${d.speak ? `speak, open ${d.scene}` : 'wait'} (${d.via}: ${d.reason})`);
+      onEvent('decision', { changed, speak: d.speak, scene: d.scene, via: d.via, reason: d.reason });
       if (d.speak && PROACTIVE[d.scene] && !busy()) {
         pending = { id: nextId++, scene: d.scene, line: PROACTIVE[d.scene], say: LINES[PROACTIVE[d.scene]], reason: d.reason, via: d.via };
         push('proactive', pending);
+        onEvent('push', { kind: 'proactive', scene: d.scene, presence });
       } else if (d.speak) {
         retry = true;
       }
@@ -78,7 +81,7 @@ export function createAgentLoop({ feeds, script = [], tickMs = 3000, decide = de
         script.forEach((step, i) => {
           if (step.afterScene === prev.scene && !scriptDone.has(i)) {
             scriptDone.add(i);
-            const t = setTimeout(() => { timers.delete(t); feeds.fire(step.event); log(`[script] ${step.event}`); }, step.delaySec * 1000);
+            const t = setTimeout(() => { timers.delete(t); feeds.fire(step.event); log(`[script] ${step.event}`); onEvent('feed_event', { event: step.event, by: 'script' }); }, step.delaySec * 1000);
             timers.add(t);
           }
         });
@@ -100,6 +103,7 @@ export function createAgentLoop({ feeds, script = [], tickMs = 3000, decide = de
         timers.clear();
       }
       const ok = feeds.fire(event);
+      onEvent('feed_event', { event, by: 'presenter' });
       if (event === 'reset') seen = feeds.versions();
       return ok;
     },

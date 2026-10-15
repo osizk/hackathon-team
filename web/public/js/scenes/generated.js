@@ -202,6 +202,8 @@ export default function mountGenerated(el, data, agent) {
     if (flash) setTimeout(() => el.classList.remove('g-flash'), T(700));
   };
   draw();
+  // The offline todo asks its question after it has grown (the intro line said what it was doing).
+  if (stage === 'review' && data.ask) agent.say(data.ask);
 
   return {
     state: () => ({ spec, stage: stage === 'saved' ? 'review' : stage }),

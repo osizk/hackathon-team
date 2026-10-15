@@ -331,3 +331,7 @@ body.listening .mic { animation: pulse 1.2s ease-out infinite; }
 .g-image.failed .g-frame { animation: none; background: #ece7e0; }
 .g-image.failed .g-frame::after { content: "🖼"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 34px; opacity: .45; }
 .g-image figcaption { margin-top: 6px; font-size: 13px; opacity: .7; }
+
+/* Until the first tap: browsers block sound before a gesture. */
+.tap-hint { position: absolute; top: 18%; left: 50%; translate: -50% 0; margin: 0; padding: 8px 16px; border-radius: 99px; font-size: 14px; font-weight: 600; color: var(--ink-2); background: rgba(255, 255, 255, .7); animation: breathe 2.4s ease-in-out infinite; }
+body.started .tap-hint { display: none; }

@@ -7,7 +7,9 @@ const FAKE_SDK = `
 export const Conversation = {
   async startSession(opts) {
     const conv = { opts, sent: [], context: [], muted: null,
-      setMicMuted(m) { conv.muted = m; }, sendUserMessage(t) { conv.sent.push(t); },
+      calls: [],
+      setMicMuted(m) { conv.muted = m; conv.calls.push('mic:' + (m ? 'muted' : 'open')); }, sendUserMessage(t) { conv.sent.push(t); },
+      setVolume({ volume }) { conv.calls.push('volume:' + volume); }, sendUserActivity() {},
       sendContextualUpdate(t) { conv.context.push(t); }, async endSession() {} };
     conv.sendUserMessage = (t) => (t.startsWith('[feed update]') ? conv.context.push(t) : conv.sent.push(t));
     window.__conv = conv;
@@ -19,7 +21,8 @@ export const Conversation = {
 async function liveHome(page) {
   await page.request.post('/api/feeds/event', { data: { event: 'reset' } });
   await page.addInitScript(() => {
-    navigator.mediaDevices.getUserMedia = async () => ({ getTracks: () => [] });
+    const track = { stop() {}, getSettings: () => ({ echoCancellation: true, noiseSuppression: true, autoGainControl: true }) };
+    navigator.mediaDevices.getUserMedia = async () => ({ getTracks: () => [track], getAudioTracks: () => [track] });
   });
   await page.route('**/api/health', (r) => r.fulfill({ json: { brain: 'elevenlabs-agent', tts: false } }));
   await page.route('**/api/agent/session', (r) => r.fulfill({ json: { live: true, signedUrl: 'wss://example.invalid/fake' } }));
@@ -32,6 +35,9 @@ async function liveHome(page) {
   await expect.poll(() => page.evaluate(() => window.__conv?.muted)).toBe(false);
   await page.locator('#mic').dispatchEvent('pointerup');
   await expect.poll(() => page.evaluate(() => window.__conv.muted)).toBe(true);
+  // Echo cancellation, noise suppression and auto gain are on, read from the real track settings, and logged.
+  const mic = await page.evaluate(() => window.__runlog.find((e) => e.type === 'mic' && e.state === 'settings'));
+  expect(mic).toMatchObject({ echoCancellation: true, noiseSuppression: true, autoGainControl: true });
 }
 
 const tool = (page, name, params) => page.evaluate(([n, p]) => window.__conv.opts.clientTools[n](p), [name, params]);
@@ -83,4 +89,25 @@ test('live: typed text goes to the agent, and feed changes arrive as contextual 
   await page.request.post('/api/feeds/event', { data: { event: 'flight-delayed' } });
   await expect.poll(() => page.evaluate(() => window.__conv.context.join(' ')), { timeout: 5000 }).toContain('delayed 120 minutes');
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'home');
+});
+
+test('live: one voice - app lines go through the agent; pressing the mic silences the agent before the mic opens', async ({ page }) => {
+  await liveHome(page);
+  // A scene line while live: sent to the agent to say, never played locally.
+  await tool(page, 'open_scene', { scene: 'payment' });
+  await expect(page.locator('body')).toHaveAttribute('data-scene', 'payment');
+  await page.click('[data-testid=deny]');
+  await expect.poll(() => page.evaluate(() => window.__conv.sent.join(' '))).toContain('[scene event: pay_denied]');
+  const local = await page.evaluate(() => window.__runlog.filter((e) => e.type === 'audio_start' && e.source !== 'agent').length);
+  expect(local).toBe(0);
+  await page.evaluate(() => window.__conv.opts.onModeChange({ mode: 'listening' })); // the agent said it
+  await expectHome(page);
+
+  // The agent is talking; the user presses the mic: volume 0 first, then the mic opens.
+  await page.evaluate(() => { window.__conv.calls = []; window.__conv.opts.onModeChange({ mode: 'speaking' }); });
+  await page.locator('#mic').dispatchEvent('pointerdown');
+  await expect.poll(() => page.evaluate(() => window.__conv.calls)).toEqual(['volume:0', 'mic:open']);
+  await page.evaluate(() => window.__conv.opts.onModeChange({ mode: 'listening' })); // the server cut the turn
+  await expect.poll(() => page.evaluate(() => window.__conv.calls.at(-1))).toBe('volume:1');
+  await page.locator('#mic').dispatchEvent('pointerup');
 });

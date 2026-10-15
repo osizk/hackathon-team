@@ -15,7 +15,8 @@ export const AGENT_NAME = 'Agent OS (U-Hackathon 2026)';
 export const AGENT_LLM = 'claude-sonnet-5-5';
 export const AGENT_TTS_MODEL = 'eleven_v3_conversational';
 export const AGENT_LANGUAGE = 'th';
-export const FIRST_MESSAGE = 'สวัสดี มีอะไรให้ช่วยไหม';
+// Empty: the agent waits for the user. The app greets once on the first tap (greet.mp3, same voice).
+export const FIRST_MESSAGE = '';
 
 // One client tool config per tool, in the ElevenLabs ClientToolConfig shape.
 export function toolConfigs() {
@@ -32,6 +33,9 @@ export function toolConfigs() {
       description: t.description,
       expects_response: true,
       response_timeout_secs: 10,
+      // Say what you are about to do before a scene grows or changes.
+      // A page revise takes the model a few seconds: a short sentence first keeps it feeling quick.
+      ...(['open_scene', 'render_ui', 'revise_ui'].includes(t.name) ? { pre_tool_speech: 'force' } : {}),
       parameters: { type: 'object', properties, required },
     };
   });

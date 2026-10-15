@@ -4,10 +4,11 @@ import { LINES } from './lines.js';
 import { SCENE_DEFAULTS } from './data.js';
 import { SCENES } from './scenes/index.js';
 import { savedIndex } from './scenes/generated.js';
-import { initVoice, speak, showSubtitle } from './voice.js';
+import { initVoice, speak, showSubtitle, interruptAll } from './voice.js';
+import { logEvent } from './log.js';
 import { createListener } from './stt.js';
 import { connectAgent } from './agent-link.js';
-import { live, checkLive, startLive, setMic, sendText, sendContext, sendFeed } from './live-agent.js';
+import { live, checkLive, startLive, setMic, sendText, sendContext, sendFeed, silenceAgent, afterAgentSentence } from './live-agent.js';
 import { T, TEST, wait } from './timing.js';
 
 const $ = (id) => document.getElementById(id);
@@ -38,6 +39,7 @@ export function openScene(name, data = {}) {
   el.className = `scene scene-${name}`;
   el.dataset.scene = name;
 
+  logEvent('scene_open', { name, swap: Boolean(open) });
   if (open) {
     // Scene to scene: the old one slides up, the new one rises under it.
     const old = open.el;
@@ -61,6 +63,7 @@ export function closeScene() {
   const { el, name } = open;
   // Tell the live agent, so it does not act on a page that is gone.
   if (live.connected) sendContext(`[screen] The ${name} page was closed. The agent home is showing.`);
+  logEvent('scene_close', { name });
   open = null;
   stage.classList.remove('open');
   document.body.classList.remove('scene-open');
@@ -68,15 +71,22 @@ export function closeScene() {
   setTimeout(() => el.remove(), T(750));
 }
 
-// The agent speaks first (presenter hotkey): say the intro and grow the scene.
+// Speak first, then act: the agent starts its sentence about what it will do, and the scene
+// grows while that sentence plays (never before it starts).
+async function sayThenOpen({ line, text }, name, data) {
+  let talking;
+  await new Promise((started) => { talking = speak({ line, text, onStart: started }); });
+  await wait(name === 'shopping' ? 1400 : 900);
+  openScene(name, data);
+  await talking;
+}
+
+// The agent speaks first (always-on feed event offline, or a presenter hotkey).
 async function proactive(name) {
   if (open) closeScene();
   const line = { flight: 'flight_intro', training: 'train_intro', shopping: 'shop_intro', payment: 'pay_ask' }[name];
   if (!SCENES[name]) return;
-  const talking = speak({ line, text: LINES[line] });
-  await wait(name === 'shopping' ? 1400 : 900);
-  openScene(name);
-  await talking;
+  await sayThenOpen({ line, text: LINES[line] }, name);
 }
 
 async function routeText(text) {
@@ -92,7 +102,12 @@ async function routeText(text) {
 // What the live agent's client tools may do to the screen.
 const toolUi = {
   current: () => open,
-  openScene: (name, data) => { if (open) closeScene(); setTimeout(() => openScene(name, data), open ? T(750) : 0); },
+  // The agent says what it will do first; the scene grows when that sentence ends.
+  openScene: async (name, data) => {
+    await afterAgentSentence();
+    if (open) { closeScene(); await wait(750); }
+    openScene(name, data);
+  },
   closeScene: () => closeScene(),
   action: (name, extra = {}) => open?.ctl.onAction?.(name, extra, Promise.resolve()),
   nudgeAllow: () => open?.ctl.onAction?.('button-only'),
@@ -111,8 +126,11 @@ export async function handleUserText(text) {
   showSubtitle(`“${text}”`, 1200);
   document.body.classList.add('thinking');
   let res;
+  const t0 = Date.now();
   try {
     res = await routeText(text);
+    logEvent('route', { via: res.via, scene: res.scene || null, action: res.action || null, ms: Date.now() - t0 });
+    if (res.say) logEvent('agent_reply', { text: res.say });
   } catch (err) {
     console.warn('[agent]', err.message);
     res = { scene: null, line: 'unsure', say: LINES.unsure };
@@ -129,10 +147,7 @@ export async function handleUserText(text) {
   }
   if (res.scene && SCENES[res.scene]) {
     if (open) closeScene();
-    const talking = speak({ line: res.line, text: res.say });
-    await wait(res.scene === 'shopping' ? 1400 : 700);
-    openScene(res.scene, res.data);
-    await talking;
+    await sayThenOpen({ line: res.line, text: res.say }, res.scene, res.data);
     return;
   }
   if (res.say) await speak({ line: res.line, text: res.say });
@@ -149,6 +164,7 @@ function setupFallback() {
     const text = input.value;
     input.value = '';
     hide();
+    logEvent('user_text', { text });
     if (live.available && !live.connected) await startLive(toolUi).catch(() => {});
     handleUserText(text);
   });
@@ -180,17 +196,22 @@ function setupMic(fallback) {
   const mic = $('mic');
   const listener = createListener({
     onInterim: (t) => showSubtitle(`“${t}”`, 0),
-    onFinal: (t) => handleUserText(t),
+    onFinal: (t) => { logEvent('stt', { text: t, final: true }); handleUserText(t); },
     onError: (err) => { console.warn('[stt]', err); if (err === 'not-allowed') fallback.show(); },
   });
   // Live agent: holding the mic unmutes it; the agent does its own speech to text.
   // Offline: the browser's speech recognition (th-TH) listens while the mic is held.
   const start = async (e) => {
     e.preventDefault();
+    // Stop every voice first, so the mic never hears the agent.
+    interruptAll();
+    silenceAgent();
     document.body.classList.add('listening');
+    logEvent('mic', { state: 'down' });
     if (live.available) {
       try {
         await startLive(toolUi);
+        silenceAgent(); // e.g. its greeting, if this press started the conversation
         if (document.body.classList.contains('listening')) setMic(true);
         return;
       } catch { /* fall back to browser listening */ }
@@ -201,6 +222,7 @@ function setupMic(fallback) {
   const stop = () => {
     if (!document.body.classList.contains('listening')) return;
     document.body.classList.remove('listening');
+    logEvent('mic', { state: 'up' });
     if (live.connected) setMic(false);
     else listener?.stop();
   };
@@ -217,12 +239,33 @@ function tickClock() {
   $('clock').textContent = `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
+// The mascot greets once, after the first tap (browsers block sound before a gesture).
+// Always the saved greet line (same voice as the live agent, whose first message is empty), so
+// there is exactly one greeting whether or not the live agent connects later.
+function setupGreeting() {
+  let greeted = false;
+  const first = (e) => {
+    if (greeted) return;
+    greeted = true;
+    document.body.classList.add('started');
+    window.removeEventListener('pointerdown', first, true);
+    window.removeEventListener('keydown', first, true);
+    if (e.target.closest?.('#mic, input, form, .presenter') || (e.type === 'keydown' && e.key !== 'Enter')) return; // the user is about to talk or type
+    logEvent('greet', { via: 'local' });
+    speak({ line: 'greet', text: LINES.greet });
+  };
+  window.addEventListener('pointerdown', first, true);
+  window.addEventListener('keydown', first, true);
+}
+
 async function boot() {
   tickClock();
   setInterval(tickClock, 15000);
   const fallback = setupFallback();
   setupHotkeys(fallback);
   setupMic(fallback);
+  setupGreeting();
+  logEvent('page_open', { test: TEST });
   await initVoice();
   document.body.dataset.scene = 'home';
   await checkLive();

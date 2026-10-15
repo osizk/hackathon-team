@@ -13,6 +13,7 @@
   "flight_done",
   "flight_keep",
   "gen_todo",
+  "gen_ask",
   "gen_revised",
   "gen_what",
   "gen_keep_ask",

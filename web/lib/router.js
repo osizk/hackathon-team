@@ -77,7 +77,7 @@ export function keywordRoute(rawText, context = null, extra = {}) {
   const saved = savedMatch(text, extra.saved);
   if (saved) return saved;
   // No prebuilt scene fits: without a model, a todo request gets one canned generated page.
-  if (has(text, TODO_WORDS)) return { scene: 'generated', line: 'gen_todo', say: LINES.gen_todo, data: { spec: cannedTodo() } };
+  if (has(text, TODO_WORDS)) return { scene: 'generated', line: 'gen_todo', say: LINES.gen_todo, data: { spec: cannedTodo(), ask: 'gen_ask' } };
   return { scene: null, line: 'unsure', say: LINES.unsure };
 }
 

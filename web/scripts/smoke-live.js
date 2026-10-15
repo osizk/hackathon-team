@@ -31,7 +31,7 @@ const browser = await chromium.launch({ channel: 'chrome', headless: true, args 
 const page = await (await browser.newContext({ viewport: { width: 430, height: 900 }, permissions: ['microphone'] })).newPage();
 page.on('console', (m) => {
   const t = m.text();
-  if (/\[agent tool\]|\[agent\]/.test(t)) console.log(`     ${t.slice(0, 220)}`);
+  if (/\[agent tool\]|\[agent\]|\[voice\]/.test(t)) console.log(`     ${t.slice(0, 220)}`);
 });
 
 const scene = () => page.evaluate(() => document.body.dataset.scene);

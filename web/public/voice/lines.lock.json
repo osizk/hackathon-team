@@ -1,5 +1,5 @@
 {
-  "greet": "42dbc533051e7600",
+  "greet": "f8c590dbe7e6aaf2",
   "unsure": "4ec06db252ea9060",
   "shop_intro": "f8a706754098425d",
   "shop_found": "1a3551c19d7f6895",
@@ -12,13 +12,14 @@
   "flight_intro": "7edcd3778089aa61",
   "flight_done": "31086c631663c50c",
   "flight_keep": "b00270b415d04fea",
-  "gen_todo": "9516a2384f6bc8b8",
+  "gen_todo": "e68f8ed274f74c02",
   "gen_revised": "b3476e8a9e85eb67",
   "gen_what": "cbc63f7756016d4b",
   "gen_keep_ask": "675f32df8f47fc6e",
   "gen_kept": "a81bd62771158c03",
   "gen_not_kept": "f510bd8d24a4e330",
-  "gen_saved": "c583f3d3450f9f34",
-  "first_aid": "7a626529089e07e3",
-  "get_well": "fcf3671c3964c228"
+  "gen_saved": "593cde84da3982f2",
+  "first_aid": "8ac175360d50df39",
+  "get_well": "fcf3671c3964c228",
+  "gen_ask": "fdc1f196e683149e"
 }

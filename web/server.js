@@ -18,6 +18,7 @@ import { route } from './lib/router.js';
 import { elevenTts, ttsReady } from './lib/tts.js';
 import { liveReady, signedUrl } from './lib/live-session.js';
 import { createImageService } from './lib/images.js';
+import { createRunLog } from './lib/runlog.js';
 import { createFeeds, DEMO_SCRIPT } from './lib/feeds.js';
 import { createAgentLoop } from './lib/agent-loop.js';
 
@@ -26,10 +27,12 @@ loadEnv(join(here, '..', '.env'));
 
 const PUBLIC = join(here, 'public');
 const images = createImageService({ dir: join(here, '.cache', 'images') });
+const runLog = createRunLog(join(here, 'logs'));
 const agent = createAgentLoop({
   feeds: createFeeds(),
   script: process.env.AGENT_SCRIPT === 'off' ? [] : DEMO_SCRIPT,
   tickMs: Number(process.env.AGENT_TICK_MS || 3000),
+  onEvent: (type, data) => runLog.server(type, data),
 });
 const PORT = Number(process.env.PORT || 5173);
 const TYPES = {
@@ -63,6 +66,7 @@ const server = createServer(async (req, res) => {
         return send(res, 200, { live: true, signedUrl: await signedUrl() });
       } catch (err) {
         console.warn(`[agent] no live session, using offline brain: ${err.message}`);
+        runLog.server('error', { where: 'signed url', message: err.message });
         return send(res, 200, { live: false, reason: err.message });
       }
     }
@@ -76,6 +80,10 @@ const server = createServer(async (req, res) => {
       const ping = setInterval(() => res.write(': ping\n\n'), 15000);
       req.on('close', () => { clearInterval(ping); agent.removeClient(res); });
       return;
+    }
+    if (url.pathname === '/api/log' && req.method === 'POST') {
+      const { events } = await readJson(req);
+      return send(res, 200, { written: runLog.browser(events) });
     }
     if (url.pathname === '/api/agent/presence' && req.method === 'POST') {
       agent.setPresence(await readJson(req));
@@ -93,6 +101,7 @@ const server = createServer(async (req, res) => {
     if (url.pathname === '/api/image' && req.method === 'POST') {
       const { prompt, scene } = await readJson(req);
       const out = await images.get(prompt, String(scene || 'default'));
+      if (out.error && !out.quiet) runLog.server('error', { where: 'image', message: out.error });
       if (out.error && !out.quiet) console.warn(`[image] ${out.error}${images.unavailable() ? ' (no more image calls this run)' : ''}`);
       return send(res, 200, out);
     }
@@ -116,10 +125,12 @@ const server = createServer(async (req, res) => {
   } catch (err) {
     if (err.code === 'ENOENT' || err.code === 'EISDIR') return send(res, 404, { error: 'not found' });
     console.error(`[server] ${req.method} ${url.pathname}: ${err.message}`);
+    runLog.server('error', { where: url.pathname, message: err.message });
     send(res, 500, { error: 'server error' });
   }
 });
 
 server.listen(PORT, () => {
+  console.log(`run log: ${runLog.file}`);
   console.log(`Agent OS on http://localhost:${PORT}  brain=${liveReady() ? 'elevenlabs-agent' : 'keywords'} tts=${ttsReady() ? 'elevenlabs' : 'browser'} script=${process.env.AGENT_SCRIPT === 'off' ? 'off' : 'on'}`);
 });

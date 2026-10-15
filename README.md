@@ -65,11 +65,46 @@ Steps 3 and 4 come from the always-on agent on the server. It watches fake
 feeds and speaks when the page is idle. A script fires the feed events after
 the payment and training scenes close, so the order stays the same.
 
+## Run log: find what to fix
+
+Every server run writes one file, `web/logs/run-<time>.jsonl`. It is local
+only and never committed, because it holds what testers said. Each line has
+a millisecond time and records one of these:
+- what the user said
+- what the agent replied
+- every tool call
+- every voice start and end, with its source (live agent, saved MP3, TTS or
+  browser)
+- scenes opening and closing
+- feed events, and the agent's choice to speak or wait
+- errors
+
+Check the latest run, or a named one:
+
+```text
+cd web
+npm run log:check
+npm run log:check -- logs/run-2026-10-15T17-41-34-352Z.jsonl
+```
+
+It reports how fast the agent replies, and flags these problems:
+- two voices at once
+- a reply slower than 3 s
+- a scene that opened before the agent said anything
+- a feed event pushed while something was speaking
+- the mic hearing the agent's own words (self-hearing)
+- errors
+
+To test the live agent end to end in Chrome, run
+`npm run smoke:live -- --wav my-thai-request.wav`. The WAV is played as the
+microphone.
+
 ## Presenter controls
 
 | Control | What it does |
 | --- | --- |
-| Hold `Space` or the mic | Talk |
+| First tap | The mascot greets once ("แตะหน้าจอเพื่อเริ่ม" shows until then) |
+| Hold `Space` or the mic | Talk. Pressing it first silences the agent, so the mic never hears it |
 | `/` | Hidden text box, if the mic fails |
 | Tap the clock 3 times | Hidden feed panel: sleep synced, flight delayed, new email, reset |
 | `Shift+T`, `Shift+F`, `Shift+R` | Feed events: sleep synced, flight delayed, reset |
