@@ -87,8 +87,8 @@ body.speaking .wave i, body.listening .wave i { animation: bar .9s ease-in-out i
 }
 .subtitle.show { opacity: 1; transform: none; }
 body.scene-open .subtitle {
-  bottom: 100px; left: 16px; right: 16px; min-height: 0;
-  padding: 12px 16px 12px 58px; text-align: left; font-size: 15px;
+  bottom: 96px; left: 16px; right: 16px; min-height: 0;
+  padding: 8px 14px 8px 58px; text-align: left; font-size: 14px; line-height: 1.35;
   color: #fff; background: rgba(32, 26, 22, .88); border-radius: 18px;
   backdrop-filter: blur(8px);
 }
@@ -155,7 +155,7 @@ body.scene-open .home-btn { display: block; }
   pointer-events: none;
 }
 .stage.open { clip-path: circle(140% at 50% 42%); pointer-events: auto; }
-.scene { position: absolute; inset: 0; overflow-y: auto; padding: 84px 22px 120px; transition: transform .6s cubic-bezier(.7, 0, .2, 1), opacity .6s; }
+.scene { position: absolute; inset: 0; overflow-y: auto; padding: 84px 22px 220px; transition: transform .6s cubic-bezier(.7, 0, .2, 1), opacity .6s; }
 .scene.leaving { transform: translateY(-100%); opacity: .4; }
 .scene.entering { animation: rise .6s cubic-bezier(.7, 0, .2, 1); }
 @keyframes rise { from { transform: translateY(100%); } to { transform: none; } }
