@@ -134,6 +134,8 @@ export function startLive(ui) {
     await checkMic();
     conversation = await Conversation.startSession({
       signedUrl: session.signedUrl,
+      // Fills {{today}} in the agent prompt (Bangkok date from the server).
+      ...(session.today ? { dynamicVariables: { today: session.today } } : {}),
       connectionType: 'websocket',
       clientTools: wrapTools(createToolHandlers(ui)),
       onConnect: () => { live.connected = true; setBrain('agent'); },
