@@ -542,3 +542,45 @@ body.scene-open .interaction-panel { visibility: visible; opacity: 1; pointer-ev
 html[lang="th"] .phone { font-weight: 400; }
 html[lang="th"] .phone :is(h1, h2, h3, b, strong, button, label, select, .eyebrow, .secretary-badge, .g-badge, .pill, .language-switch button, .mic-hint, .tap-hint) { font-weight: 400; }
 .home .intro h1 { font-weight: 700; }
+/* ---------- Memory page: what the agent remembers, and the user's say over it ---------- */
+.scene-memory { background: linear-gradient(180deg, #fff3ea, var(--card) 40%); overflow-wrap: anywhere; }
+.scene-memory > * { max-width: 720px; margin-left: auto; margin-right: auto; }
+.mem-title { font-size: clamp(25px, 7vw, 32px); margin: 0 0 4px; }
+.mem-en { margin: 0; font-size: 13px; line-height: 1.5; color: var(--ink-2); }
+.mem-group { background: var(--card); border: 1px solid #e5d8c5; border-radius: 20px; padding: 16px 18px; margin: 14px auto; }
+.mem-group h2 { font-size: 18px; margin: 0 0 2px; }
+.mem-list { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; }
+.mem-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 10px 0 0; border-top: 1px solid #efe3d0; min-width: 0; }
+.mem-label { flex: 0 0 auto; min-width: 84px; font-weight: 600; font-size: 14px; }
+.mem-label small { display: block; font-weight: 400; font-size: 11.5px; color: var(--ink-2); }
+.mem-value { flex: 1 1 160px; min-width: 0; line-height: 1.5; }
+.mem-empty { margin: 10px 0 0; color: var(--ink-2); font-size: 14px; }
+.mem-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+.mem-btn { min-height: 44px; padding: 8px 14px; border: 1px solid #d7c5ae; border-radius: 14px; background: var(--card); color: var(--ink); font: 600 14px var(--font); cursor: pointer; }
+.mem-btn:hover { background: var(--cream-2); }
+.mem-btn:focus-visible, .mem-edit input:focus-visible { outline: 3px solid #bb482c; outline-offset: 2px; }
+.mem-primary { background: var(--ink); border-color: var(--ink); color: var(--card); }
+.mem-primary:hover { background: #4a3f38; }
+.mem-danger { border-color: #b23b37; color: #9e2f2b; }
+.mem-edit { flex: 1 1 240px; min-width: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.mem-edit input { flex: 1 1 180px; min-width: 0; min-height: 44px; padding: 8px 12px; border: 1px solid #d7c5ae; border-radius: 12px; font: 16px var(--font); color: var(--ink); background: white; user-select: text; }
+.mem-foot { margin: 18px auto 8px; }
+.mem-confirm { background: #fff0ee; border: 1px solid #e7b3ae; border-radius: 16px; padding: 12px 14px; }
+.mem-confirm p { margin: 0 0 10px; font-weight: 600; }
+.mem-confirm .mem-actions { margin-left: 0; }
+.memory-entry {
+  width: 100%; max-width: 480px; min-height: 44px; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 8px 12px; border-radius: 14px; border: 1px dashed #d7c5ae; background: transparent;
+  font: 600 14px var(--font); color: var(--ink); cursor: pointer;
+}
+.memory-entry small { font-weight: 400; font-size: 11.5px; color: var(--ink-2); }
+.memory-entry:active { transform: scale(.97); }
+/* The memory page shares Q-Bot's lavender glass treatment. */
+.scene-memory { background: linear-gradient(180deg, #f5f2ff, #fff 42%); }
+.mem-group { background: var(--glass-surface); border-color: var(--glass-border); box-shadow: var(--glass-shadow); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+.mem-row { border-color: #ffffff80; }
+.mem-btn, .memory-entry { border-color: var(--glass-border); background: var(--glass-surface); color: #38254f; box-shadow: var(--glass-shadow); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+.mem-btn:hover, .memory-entry:hover { filter: brightness(1.06); }
+.mem-primary { color: #fff; border-color: #ffffff80; background: linear-gradient(150deg, #a182c7e0, #7652a2e6 50%, #4d3076f0); }
+.mem-danger { color: #9e2f2b; }
+.mem-btn:focus-visible, .mem-edit input:focus-visible { outline: 3px solid #d8c5ed; }

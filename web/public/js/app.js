@@ -232,6 +232,8 @@ function setupFallback() {
 }
 
 function setupHomeButton() {
+  // The memory page: no talking needed to see or change what the agent remembers.
+  $('memoryEntry').addEventListener('click', () => openScene('memory'));
   $('homeBtn').addEventListener('click', () => closeScene());
 }
 
@@ -320,7 +322,7 @@ function setupGreeting() {
   let greeted = false;
   const first = (e) => {
     if (greeted) return;
-    if (e.target.closest?.('#mic, input, form, .presenter, .language-switch, .home-btn, .secretary-shortcuts, dialog') || (e.type === 'keydown' && e.key !== 'Enter')) return;
+    if (e.target.closest?.('#mic, input, form, .presenter, .language-switch, .memory-entry, .home-btn, .secretary-shortcuts, dialog') || (e.type === 'keydown' && e.key !== 'Enter')) return;
     greeted = true;
     window.removeEventListener('pointerdown', first, true);
     window.removeEventListener('keydown', first, true);
