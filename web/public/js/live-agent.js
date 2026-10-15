@@ -12,6 +12,8 @@ let conversation = null;
 let starting = null;
 export const live = { available: false, connected: false };
 
+export const stripTags = (text) => String(text).replace(/\[[^\]]{1,30}\]\s*/g, '').trim();
+
 const setBrain = (brain) => { document.body.dataset.brain = brain; };
 
 export async function checkLive() {
@@ -61,7 +63,8 @@ export function startLive(ui) {
       onError: (message) => console.warn('[agent]', message),
       onMessage: ({ source, message }) => {
         if (!message) return;
-        if (source === 'ai') showSubtitle(message, 3200);
+        // v3 voices take audio tags like [happy]; they are for the voice, not the subtitle.
+        if (source === 'ai') showSubtitle(stripTags(message), 3200);
         else showSubtitle(`“${message}”`, 1400);
       },
       onModeChange: (mode) => document.body.classList.toggle('speaking', (mode?.mode ?? mode) === 'speaking'),
@@ -83,3 +86,6 @@ export function startLive(ui) {
 export const setMic = (on) => conversation?.setMicMuted(!on);
 export const sendText = (text) => conversation?.sendUserMessage(text);
 export const sendContext = (text) => conversation?.sendContextualUpdate(text);
+// A feed change: a contextual update alone does not give the agent a turn, so this sends it as a
+// marked message; the agent then speaks first or calls skip_turn.
+export const sendFeed = (text) => conversation?.sendUserMessage(`${text} (This is a feed update, not the user speaking.)`);

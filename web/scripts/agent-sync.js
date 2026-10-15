@@ -12,6 +12,11 @@ const ENV_PATH = join(here, '..', '..', '.env');
 const API = 'https://api.elevenlabs.io/v1/convai';
 loadEnv(ENV_PATH);
 
+// Tool ids live in .env as name:id,name:id (shell-safe, unlike JSON).
+export const parseToolIds = (text = '') =>
+  Object.fromEntries(String(text).split(',').map((pair) => pair.trim().split(':')).filter(([n, id]) => n && id));
+export const formatToolIds = (ids) => Object.entries(ids).map(([n, id]) => `${n}:${id}`).join(',');
+
 // Set or replace KEY=value lines in .env, keeping every other line as it is.
 export function setEnvLines(text, values) {
   const lines = text ? text.replace(/\n$/, '').split('\n') : [];
@@ -68,7 +73,7 @@ async function main() {
     console.error('ELEVENLABS_API_KEY is not set in .env.');
     process.exit(1);
   }
-  const known = process.env.ELEVENLABS_TOOL_IDS ? JSON.parse(process.env.ELEVENLABS_TOOL_IDS) : {};
+  const known = parseToolIds(process.env.ELEVENLABS_TOOL_IDS);
   const toolIds = await syncTools(known);
   const body = agentConfig({ toolIds: Object.values(toolIds), voiceId: process.env.ELEVENLABS_VOICE_ID || undefined });
 
@@ -81,7 +86,7 @@ async function main() {
     console.log(`agent created ${agentId}`);
   }
   const current = existsSync(ENV_PATH) ? readFileSync(ENV_PATH, 'utf8') : '';
-  writeFileSync(ENV_PATH, setEnvLines(current, { ELEVENLABS_AGENT_ID: agentId, ELEVENLABS_TOOL_IDS: JSON.stringify(toolIds) }));
+  writeFileSync(ENV_PATH, setEnvLines(current, { ELEVENLABS_AGENT_ID: agentId, ELEVENLABS_TOOL_IDS: formatToolIds(toolIds) }));
   console.log('wrote ELEVENLABS_AGENT_ID and ELEVENLABS_TOOL_IDS to .env');
 }
 

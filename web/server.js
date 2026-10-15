@@ -93,7 +93,7 @@ const server = createServer(async (req, res) => {
     if (url.pathname === '/api/image' && req.method === 'POST') {
       const { prompt, scene } = await readJson(req);
       const out = await images.get(prompt, String(scene || 'default'));
-      if (out.error) console.warn(`[image] ${out.error}`);
+      if (out.error && !out.quiet) console.warn(`[image] ${out.error}${images.unavailable() ? ' (no more image calls this run)' : ''}`);
       return send(res, 200, out);
     }
     if (url.pathname.startsWith('/api/image/')) {

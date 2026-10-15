@@ -49,6 +49,15 @@ export function agentConfig({ toolIds = [], voiceId = DEFAULT_VOICE } = {}) {
           prompt: readFileSync(join(here, 'prompt.md'), 'utf8'),
           llm: AGENT_LLM,
           tool_ids: toolIds,
+          // Lets the agent stay silent after a feed update that is not worth speaking about.
+          built_in_tools: {
+            skip_turn: {
+              type: 'system',
+              name: 'skip_turn',
+              description: 'Stay silent this turn. Use it after a [feed update] that is not worth interrupting the user for.',
+              params: { system_tool_type: 'skip_turn' },
+            },
+          },
         },
       },
       tts: { voice_id: voiceId, model_id: AGENT_TTS_MODEL },

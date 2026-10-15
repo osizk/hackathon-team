@@ -62,3 +62,12 @@ test('times out, and caps calls per scene; no key means no call', async () => {
   assert.deepEqual(await svc2.get('z'), { error: 'no ELEVENLABS_API_KEY' });
   assert.equal(none.calls.length, 0);
 });
+
+test('after 402 the service stops calling and answers at once', async () => {
+  const paid = fakeApi(() => json(402, { detail: { status: 'paid_plan_required' } }));
+  const svc = createImageService({ env: { ELEVENLABS_API_KEY: 'k' }, dir: fresh(), fetchImpl: paid.fetchImpl, sleep: async () => {} });
+  await svc.get('first');
+  const second = await svc.get('second', 'other-scene');
+  assert.deepEqual(second, { error: 'paid_plan_required', quiet: true });
+  assert.equal(paid.calls.length, 1);
+});

@@ -28,6 +28,9 @@ export function createImageService({ env = process.env, dir, fetchImpl = fetch, 
   mkdirSync(dir, { recursive: true });
   const inflight = new Map();
   const perScene = new Map();
+  // After a plan or permission error, stop calling: every later picture fails fast and quietly.
+  let unavailable = null;
+  const PERMANENT = ['paid_plan_required', 'no permission (Image & Video)'];
 
   async function generate(prompt, key) {
     const headers = { 'content-type': 'application/json', 'xi-api-key': env.ELEVENLABS_API_KEY };
@@ -58,6 +61,7 @@ export function createImageService({ env = process.env, dir, fetchImpl = fetch, 
 
   return {
     file: (name) => (/^[a-f0-9]{24}\.png$/.test(name) ? join(dir, name) : null),
+    unavailable: () => unavailable,
     async get(rawPrompt, scene = 'default') {
       const prompt = cleanPrompt(rawPrompt);
       if (!prompt) return { error: 'empty prompt' };
@@ -65,11 +69,16 @@ export function createImageService({ env = process.env, dir, fetchImpl = fetch, 
       if (existsSync(join(dir, `${key}.png`))) return { url: `/api/image/${key}.png`, cached: true };
       if (inflight.has(key)) return inflight.get(key);
       if (!env.ELEVENLABS_API_KEY) return { error: 'no ELEVENLABS_API_KEY' };
+      if (unavailable) return { error: unavailable, quiet: true };
       const used = perScene.get(scene) || 0;
       if (used >= MAX_PER_SCENE) return { error: `cap of ${MAX_PER_SCENE} images per scene` };
       perScene.set(scene, used + 1);
       const job = generate(prompt, key)
         .catch((err) => ({ error: err.name === 'TimeoutError' ? 'timeout' : err.message }))
+        .then((out) => {
+          if (PERMANENT.includes(out.error)) unavailable = out.error;
+          return out;
+        })
         .finally(() => inflight.delete(key));
       inflight.set(key, job);
       return job;

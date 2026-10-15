@@ -113,7 +113,7 @@ export function createToolHandlers(ui) {
 
     mark_urgent({ level } = {}) {
       const open = generated();
-      if (!open) return 'error: render the first-aid page with render_ui first';
+      if (!open) return 'no page is open (the user closed it); do nothing more';
       const current = open.ctl.state?.().spec;
       const spec = validateSpec({ ...current, urgency: level === 'serious' ? 'serious' : 'urgent' });
       ui.action('urgent', { spec });

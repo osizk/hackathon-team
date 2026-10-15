@@ -9,6 +9,7 @@ export const Conversation = {
     const conv = { opts, sent: [], context: [], muted: null,
       setMicMuted(m) { conv.muted = m; }, sendUserMessage(t) { conv.sent.push(t); },
       sendContextualUpdate(t) { conv.context.push(t); }, async endSession() {} };
+    conv.sendUserMessage = (t) => (t.startsWith('[feed update]') ? conv.context.push(t) : conv.sent.push(t));
     window.__conv = conv;
     setTimeout(() => opts.onConnect && opts.onConnect({ conversationId: 'fake' }), 0);
     return conv;
