@@ -391,4 +391,7 @@ body.started .tap-hint { display: none; }
 .plan li { padding: 4px 10px; border-radius: 99px; color: var(--ink-2); background: rgba(255, 255, 255, .75); }
 .plan li[data-state="now"] { font-weight: 600; color: #fff; background: rgba(32, 26, 22, .88); }
 .plan li[data-state="done"] { color: #1d6b3a; background: rgba(214, 240, 222, .92); }
-body.scene-open .plan { bottom: 150px; }
+/* With a page open: top left, beside the Home button, where pages leave room, so it never covers
+   the page's own buttons. */
+body.scene-open .plan { top: 44px; bottom: auto; left: 12px; right: 164px; justify-content: flex-start; gap: 3px; font-size: 10.5px; line-height: 1.2; }
+body.scene-open .plan li { padding: 2px 7px; white-space: nowrap; }
