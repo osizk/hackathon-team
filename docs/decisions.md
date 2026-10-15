@@ -15,6 +15,71 @@ Copy this block for a new decision:
 - **Who decided:** names, or "whole team".
 ```
 
+## 2026-10-15: Allow is a button only
+
+- **Decision:** On the payment card, only a tap on Allow moves money. Saying
+  "allow", "yes" or "pay" only makes the button pulse. This holds even if
+  Claude says otherwise; the code checks it. Tonight Allow ends in a success
+  screen only, with no real payment.
+- **Why:** Speech to text makes mistakes, and money must never move by
+  mistake. Same rule as before: nothing pays without the owner's approve.
+- **Who decided:** head (team lead)
+
+## 2026-10-15: A real always-on agent
+
+- **Decision:** The agent speaks first by itself. A loop on the server
+  watches fake feeds (email, calendar, sleep and runs, flight) every few
+  seconds, decides when to speak and which scene to open, and pushes it to
+  the page. Claude decides with a key, simple rules without. It never speaks
+  over an open scene or while anyone talks. A script keeps the demo order
+  fixed; the presenter can fire a feed event from a hidden panel. Hotkeys
+  stay as the last resort.
+- **Why:** "Always-on จริง" - the agent should really watch and act, not
+  wait for a presenter key.
+- **Who decided:** head (team lead)
+
+## 2026-10-15: Keep the pages the user likes
+
+- **Decision:** When the user likes a generated page, the agent asks whether
+  to keep it. A kept page is saved in the browser and opens at once next
+  time, with new data and no new generation.
+- **Why:** "แล้วถ้าอันเจอที่ user ชอบแล้วค่อยทำเป็นอะไรที่ไว้ใช้ประจำ" - what
+  the user likes should become something they use every day.
+- **Who decided:** head (team lead)
+
+## 2026-10-15: Generated pages with a like-and-adjust loop
+
+- **Decision:** Keep the four prebuilt scenes. For a task with no scene, the
+  agent draws a new page as JSON from a fixed set of parts, never as HTML or
+  code. Then it asks if the user likes it and proposes one or two changes;
+  the spoken answer changes the page in place.
+- **Why:** "มันต้อง generate ได้ด้วยเพื่อมันมี task ที่มันไม่คุ้น" - the agent
+  will get tasks it does not know. A fixed set of parts keeps it safe.
+- **Who decided:** head (team lead)
+
+## 2026-10-15: Agent OS storyboard
+
+- **Decision:** Agent home, then four scenes: shopping list from email,
+  payment card, training with race sign-up, flight delay. Every scene grows
+  out of the home and folds back. The home has no chat history and no text
+  box. Use cases are the three of the Muse launch video. Details:
+  [agent-os-storyboard.md](agent-os-storyboard.md).
+- **Why:** Each scene shows one message: the agent builds UI, money moves
+  only on approve, multi-step work for you, the agent speaks first.
+- **Who decided:** head (team lead)
+
+## 2026-10-15: Pivot from CryptoMate to Agent OS
+
+- **Decision:** We build **Agent OS**: you talk to an agent, and it answers
+  with real UI instead of text, on one screen, never switching apps. This
+  replaces CryptoMate and the CryptoMate entries below (app flow, payment
+  assistant, tech stack, money story, demo story). The demo app is plain
+  HTML/JS with a small Node server in `web/`, ElevenLabs for the voice,
+  Claude optional (issue #17).
+- **Why:** The team lead changed the idea ("เปลี่ยน"). A demo need not be
+  pretty; quality rises as models improve.
+- **Who decided:** head (team lead)
+
 ## 2026-10-15: Product is CryptoMate
 
 - **Decision:** We build CryptoMate, "เพื่อนคู่ใจที่ดูแลเงิน crypto ของคุณ

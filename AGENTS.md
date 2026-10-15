@@ -10,25 +10,20 @@ Instructions for every agent (Claude Code, Codex) and every person in this repo.
   you talk to an agent and it answers by voice and with a full-screen UI that
   grows out of one home screen and folds back. Money moves only on the owner's
   tap. Storyboard: [docs/agent-os-storyboard.md](docs/agent-os-storyboard.md).
-  The CryptoMate idea is in [docs/idea.md](docs/idea.md).
-- Payment goes through our own crypto payment assistant. It checks rules in
-  code, waits for the owner's approve, then pays with the U-Card.
+  The idea: [docs/idea.md](docs/idea.md).
+- The payment card checks rules in code and pays only on a tap of Allow.
+  Real U-topia payment is out of scope for the demo.
 - What to build, part by part: [docs/build-parts.md](docs/build-parts.md).
 
 ## Tech stack
 
 Decided 2026-10-15. Why: [docs/decisions.md](docs/decisions.md).
 
-- Agent base loop: Pi v1.2.0, package `@earendil-works/pi-coding-agent@1.2.0`,
-  on Node.
-- Browser: Playwright as a library in Node, attached by CDP to a dedicated
-  Chrome profile. See [Start the agent's Chrome](#start-the-agents-chrome).
-- U-topia steps: a fixed Playwright script, not model guesses.
-- Approve: in the web app. LINE only if time allows.
-- Shops: use shops we checked work with an agent browser. Shopee, Lazada and
-  Amazon often block agent browsers.
 - Demo app: plain HTML/JS in `web/` with a small Node server, Claude for
-  scene choice (optional) and ElevenLabs TTS for the voice (issue #17).
+  scene choice, generated pages and the always-on agent (optional), and
+  ElevenLabs TTS for the voice (issue #17). Tests: Playwright in Chrome.
+- The CryptoMate stack (Pi agent loop, agent browser over CDP, U-topia
+  script) is not used by the demo. Its notes stay below for later.
 - Do not add another framework or service unless an issue asks for it.
 
 ## App flow
@@ -49,7 +44,7 @@ One folder per part, so four people do not edit the same files.
 
 | Folder | What lives there | Owner |
 | --- | --- | --- |
-| `web/` | Web app: chat box, marketplace list, compare view, approve screen, live screen | A |
+| `web/` | Agent OS demo app: agent home, scenes, server, always-on agent | A |
 | `agent/` | Pi agent loop and its browser tools (open, read, click, type, wait), shopping run | B |
 | `pay/rules/` | Rules check in plain code, with unit tests | B |
 | `pay/approve/` | Payment request waiting for the owner's answer | A |
