@@ -4,6 +4,7 @@
 // A page the user likes can be kept as a saved scene in localStorage.
 import { T } from '../timing.js';
 import { apiFetch } from '../api.js';
+import { pageLayout, tagTone } from '../genui.js';
 
 const STORE = 'agentos.savedScenes';
 
@@ -52,9 +53,11 @@ function checklistDone(spec) {
   return items.length ? Math.round((items.filter((i) => i.done).length / items.length) * 100) : 0;
 }
 
-function drawBlock(b, spec, onChange, onButton) {
+const num = (n) => (Number.isFinite(n) ? n.toLocaleString('en-US') : String(n));
+
+function drawBlock(b, spec, onChange, onButton, { lead = false, primary = false } = {}) {
   switch (b.type) {
-    case 'text': return h('p', 'g-text', b.text);
+    case 'text': return h('p', lead ? 'g-text g-lead' : 'g-text', b.text);
     case 'stat': {
       const el = h('div', 'g-stat');
       el.append(h('b', null, b.value), h('span', null, b.label));
@@ -74,14 +77,29 @@ function drawBlock(b, spec, onChange, onButton) {
       return el;
     }
     case 'checklist': {
+      if (!b.items.length) return h('p', 'g-empty', 'ยังไม่มีรายการ · No items yet. Say "add …"');
       const ul = h('ul', 'g-checklist');
       b.items.forEach((item) => {
         const li = h('li', item.done ? 'done' : '');
+        li.setAttribute('role', 'checkbox');
+        li.setAttribute('aria-checked', String(item.done));
+        li.tabIndex = 0;
         const box = h('span', 'g-box', item.done ? '✓' : '');
-        li.append(box, h('span', 'g-item', item.text));
-        if (item.tag) li.append(h('em', `g-tag g-tag-${item.tag.toLowerCase()}`, item.tag));
-        if (item.due) li.append(h('small', 'g-due', item.due));
-        li.addEventListener('click', () => { item.done = !item.done; onChange(); });
+        const main = h('span', 'g-item-main');
+        main.append(h('span', 'g-item', item.text));
+        // Tag and due date sit under the text as small chips, so long items keep the full width.
+        if (item.tag || item.due) {
+          const meta = h('span', 'g-meta');
+          if (item.tag) meta.append(h('em', `g-tag g-tag-${tagTone(item.tag)}`, item.tag));
+          if (item.due) meta.append(h('small', 'g-due', item.due));
+          main.append(meta);
+        }
+        li.append(box, main);
+        const toggle = () => { item.done = !item.done; onChange(); };
+        li.addEventListener('click', toggle);
+        li.addEventListener('keydown', (e) => {
+          if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle(); }
+        });
         ul.append(li);
       });
       return ul;
@@ -100,10 +118,18 @@ function drawBlock(b, spec, onChange, onButton) {
       const el = h('div', 'g-chart');
       const max = Math.max(1, ...b.bars.map((x) => x.value));
       b.bars.forEach((x) => {
+        // Bar and its value sit in a track, so every bar shares one baseline.
         const col = h('div', 'g-col');
+        const pct = Math.round((x.value / max) * 100);
+        const track = h('div', 'g-track');
         const bar = h('i');
-        bar.style.height = `${Math.round((x.value / max) * 100)}%`;
-        col.append(h('b', null, x.value), bar, h('span', null, x.label));
+        bar.style.height = `${pct}%`;
+        const value = h('b', null, num(x.value));
+        value.style.bottom = `${pct}%`;
+        track.append(value, bar);
+        const label = h('span', null, x.label);
+        label.title = x.label;
+        col.append(track, label);
         el.append(col);
       });
       return el;
@@ -116,7 +142,8 @@ function drawBlock(b, spec, onChange, onButton) {
       return el;
     }
     case 'button': {
-      const btn = h('button', 'btn btn-allow g-button', b.label);
+      // One primary action per page; any other button is drawn as a quieter outline.
+      const btn = h('button', primary ? 'btn btn-allow g-button' : 'btn g-button g-button-secondary', b.label);
       btn.addEventListener('click', () => onButton(b.label));
       return btn;
     }
@@ -154,12 +181,14 @@ function drawBlock(b, spec, onChange, onButton) {
       box.append(h('span', 'g-sources-label', 'Sources'));
       const ul = h('ul');
       b.items.forEach((i) => {
-        const a = h('a', null, i.title);
+        // The whole row is the link, so it is a full-size tap target.
+        const a = h('a');
         a.href = i.url;
         a.target = '_blank';
         a.rel = 'noopener noreferrer';
+        a.append(h('span', null, i.title), h('small', null, new URL(i.url).hostname.replace(/^www\./, '')));
         const li = h('li');
-        li.append(a, h('small', null, new URL(i.url).hostname.replace(/^www\./, '')));
+        li.append(a);
         ul.append(li);
       });
       box.append(ul);
@@ -204,16 +233,30 @@ export default function mountGenerated(el, data, agent) {
     badge.dataset.testid = 'g-badge';
     const title = h('h1', 'g-title', spec.title);
     title.dataset.testid = 'g-title';
-    el.append(badge, title);
-    if (spec.subtitle) el.append(h('p', 'g-subtitle', spec.subtitle));
-    spec.blocks.forEach((b) => el.append(drawBlock(b, spec, () => draw(), (label) => agent.request(label))));
+    const head = h('header', 'g-head');
+    head.append(badge, title);
+    if (spec.subtitle) head.append(h('p', 'g-subtitle', spec.subtitle));
+    const body = h('div', 'g-body');
+    const onChange = () => draw();
+    const onButton = (label) => agent.request(label);
+    pageLayout(spec.blocks).forEach((g) => {
+      if (g.kind === 'stats') {
+        const row = h('div', 'g-stats');
+        g.blocks.forEach((b) => row.append(drawBlock(b, spec, onChange, onButton)));
+        body.append(row);
+      } else body.append(drawBlock(g.block, spec, onChange, onButton, g));
+    });
+    el.append(head, body);
 
+    // The agent's question as chips: change ideas first, the answer that ends the step last.
     const chips = h('div', 'g-chips');
     chips.dataset.testid = 'g-chips';
     const options =
       stage === 'keep' ? ['Keep it', 'No thanks'] : stage === 'review' ? [...spec.proposals.map((p) => p.label), 'I like it'] : [];
+    const finalChip = stage === 'keep' ? 'Keep it' : 'I like it';
+    if (options.length) chips.append(h('p', 'g-chips-label', stage === 'keep' ? 'เก็บหน้านี้ไว้ใช้ไหม · Keep this page?' : 'ปรับหน้านี้ · Change this page'));
     options.forEach((label) => {
-      const chip = h('button', 'g-chip', label);
+      const chip = h('button', label === finalChip ? 'g-chip g-chip-final' : 'g-chip', label);
       chip.addEventListener('click', () => agent.request(label));
       chips.append(chip);
     });
