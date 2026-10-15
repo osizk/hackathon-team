@@ -4,6 +4,7 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: 'tests',
   timeout: 30_000,
+  workers: 1,
   use: { baseURL: 'http://localhost:5174', channel: 'chrome', headless: true, viewport: { width: 500, height: 900 } },
   webServer: {
     command: 'node server.js',

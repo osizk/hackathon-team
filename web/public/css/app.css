@@ -218,3 +218,44 @@ body.listening .mic { animation: pulse 1.2s ease-out infinite; }
 .flight-done .big-check { margin: 0 auto; width: 84px; height: 84px; font-size: 44px; }
 .flight-done h2 { margin: 10px 0 2px; }
 .flight-done p { margin: 0; color: var(--ink-2); }
+
+/* ---------- Training ---------- */
+.scene-training { background: linear-gradient(180deg, #f3efff, var(--card) 40%); }
+.sleep { display: flex; align-items: center; gap: 18px; }
+.ring {
+  --p: 80; width: 112px; height: 112px; border-radius: 50%; flex: none;
+  background: conic-gradient(#7c5cff calc(var(--p) * 1%), #e6e0ff 0);
+  display: grid; place-content: center; text-align: center; position: relative;
+}
+.ring::before { content: ""; position: absolute; inset: 11px; border-radius: 50%; background: var(--card); }
+.ring b, .ring small { position: relative; }
+.ring b { font-size: 34px; line-height: 1; }
+.ring small { color: var(--ink-2); }
+.sleep ul { list-style: none; margin: 0; padding: 0; font-size: 14px; line-height: 1.8; }
+.sleep .good { color: var(--ok); font-weight: 700; }
+.train-h { margin: 16px 0 6px; font-size: 18px; }
+.plan { list-style: none; margin: 0; padding: 0; }
+.plan li { display: flex; gap: 10px; align-items: baseline; padding: 9px 0; border-bottom: 1px solid #ebe5f7; font-size: 15px; }
+.plan b { width: 52px; }
+.plan small { margin-left: auto; color: var(--ink-2); }
+.race { margin-top: 14px; border-radius: 20px; overflow: hidden; background: #fff; box-shadow: 0 8px 24px rgba(80, 60, 140, .12); transition: box-shadow .4s, transform .4s; }
+.race > img { display: block; width: 100%; height: 120px; object-fit: cover; }
+.race-body { padding: 12px 16px 16px; }
+.race h3 { margin: 0; }
+.race p { margin: 4px 0 0; font-size: 13px; color: var(--ink-2); }
+.race.expanding { box-shadow: 0 0 0 3px #7c5cff, 0 12px 30px rgba(80, 60, 140, .2); }
+.race-form { display: grid; gap: 8px; margin-top: 12px; animation: rise-in .4s ease both; }
+.race-form label { display: grid; gap: 3px; font-size: 12px; color: var(--ink-2); }
+.race-form input[readonly] { padding: 9px 11px; border-radius: 10px; border: 1px solid #ddd5ee; font: 15px var(--font); color: var(--ink); background: #faf8ff; }
+.race-form input.typing { border-color: #7c5cff; box-shadow: 0 0 0 3px rgba(124, 92, 255, .2); }
+.race-form .agree { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--ink); }
+.race-form .btn { margin-top: 4px; flex: none; }
+.race-form .btn.pressed { transform: scale(.96); background: #7c5cff; }
+.race-done { text-align: center; padding-top: 10px; }
+.treadmill { width: 220px; height: 220px; object-fit: contain; animation: jog .45s ease-in-out infinite; }
+@keyframes jog { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.race-done h2 { margin: 6px 0 2px; }
+.race-done p { margin: 0; color: var(--ink-2); }
+.confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.confetti i { position: absolute; top: -12px; width: 8px; height: 14px; border-radius: 2px; animation: fall 2.4s ease-in forwards; }
+@keyframes fall { to { transform: translate(var(--x), 900px) rotate(var(--r)); opacity: .8; } }

@@ -6,8 +6,8 @@ test('hectic week: list builds from email, slides into payment, Allow folds home
   await say(page, 'this week is hectic');
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'shopping');
   await expect(page.locator('[data-testid=mail]')).toBeVisible();
-  await expect(page.locator('[data-testid=shop-items] li')).toHaveCount(6);
-  await expect(page.locator('[data-testid=shop-total]')).toHaveText('฿849');
+  // The list builds item by item, then slides up into payment with every item.
+  await expect(page.locator('[data-testid=shop-items] li').first()).toBeAttached();
   await expect(page.locator('body')).toHaveAttribute('data-scene', 'payment', { timeout: 10_000 });
   await expect(page.locator('[data-testid=pay-total]')).toHaveText('฿849');
   await expect(page.locator('.pay-items li')).toHaveCount(6);

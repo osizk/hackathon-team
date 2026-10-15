@@ -1,0 +1,389 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <!-- Soft floor contact shadow under treadmill -->
+    <radialGradient id="floorShadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#26201D" stop-opacity="0.25" />
+      <stop offset="60%" stop-color="#362E2A" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#362E2A" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Main plush body gradient (matching mascot.svg) -->
+    <radialGradient id="bodyPlush" cx="38%" cy="30%" r="68%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="25%" stop-color="#FFFDF7" />
+      <stop offset="55%" stop-color="#FBF4E4" />
+      <stop offset="80%" stop-color="#EEDEC5" />
+      <stop offset="100%" stop-color="#DDC8AE" />
+    </radialGradient>
+
+    <!-- Soft tummy highlight glow -->
+    <radialGradient id="tummyGlow" cx="48%" cy="40%" r="58%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.75" />
+      <stop offset="55%" stop-color="#FFFDF8" stop-opacity="0.32" />
+      <stop offset="100%" stop-color="#FFF8EC" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Ear gradients -->
+    <radialGradient id="earLeftGrad" cx="40%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#FFFDF8" />
+      <stop offset="60%" stop-color="#F7EFE1" />
+      <stop offset="100%" stop-color="#DECBB2" />
+    </radialGradient>
+    <radialGradient id="earRightGrad" cx="60%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#FFFDF8" />
+      <stop offset="60%" stop-color="#F7EFE1" />
+      <stop offset="100%" stop-color="#DECBB2" />
+    </radialGradient>
+
+    <!-- Inner ear pink blush -->
+    <radialGradient id="innerEar" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#F8CFC6" stop-opacity="0.85" />
+      <stop offset="65%" stop-color="#F5C4B9" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#F5C4B9" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Rosy cheeks -->
+    <radialGradient id="rosyCheek" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FF93A2" stop-opacity="0.75" />
+      <stop offset="55%" stop-color="#FFA8B5" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#FFA8B5" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Limbs -->
+    <linearGradient id="armFront" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="45%" stop-color="#FDF6EA" />
+      <stop offset="100%" stop-color="#E2CFB7" />
+    </linearGradient>
+    <linearGradient id="armBack" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBF4E6" />
+      <stop offset="50%" stop-color="#EEDEC5" />
+      <stop offset="100%" stop-color="#D7C1A4" />
+    </linearGradient>
+    <linearGradient id="legFront" x1="20%" y1="0%" x2="60%" y2="100%">
+      <stop offset="0%" stop-color="#FFFDF7" />
+      <stop offset="50%" stop-color="#F4E8D7" />
+      <stop offset="100%" stop-color="#DDC8AE" />
+    </linearGradient>
+    <linearGradient id="legBack" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F7EEE0" />
+      <stop offset="50%" stop-color="#E8D5B6" />
+      <stop offset="100%" stop-color="#CEB79B" />
+    </linearGradient>
+
+    <!-- Sweatband gradients -->
+    <linearGradient id="sweatband" x1="0%" y1="0%" x2="100%" y2="15%">
+      <stop offset="0%" stop-color="#FF4D4D" />
+      <stop offset="45%" stop-color="#EE2B2B" />
+      <stop offset="100%" stop-color="#C51616" />
+    </linearGradient>
+    <linearGradient id="sweatRibbon" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#EE2B2B" />
+      <stop offset="100%" stop-color="#991B1B" />
+    </linearGradient>
+
+    <!-- Sweat drop -->
+    <linearGradient id="sweatDrop" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#E0F2FE" />
+      <stop offset="45%" stop-color="#7DD3FC" />
+      <stop offset="100%" stop-color="#0284C7" />
+    </linearGradient>
+
+    <!-- Treadmill Gradients (Modern sleek grey styling) -->
+    <linearGradient id="tmFrameSide" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#94A3B8" />
+      <stop offset="30%" stop-color="#64748B" />
+      <stop offset="85%" stop-color="#475569" />
+      <stop offset="100%" stop-color="#334155" />
+    </linearGradient>
+    <linearGradient id="tmFrameBase" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#475569" />
+      <stop offset="100%" stop-color="#1E293B" />
+    </linearGradient>
+    <linearGradient id="tmBelt" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1E2229" />
+      <stop offset="8%" stop-color="#2B323D" />
+      <stop offset="92%" stop-color="#2B323D" />
+      <stop offset="100%" stop-color="#1E2229" />
+    </linearGradient>
+    <linearGradient id="tmMotorCover" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#64748B" />
+      <stop offset="45%" stop-color="#475569" />
+      <stop offset="100%" stop-color="#334155" />
+    </linearGradient>
+    <linearGradient id="tmPost" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#94A3B8" />
+      <stop offset="50%" stop-color="#64748B" />
+      <stop offset="100%" stop-color="#475569" />
+    </linearGradient>
+
+    <!-- Motion fade line -->
+    <linearGradient id="motionFade" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#94A3B8" stop-opacity="0" />
+      <stop offset="50%" stop-color="#CBD5E1" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#94A3B8" stop-opacity="0.85" />
+    </linearGradient>
+
+    <!-- Star sparkle gradient -->
+    <linearGradient id="sparkleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE494" />
+      <stop offset="100%" stop-color="#FFBE42" />
+    </linearGradient>
+  </defs>
+
+  <!-- 1. Motion Speed Streaks (Behind mascot) -->
+  <g opacity="0.85">
+    <path d="M 40 142 Q 78 140 110 142" stroke="url(#motionFade)" stroke-width="2.6" stroke-linecap="round" fill="none" />
+    <path d="M 22 165 Q 70 163 108 165" stroke="url(#motionFade)" stroke-width="3.2" stroke-linecap="round" fill="none" />
+    <path d="M 46 190 Q 86 188 122 190" stroke="url(#motionFade)" stroke-width="2.8" stroke-linecap="round" fill="none" />
+    <path d="M 32 215 Q 76 213 115 215" stroke="url(#motionFade)" stroke-width="3" stroke-linecap="round" fill="none" />
+    <path d="M 52 238 Q 90 236 126 238" stroke="url(#motionFade)" stroke-width="2.4" stroke-linecap="round" fill="none" />
+    <path d="M 72 125 Q 94 124 114 125" stroke="#CBD5E1" stroke-width="1.8" stroke-linecap="round" opacity="0.5" fill="none" />
+    <path d="M 65 260 Q 92 259 112 260" stroke="#CBD5E1" stroke-width="1.8" stroke-linecap="round" opacity="0.45" fill="none" />
+  </g>
+
+  <!-- 2. Floor Contact Shadow directly under Treadmill Base -->
+  <ellipse cx="202" cy="320" rx="142" ry="7.5" fill="url(#floorShadow)" />
+
+  <!-- 3. Treadmill Background Elements (Far Upright Post & Far Handrail) -->
+  <g>
+    <!-- Far upright post -->
+    <path d="M 286 295 L 298 195" stroke="#475569" stroke-width="6.5" stroke-linecap="round" />
+    <!-- Far handrail -->
+    <path d="M 298 200 L 254 210" stroke="#475569" stroke-width="6" stroke-linecap="round" />
+  </g>
+
+  <!-- 4. Mascot: Back Limbs (Behind Body) -->
+  <!-- Back Arm (Swinging high behind body) -->
+  <g>
+    <!-- Motion whoosh behind back paw -->
+    <path d="M 98 174 C 92 184 93 194 100 201" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.55" />
+    <!-- Back Arm shape -->
+    <path d="M 145 190 C 130 184 115 180 105 188 C 98 194 99 203 108 207 C 120 211 136 208 148 204 Z" fill="url(#armBack)" />
+    <!-- Clenched back paw -->
+    <circle cx="104" cy="195" r="9.5" fill="url(#armBack)" />
+    <path d="M 103 192 C 107 194 107 198 104 201" stroke="#BAA287" stroke-width="1.6" stroke-linecap="round" fill="none" />
+  </g>
+
+  <!-- Back Leg (Kicking backward-upward off treadmill belt) -->
+  <g>
+    <!-- Motion arc at kicked back foot -->
+    <path d="M 108 274 C 117 283 128 281 138 276" stroke="#CBD5E1" stroke-width="2.2" stroke-linecap="round" fill="none" opacity="0.6" />
+    <!-- Leg beam -->
+    <path d="M 158 240 C 146 248 132 258 120 265 C 112 270 114 279 123 280 C 134 280 147 269 162 257 Z" fill="url(#legBack)" />
+    <!-- Chubby foot sole pad -->
+    <ellipse cx="121" cy="272" rx="12" ry="8" transform="rotate(28 121 272)" fill="url(#legBack)" />
+    <ellipse cx="120" cy="272" rx="7" ry="4.8" transform="rotate(28 120 272)" fill="#F5DDD2" opacity="0.65" />
+  </g>
+
+  <!-- 5. Mascot: Head Back Ears -->
+  <!-- Left Ear -->
+  <g>
+    <path d="M 126 128 C 114 102 125 76 145 76 C 163 76 172 96 166 120 Z" fill="url(#earLeftGrad)" />
+    <ellipse cx="145" cy="100" rx="7.5" ry="11" transform="rotate(-12 145 100)" fill="url(#innerEar)" />
+  </g>
+
+  <!-- Right Ear -->
+  <g>
+    <path d="M 234 120 C 228 96 237 76 255 76 C 275 76 284 102 272 128 Z" fill="url(#earRightGrad)" />
+    <ellipse cx="255" cy="100" rx="7.5" ry="11" transform="rotate(12 255 100)" fill="url(#innerEar)" />
+  </g>
+
+  <!-- 6. Mascot: Chubby Dumpling Plush Body -->
+  <g>
+    <!-- Running dumpling body with dynamic forward lean -->
+    <path d="M 194 102 
+             C 180 95 160 95 138 114 
+             C 110 138 102 180 110 218 
+             C 118 256 150 275 192 274 
+             C 232 273 266 251 272 214 
+             C 278 176 268 134 240 112 
+             C 220 95 204 98 194 102 Z" 
+          fill="url(#bodyPlush)" />
+
+    <!-- Top Dumpling Pinch Crease (signature detail) -->
+    <path d="M 191 101 C 193 107 196 107 198 101" 
+          fill="none" 
+          stroke="#DAC5AA" 
+          stroke-width="2.5" 
+          stroke-linecap="round" />
+
+    <!-- Soft Tummy Highlight Glow -->
+    <ellipse cx="200" cy="208" rx="58" ry="43" transform="rotate(5 200 208)" fill="url(#tummyGlow)" />
+  </g>
+
+  <!-- 7. Tiny Red Sweatband (Across forehead + trailing flutter) -->
+  <g>
+    <!-- Fluttering ribbon tails behind (Left) -->
+    <path d="M 126 130 C 110 126 98 120 85 125 C 79 128 81 134 89 133 C 100 131 112 135 124 139 Z" fill="url(#sweatRibbon)" />
+    <path d="M 125 136 C 108 136 94 134 83 143 C 78 147 82 153 90 149 C 101 144 112 146 124 144 Z" fill="url(#sweatRibbon)" />
+    <!-- Ribbon knot -->
+    <ellipse cx="127" cy="136" rx="4.5" ry="6" transform="rotate(-8 127 136)" fill="#B91C1C" />
+
+    <!-- Main Headband across forehead -->
+    <path d="M 126 130 
+             C 158 138 210 136 248 119 
+             C 251 124 252 129 249 134 
+             C 208 152 156 153 125 142 Z" 
+          fill="url(#sweatband)" />
+
+    <!-- Crisp White Center Racing Stripe -->
+    <path d="M 125.5 135 C 158 143 209 141 248.5 125" 
+          stroke="#FFFFFF" 
+          stroke-width="2.6" 
+          stroke-linecap="round" 
+          fill="none" 
+          opacity="0.95" />
+  </g>
+
+  <!-- 8. Mascot Face (Cute, happy running expression) -->
+  <g>
+    <!-- Rosy Glowing Cheeks (Soft radial blush) -->
+    <ellipse cx="152" cy="178" rx="15" ry="9.5" transform="rotate(3 152 178)" fill="url(#rosyCheek)" />
+    <ellipse cx="234" cy="168" rx="15" ry="9.5" transform="rotate(3 234 168)" fill="url(#rosyCheek)" />
+
+    <!-- Eyes (Matching iconic mascot.svg style with lively running happiness) -->
+    <!-- Left Eye -->
+    <g>
+      <ellipse cx="173" cy="162" rx="5" ry="5.5" fill="#2C211D" />
+      <circle cx="171.5" cy="160" r="1.8" fill="#FFFFFF" />
+      <circle cx="174.6" cy="164" r="0.8" fill="#FFFFFF" opacity="0.8" />
+      <path d="M 168 153 C 171 150 176 150 179 153" stroke="#6B4E3D" stroke-width="1.8" stroke-linecap="round" fill="none" />
+    </g>
+
+    <!-- Right Eye -->
+    <g>
+      <ellipse cx="218" cy="156" rx="5" ry="5.5" fill="#2C211D" />
+      <circle cx="216.5" cy="154" r="1.8" fill="#FFFFFF" />
+      <circle cx="219.6" cy="158" r="0.8" fill="#FFFFFF" opacity="0.8" />
+      <path d="M 213 147 C 216 144 221 144 224 147" stroke="#6B4E3D" stroke-width="1.8" stroke-linecap="round" fill="none" />
+    </g>
+
+    <!-- Happy Open Joyful Smile -->
+    <g>
+      <path d="M 190 170 
+               C 197 170 203 172 206 175 
+               C 202 184 194 185 189 178 
+               C 188 174 188 171 190 170 Z" 
+            fill="#5E1D24" />
+      <!-- Tiny rosy tongue -->
+      <path d="M 191 178 C 195 176 199 176 203 178 C 201 183 195 183 191 178 Z" fill="#FF8CA3" />
+      <path d="M 188 171 C 193 169 200 169 207 174" stroke="#4A2E24" stroke-width="2" stroke-linecap="round" fill="none" />
+    </g>
+
+    <!-- Tiny Flying Sweat Bead (Effort & cute athletic energy!) -->
+    <g transform="translate(112, 116) rotate(-22)">
+      <path d="M 0 0 C -3.5 5 -4 9 -1.5 12 C 1 15 6 14 7.5 10.5 C 9 7 5 3 0 0 Z" fill="url(#sweatDrop)" />
+      <circle cx="1.5" cy="10" r="1.2" fill="#FFFFFF" opacity="0.85" />
+    </g>
+  </g>
+
+  <!-- 9. Mascot: Front Limbs (In front of body) -->
+  <!-- Front Leg (Stepping down onto treadmill belt) -->
+  <g>
+    <!-- Leg column -->
+    <path d="M 194 246 C 203 248 214 257 219 268 C 222 274 219 282 212 284 C 203 286 194 277 190 268 Z" fill="url(#legFront)" />
+    <!-- Front Foot contacting belt smoothly -->
+    <ellipse cx="218" cy="285" rx="15" ry="8.5" transform="rotate(-5 218 285)" fill="url(#legFront)" />
+    <!-- Contact shadow on belt -->
+    <ellipse cx="218" cy="292" rx="13" ry="3.5" fill="#0C1017" opacity="0.65" />
+  </g>
+
+  <!-- Front Arm (Bent forward, pumping with cute determination) -->
+  <g>
+    <!-- Soft shadow on body -->
+    <ellipse cx="228" cy="204" rx="13" ry="11" fill="#8C6E52" opacity="0.18" />
+    <!-- Arm limb: pumping forward/upward -->
+    <path d="M 218 200 
+             C 234 196 248 198 255 204 
+             C 260 210 258 219 248 221 
+             C 236 223 226 215 220 208 Z" 
+          fill="url(#armFront)" />
+    <!-- Clenched front paw -->
+    <circle cx="253" cy="207" r="10" fill="url(#armFront)" />
+    <path d="M 251 203 C 255 205 255 209 251 211" stroke="#D3BD9F" stroke-width="1.8" stroke-linecap="round" fill="none" />
+    <path d="M 255 207 C 258 209 258 212 255 214" stroke="#D3BD9F" stroke-width="1.6" stroke-linecap="round" fill="none" />
+  </g>
+
+  <!-- 10. Small Grey Treadmill (Foreground Deck, Belt & Console) -->
+  <g>
+    <!-- Rear Roller (Left end cap) -->
+    <ellipse cx="84" cy="298" rx="8" ry="10" fill="#334155" />
+    <ellipse cx="84" cy="298" rx="5" ry="7" fill="#1E293B" />
+
+    <!-- Main Treadmill Running Deck Chassis -->
+    <path d="M 84 290 
+             L 282 290 
+             C 288 290 294 293 296 298 
+             L 296 302 
+             C 294 308 288 311 280 311 
+             L 84 311 
+             C 76 311 72 306 72 300.5 
+             C 72 295 76 290 84 290 Z" 
+          fill="url(#tmFrameSide)" />
+
+    <!-- Dark bottom chassis lip & shadow line -->
+    <rect x="82" y="306" width="204" height="5" rx="2" fill="url(#tmFrameBase)" />
+
+    <!-- Sturdy rubber feet resting on floor -->
+    <rect x="92" y="311" width="20" height="4.5" rx="2" fill="#1E293B" />
+    <rect x="264" y="311" width="22" height="4.5" rx="2" fill="#1E293B" />
+
+    <!-- Treadmill Moving Belt (Recessed track) -->
+    <rect x="90" y="289" width="186" height="11" rx="2.5" fill="url(#tmBelt)" />
+
+    <!-- Belt Motion Speed Streaks (Fast spinning track) -->
+    <g opacity="0.65">
+      <line x1="102" y1="293" x2="140" y2="293" stroke="#64748B" stroke-width="1.8" stroke-linecap="round" />
+      <line x1="152" y1="295" x2="198" y2="295" stroke="#94A3B8" stroke-width="2.2" stroke-linecap="round" />
+      <line x1="228" y1="292" x2="262" y2="292" stroke="#64748B" stroke-width="1.8" stroke-linecap="round" />
+      <line x1="122" y1="297" x2="165" y2="297" stroke="#475569" stroke-width="1.6" stroke-linecap="round" />
+    </g>
+
+    <!-- Front Motor Housing (Curved aerodynamic front shroud) -->
+    <path d="M 270 281 
+             C 286 281 308 285 316 293 
+             C 322 300 320 308 314 312 
+             C 306 314 290 314 276 312 
+             Z" 
+          fill="url(#tmMotorCover)" />
+    <path d="M 276 283 C 291 284 306 287 313 294" stroke="#94A3B8" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.75" />
+
+    <!-- Near Upright Post (Rises to console) -->
+    <path d="M 292 304 L 305 196" stroke="url(#tmPost)" stroke-width="7.5" stroke-linecap="round" />
+    <path d="M 292 304 L 305 196" stroke="#CBD5E1" stroke-width="1.4" stroke-linecap="round" opacity="0.55" />
+
+    <!-- Near Handrail (Bar extending toward runner at waist height) -->
+    <path d="M 304 214 L 268 223" stroke="url(#tmPost)" stroke-width="6.5" stroke-linecap="round" />
+    <circle cx="268" cy="223" r="3.2" fill="#475569" />
+
+    <!-- Digital Console / Display Screen -->
+    <g transform="translate(303, 178) rotate(-14)">
+      <!-- Console housing -->
+      <rect x="-7" y="-12" width="32" height="23" rx="4.5" fill="#1E293B" stroke="#475569" stroke-width="1.8" />
+      <!-- Digital screen display -->
+      <rect x="-3.5" y="-8.5" width="25" height="16" rx="2" fill="#090D14" />
+      <!-- Glowing cyan heart rate / speed readout line -->
+      <path d="M -1 0 L 3 0 L 5 -4 L 8 3 L 11 -2 L 13 0 L 18 0" stroke="#00F5D4" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+      <!-- Tiny digital data LED dots -->
+      <circle cx="1" cy="4" r="1" fill="#38BDF8" />
+      <circle cx="4.5" cy="4" r="1" fill="#38BDF8" />
+      <circle cx="8" cy="4" r="1" fill="#38BDF8" />
+      <!-- Red emergency stop button -->
+      <circle cx="15" cy="4" r="1.8" fill="#EF4444" />
+    </g>
+  </g>
+
+  <!-- 11. Joyful AI Sparkles (Signature Mascot Element) -->
+  <g>
+    <!-- Big star (Top right) -->
+    <path d="M 326 90 Q 326 99 335 99 Q 326 99 326 108 Q 326 99 317 99 Q 326 99 326 90 Z" fill="url(#sparkleGrad)" opacity="0.9" />
+    <circle cx="339" cy="85" r="1.6" fill="#FFE8A3" />
+
+    <!-- Small star (Mid right, forward momentum) -->
+    <path d="M 342 148 Q 342 154 348 154 Q 342 154 342 160 Q 342 154 336 154 Q 342 154 342 148 Z" fill="url(#sparkleGrad)" opacity="0.8" />
+
+    <!-- Tiny sparkle accent -->
+    <path d="M 272 186 Q 272 190 276 190 Q 272 190 272 194 Q 272 190 268 190 Q 272 190 272 186 Z" fill="#FBBF24" opacity="0.75" />
+  </g>
+</svg>

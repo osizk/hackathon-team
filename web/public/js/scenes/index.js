@@ -3,5 +3,6 @@
 import payment from './payment.js';
 import shopping from './shopping.js';
 import flight from './flight.js';
+import training from './training.js';
 
-export const SCENES = { payment, shopping, flight };
+export const SCENES = { payment, shopping, flight, training };

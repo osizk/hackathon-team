@@ -21,9 +21,9 @@ export default function mountFlight(el, data, agent) {
     </article>
     <ol class="timeline" data-testid="timeline">
       <li class="tl-now"><time>now</time>Delay found</li>
-      <li class="tl-old"><time>${newArrive}</time>Land ${old.to} on ${old.code}, late</li>
       <li class="tl-new" hidden><time>${proposed.arrive}</time>Land ${proposed.to} on ${proposed.code}</li>
-      <li class="tl-meet"><time>${data.meeting.split(' ').find((w) => /\d:\d/.test(w)) || ''}</time>${data.meeting}</li>
+      <li class="tl-meet"><time>${data.meetingTime}</time>${data.meeting}</li>
+      <li class="tl-old"><time>${newArrive}</time>Land ${old.to} on ${old.code}, misses the meeting</li>
     </ol>
     <article class="ticket offer" data-testid="offer">
       <div class="ticket-row"><b>${proposed.code}</b><span class="pill ok">Seat held</span></div>
