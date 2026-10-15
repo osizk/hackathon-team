@@ -1,8 +1,9 @@
 // Speed check in Chrome: how fast the page paints, how fast the live agent first speaks, and how
 // fast it answers once warm. Same numbers before and after a speed change.
-//   node scripts/measure.js [--base http://localhost:5173] [--runs 1] [--offline]
+//   node scripts/measure.js [--base http://localhost:5173] [--runs 1] [--offline] [--slow]
 // Live runs join the real ElevenLabs agent: each run uses one session of the daily limit.
-// --offline only measures the page load (no session).
+// --offline only measures the page load (no session). --slow: a phone on 4G (150 ms round trip,
+// 9 Mbit/s down), so a local server shows what the network costs.
 import { chromium } from '@playwright/test';
 
 const arg = (name, fallback) => {
@@ -12,6 +13,7 @@ const arg = (name, fallback) => {
 const BASE = arg('--base', 'http://localhost:5173');
 const RUNS = Number(arg('--runs', 1));
 const OFFLINE = process.argv.includes('--offline');
+const SLOW = process.argv.includes('--slow');
 // A turn that opens a prebuilt scene (first suggestion), then two short warm turns.
 const WARM = ['สวัสดี วันนี้วันอะไร', 'ขอบคุณนะ'];
 
@@ -36,6 +38,11 @@ const median = (xs) => { const s = xs.filter((x) => x != null).sort((a, b) => a 
 async function oneRun(browser) {
   const ctx = await browser.newContext({ viewport: { width: 430, height: 900 }, permissions: ['microphone'] });
   const page = await ctx.newPage();
+  if (SLOW) {
+    const cdp = await ctx.newCDPSession(page);
+    await cdp.send('Network.enable');
+    await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 150, downloadThroughput: 9e6 / 8, uploadThroughput: 1.5e6 / 8 });
+  }
   await page.addInitScript(marks);
   await page.goto(`${BASE}/?script=off`);
   await page.waitForFunction(() => document.body.dataset.ready === '1', null, { timeout: 20000 });
@@ -50,7 +57,10 @@ async function oneRun(browser) {
   if (OFFLINE || load.brain !== 'agent-ready') { await ctx.close(); return out; }
 
   // Cold: tap the first suggestion, as a judge would. Clock starts at the tap.
-  const tap = await page.evaluate(() => { const t = performance.now(); document.querySelector('#suggest button').click(); return t; });
+  // A real tap (pointerdown, then click); the clock starts at pointerdown, so nothing is fetched ahead.
+  await page.evaluate(() => window.addEventListener('pointerdown', () => { window.__tap ??= performance.now(); }, { capture: true }));
+  await page.click('#suggest button');
+  const tap = await page.evaluate(() => window.__tap);
   const after = (k, from) => page.waitForFunction(([k, from]) => window.__marks.find((m) => m.k.startsWith(k) && m.t > from)?.t, [k, from], { timeout: 40000, polling: 50 }).then((h) => h.jsonValue()).catch(() => null);
   const connected = await after('brain:agent', tap);
   const spoke = await after('speaking:true', tap);

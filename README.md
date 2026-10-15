@@ -219,6 +219,10 @@ To test the live agent end to end in Chrome, run
 `npm run smoke:live -- --wav my-thai-request.wav`. The WAV is played as the
 microphone.
 
+To check speed in Chrome (first paint, time to ready, first tap to the agent's voice and scene,
+warm reply), run `npm run measure -- --base <url> --runs 3`. Each live run uses one session of
+the daily limit; `--offline` measures only the page load, and `--slow` simulates a phone on 4G.
+
 ### Presenter controls (team only)
 
 Judges never need these. They work only when the page is opened with
