@@ -1,0 +1,14 @@
+import { defineConfig } from '@playwright/test';
+
+// The app must run with no API keys, so the test server gets empty keys.
+export default defineConfig({
+  testDir: 'tests',
+  timeout: 30_000,
+  use: { baseURL: 'http://localhost:5174', channel: 'chrome', headless: true, viewport: { width: 500, height: 900 } },
+  webServer: {
+    command: 'node server.js',
+    url: 'http://localhost:5174/api/health',
+    reuseExistingServer: false,
+    env: { PORT: '5174', ANTHROPIC_API_KEY: '', ELEVENLABS_API_KEY: '', ELEVENLABS_VOICE_ID: '' },
+  },
+});

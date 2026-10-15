@@ -1,0 +1,195 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <!-- Soft floor contact shadow -->
+    <radialGradient id="groundShadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#4A3525" stop-opacity="0.22" />
+      <stop offset="60%" stop-color="#5E4432" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#5E4432" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Main plush body gradient -->
+    <radialGradient id="bodyPlush" cx="38%" cy="32%" r="68%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="25%" stop-color="#FFFDF7" />
+      <stop offset="55%" stop-color="#FBF4E4" />
+      <stop offset="80%" stop-color="#EEDEC5" />
+      <stop offset="100%" stop-color="#DDC8AE" />
+    </radialGradient>
+
+    <!-- Soft tummy highlight -->
+    <radialGradient id="tummyGlow" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.75" />
+      <stop offset="55%" stop-color="#FFFDF8" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#FFF8EC" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Ear gradients -->
+    <radialGradient id="earLeftGrad" cx="40%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#FFFDF8" />
+      <stop offset="60%" stop-color="#F7EFE1" />
+      <stop offset="100%" stop-color="#DECBB2" />
+    </radialGradient>
+    <radialGradient id="earRightGrad" cx="60%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#FFFDF8" />
+      <stop offset="60%" stop-color="#F7EFE1" />
+      <stop offset="100%" stop-color="#DECBB2" />
+    </radialGradient>
+
+    <!-- Soft inner ear pink tint -->
+    <radialGradient id="innerEar" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#F8CFC6" stop-opacity="0.8" />
+      <stop offset="65%" stop-color="#F5C4B9" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#F5C4B9" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Rosy cheeks gradient -->
+    <radialGradient id="rosyCheek" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FF93A2" stop-opacity="0.65" />
+      <stop offset="55%" stop-color="#FFA8B5" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#FFA8B5" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Arm gradients -->
+    <linearGradient id="armLeft" x1="15%" y1="10%" x2="85%" y2="90%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="45%" stop-color="#FDF6EA" />
+      <stop offset="100%" stop-color="#E2CFB7" />
+    </linearGradient>
+    <linearGradient id="armRight" x1="85%" y1="10%" x2="15%" y2="90%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="45%" stop-color="#FDF6EA" />
+      <stop offset="100%" stop-color="#E2CFB7" />
+    </linearGradient>
+
+    <!-- Little feet gradients -->
+    <linearGradient id="footLeft" x1="30%" y1="10%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#FFFDF7" />
+      <stop offset="50%" stop-color="#F4E8D7" />
+      <stop offset="100%" stop-color="#DDC8AE" />
+    </linearGradient>
+    <linearGradient id="footRight" x1="70%" y1="10%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#FFFDF7" />
+      <stop offset="50%" stop-color="#F4E8D7" />
+      <stop offset="100%" stop-color="#DDC8AE" />
+    </linearGradient>
+
+    <!-- Arm drop shadows for plush depth -->
+    <radialGradient id="limbShadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#7A5D44" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#7A5D44" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- AI sparkle shimmer -->
+    <linearGradient id="sparkleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE494" />
+      <stop offset="100%" stop-color="#FFBE42" />
+    </linearGradient>
+  </defs>
+
+  <!-- Ambient Ground Shadow -->
+  <ellipse cx="200" cy="326" rx="96" ry="14" fill="url(#groundShadow)" />
+
+  <!-- Back Ears -->
+  <!-- Left Ear -->
+  <g>
+    <path d="M 126 148 C 114 122 125 96 145 96 C 165 96 174 118 168 142 Z" fill="url(#earLeftGrad)" />
+    <ellipse cx="146" cy="122" rx="9" ry="13" transform="rotate(-12 146 122)" fill="url(#innerEar)" />
+  </g>
+
+  <!-- Right Ear -->
+  <g>
+    <path d="M 274 148 C 286 122 275 96 255 96 C 235 96 226 118 232 142 Z" fill="url(#earRightGrad)" />
+    <ellipse cx="254" cy="122" rx="9" ry="13" transform="rotate(12 254 122)" fill="url(#innerEar)" />
+  </g>
+
+  <!-- Chubby Dumpling Body -->
+  <path d="M 200 128 
+           C 186 121 165 119 142 139 
+           C 112 165 102 212 110 254 
+           C 118 296 154 318 200 318 
+           C 246 318 282 296 290 254 
+           C 298 212 288 165 258 139 
+           C 235 119 214 121 200 128 Z" 
+        fill="url(#bodyPlush)" />
+
+  <!-- Soft Dumpling Pinch Crease at Top -->
+  <path d="M 197 127 C 199 133 201 133 203 127" 
+        fill="none" 
+        stroke="#DAC5AA" 
+        stroke-width="2.5" 
+        stroke-linecap="round" 
+        opacity="0.8" />
+
+  <!-- Soft Tummy Highlight -->
+  <ellipse cx="200" cy="242" rx="68" ry="50" fill="url(#tummyGlow)" />
+
+  <!-- Little Stubby Feet -->
+  <!-- Left Foot -->
+  <g>
+    <ellipse cx="162" cy="314" rx="22" ry="11" fill="url(#groundShadow)" opacity="0.4" />
+    <ellipse cx="162" cy="311" rx="20" ry="12" fill="url(#footLeft)" />
+  </g>
+  <!-- Right Foot -->
+  <g>
+    <ellipse cx="238" cy="314" rx="22" ry="11" fill="url(#groundShadow)" opacity="0.4" />
+    <ellipse cx="238" cy="311" rx="20" ry="12" fill="url(#footRight)" />
+  </g>
+
+  <!-- Rosy Pink Cheeks -->
+  <ellipse cx="148" cy="204" rx="17" ry="10.5" fill="url(#rosyCheek)" />
+  <ellipse cx="252" cy="204" rx="17" ry="10.5" fill="url(#rosyCheek)" />
+
+  <!-- Tiny Dark Dot Eyes -->
+  <!-- Left Eye -->
+  <g>
+    <ellipse cx="171" cy="190" rx="5" ry="5.5" fill="#2C211D" />
+    <circle cx="169.5" cy="188" r="1.8" fill="#FFFFFF" />
+    <circle cx="172.6" cy="192" r="0.8" fill="#FFFFFF" opacity="0.8" />
+  </g>
+
+  <!-- Right Eye -->
+  <g>
+    <ellipse cx="229" cy="190" rx="5" ry="5.5" fill="#2C211D" />
+    <circle cx="227.5" cy="188" r="1.8" fill="#FFFFFF" />
+    <circle cx="230.6" cy="192" r="0.8" fill="#FFFFFF" opacity="0.8" />
+  </g>
+
+  <!-- Small Gentle Smile -->
+  <path d="M 194.5 198.5 C 196.8 203.2 203.2 203.2 205.5 198.5" 
+        fill="none" 
+        stroke="#4E372E" 
+        stroke-width="2.6" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" />
+
+  <!-- Little Stubby Arms (Front view, resting gently on chubby tummy) -->
+  <!-- Left Arm Shadow -->
+  <ellipse cx="146" cy="245" rx="19" ry="14" fill="url(#limbShadow)" />
+  <!-- Left Arm -->
+  <path d="M 126 220 
+           C 112 225 110 244 122 254 
+           C 134 263 154 257 159 244 
+           C 163 234 152 223 138 220 Z" 
+        fill="url(#armLeft)" />
+
+  <!-- Right Arm Shadow -->
+  <ellipse cx="254" cy="245" rx="19" ry="14" fill="url(#limbShadow)" />
+  <!-- Right Arm -->
+  <path d="M 274 220 
+           C 288 225 290 244 278 254 
+           C 266 263 246 257 241 244 
+           C 237 234 248 223 262 220 Z" 
+        fill="url(#armRight)" />
+
+  <!-- AI Assistant Floating Sparkles -->
+  <!-- Main Star Sparkle (Top Right) -->
+  <path d="M 314 116 Q 314 126 324 126 Q 314 126 314 136 Q 314 126 304 126 Q 314 126 314 116 Z" 
+        fill="url(#sparkleGrad)" 
+        opacity="0.9" />
+  <circle cx="330" cy="112" r="2" fill="#FFE8A3" opacity="0.85" />
+
+  <!-- Soft Accent Star Sparkle (Left) -->
+  <path d="M 90 156 Q 90 163 97 163 Q 90 163 90 170 Q 90 163 83 163 Q 90 163 90 156 Z" 
+        fill="url(#sparkleGrad)" 
+        opacity="0.75" />
+</svg>

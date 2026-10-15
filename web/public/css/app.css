@@ -1,0 +1,166 @@
+:root {
+  --cream: #f6efe4;
+  --cream-2: #efe3d0;
+  --ink: #2b2420;
+  --ink-2: #6f645b;
+  --accent: #ff7a59;
+  --accent-2: #ffb36b;
+  --ok: #23a26d;
+  --bad: #d9534f;
+  --card: #fffdf9;
+  --sky: #dcecff;
+  --radius: 22px;
+  --grow: 700ms;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Noto Sans Thai", "Sukhumvit Set", "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; height: 100%; }
+body {
+  font-family: var(--font);
+  color: var(--ink);
+  background: radial-gradient(1200px 800px at 50% 20%, #3a3330, #171310);
+  display: grid;
+  place-items: center;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+body.test { --grow: 40ms; }
+body.test *, body.test *::before, body.test *::after { animation-duration: 40ms !important; transition-duration: 40ms !important; }
+
+/* Phone frame on a laptop; full screen on a phone. */
+.phone {
+  position: relative;
+  width: 390px;
+  height: 844px;
+  max-height: 100vh;
+  border-radius: 46px;
+  overflow: hidden;
+  background: radial-gradient(120% 70% at 50% 35%, #fffaf2 0%, var(--cream) 55%, var(--cream-2) 100%);
+  box-shadow: 0 0 0 12px #0d0b0a, 0 30px 80px rgba(0, 0, 0, .5);
+}
+@media (max-width: 500px) {
+  body { background: var(--cream); }
+  .phone { width: 100vw; height: 100dvh; max-height: none; border-radius: 0; box-shadow: none; }
+}
+
+.statusbar {
+  position: absolute; inset: 0 0 auto 0; z-index: 40;
+  display: flex; justify-content: space-between;
+  padding: 16px 30px 0; font-size: 15px; font-weight: 600;
+  pointer-events: none;
+}
+.status-icons { letter-spacing: 1px; font-size: 12px; }
+
+/* ---------- Agent home ---------- */
+.home {
+  height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 60px 24px 40px;
+}
+.mascot-wrap { width: 280px; height: 280px; display: grid; place-items: center; transition: transform var(--grow) ease; }
+.mascot { width: 100%; height: 100%; object-fit: contain; animation: breathe 3.6s ease-in-out infinite; filter: drop-shadow(0 18px 18px rgba(120, 90, 60, .18)); }
+@keyframes breathe { 0%, 100% { transform: translateY(0) scale(1, 1); } 50% { transform: translateY(-4px) scale(1.025, .985); } }
+body.speaking .mascot { animation: talk .5s ease-in-out infinite, breathe 3.6s ease-in-out infinite; }
+@keyframes talk { 0%, 100% { scale: 1; } 50% { scale: 1.03 .98; } }
+body.listening .mascot-wrap { transform: scale(1.06); }
+body.thinking .mascot { animation: think 1s ease-in-out infinite; }
+@keyframes think { 0%, 100% { rotate: -3deg; } 50% { rotate: 3deg; } }
+body.scene-open .mascot-wrap { transform: scale(.7); }
+
+.wave { height: 44px; display: flex; gap: 5px; align-items: center; margin-top: 18px; opacity: .25; transition: opacity .3s; }
+.wave i { display: block; width: 6px; height: 8px; border-radius: 4px; background: linear-gradient(var(--accent), var(--accent-2)); }
+body.speaking .wave, body.listening .wave { opacity: 1; }
+body.speaking .wave i, body.listening .wave i { animation: bar .9s ease-in-out infinite; }
+.wave i:nth-child(2n) { animation-delay: -.3s !important; }
+.wave i:nth-child(3n) { animation-delay: -.6s !important; }
+.wave i:nth-child(4n+1) { animation-duration: .7s !important; }
+@keyframes bar { 0%, 100% { height: 8px; } 50% { height: 40px; } }
+
+/* One subtitle line. Above the stage, so it also shows while a scene is open. */
+.subtitle {
+  position: absolute; left: 24px; right: 24px; bottom: 210px; z-index: 30;
+  margin: 0; min-height: 3em; text-align: center; font-size: 19px; line-height: 1.45; font-weight: 500;
+  opacity: 0; transform: translateY(6px); transition: opacity .5s, transform .5s;
+  pointer-events: none;
+}
+.subtitle.show { opacity: 1; transform: none; }
+body.scene-open .subtitle {
+  bottom: 18px; left: 16px; right: 16px; min-height: 0;
+  padding: 12px 16px 12px 58px; text-align: left; font-size: 15px;
+  color: #fff; background: rgba(32, 26, 22, .88); border-radius: 18px;
+  backdrop-filter: blur(8px);
+}
+body.scene-open .subtitle::before {
+  content: ""; position: absolute; left: 10px; top: 50%; translate: 0 -50%;
+  width: 38px; height: 38px; border-radius: 50%; background: var(--cream) url(/img/mascot.svg) center / 120% no-repeat;
+}
+
+.mic {
+  position: absolute; bottom: 72px; left: 50%; translate: -50% 0;
+  width: 84px; height: 84px; border-radius: 50%; border: 0;
+  color: #fff; background: linear-gradient(145deg, var(--accent-2), var(--accent));
+  box-shadow: 0 12px 28px rgba(255, 122, 89, .45), inset 0 -4px 0 rgba(0, 0, 0, .08);
+  display: grid; place-items: center; cursor: pointer; touch-action: none;
+  transition: transform .15s;
+}
+.mic:active, body.listening .mic { transform: scale(1.12); }
+body.listening .mic { animation: pulse 1.2s ease-out infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 122, 89, .55); } 100% { box-shadow: 0 0 0 26px rgba(255, 122, 89, 0); } }
+.mic-hint { position: absolute; bottom: 38px; margin: 0; font-size: 13px; color: var(--ink-2); }
+
+/* ---------- Stage: scenes grow out of the mascot and fold back ---------- */
+.stage {
+  position: absolute; inset: 0; z-index: 20; overflow: hidden;
+  background: var(--card);
+  clip-path: circle(0% at 50% 42%);
+  transition: clip-path var(--grow) cubic-bezier(.7, 0, .2, 1);
+  pointer-events: none;
+}
+.stage.open { clip-path: circle(140% at 50% 42%); pointer-events: auto; }
+.scene { position: absolute; inset: 0; overflow-y: auto; padding: 58px 22px 110px; transition: transform .6s cubic-bezier(.7, 0, .2, 1), opacity .6s; }
+.scene.leaving { transform: translateY(-100%); opacity: .4; }
+.scene.entering { animation: rise .6s cubic-bezier(.7, 0, .2, 1); }
+@keyframes rise { from { transform: translateY(100%); } to { transform: none; } }
+
+.eyebrow { margin: 6px 0 4px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); font-weight: 600; }
+.btn { flex: 1; height: 58px; border-radius: 18px; border: 0; font: 600 18px var(--font); cursor: pointer; transition: transform .1s, opacity .2s; }
+.btn:active { transform: scale(.97); }
+.btn:disabled { opacity: .4; cursor: default; }
+
+/* ---------- Payment ---------- */
+.scene-payment { background: linear-gradient(180deg, #fff7ee, var(--card) 40%); }
+.pay-merchant { margin: 0; font-size: 22px; }
+.pay-total { margin: 10px 0 14px; font-size: 54px; font-weight: 800; letter-spacing: -.02em; }
+.pay-items, .pay-rules { list-style: none; margin: 0 0 14px; padding: 0; }
+.pay-items li { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #e8dccb; font-size: 15px; }
+.pay-rules { background: #f2f9f5; border-radius: 16px; padding: 10px 14px; }
+.pay-rules li { display: flex; align-items: center; gap: 10px; padding: 5px 0; font-size: 14px; font-weight: 500; }
+.pay-rules small { margin-left: auto; color: var(--ink-2); font-weight: 400; }
+.pay-rules .tick { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: var(--ok); font-size: 12px; }
+.pay-rules .bad .tick { background: var(--bad); }
+.pay-method { font-size: 14px; color: var(--ink-2); }
+.pay-buttons { display: flex; gap: 12px; margin-top: 18px; }
+.btn-deny { background: #efe8df; color: var(--ink); }
+.btn-allow { background: var(--ink); color: #fff; }
+.btn-allow.busy { opacity: .75; }
+.btn-allow.nudge { animation: nudge .4s ease-in-out 3; box-shadow: 0 0 0 4px var(--accent-2); }
+@keyframes nudge { 0%, 100% { transform: none; } 50% { transform: scale(1.06); } }
+.pay-note { text-align: center; font-size: 13px; color: var(--ink-2); }
+.pay-result { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.pay-result h2 { margin: 18px 0 4px; font-size: 30px; }
+.pay-result p { margin: 0; color: var(--ink-2); }
+.big-check {
+  width: 120px; height: 120px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 64px; color: #fff; background: var(--ok); animation: pop .5s cubic-bezier(.3, 1.6, .5, 1);
+}
+@keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+.scene.denied { filter: grayscale(.6); }
+
+/* ---------- Fallback text input (presenter only) ---------- */
+.fallback { position: absolute; left: 12px; right: 12px; top: 46px; z-index: 50; }
+.fallback input {
+  width: 100%; padding: 12px 14px; border-radius: 14px; border: 2px solid var(--accent);
+  font: 16px var(--font); background: #fff; outline: none;
+}
